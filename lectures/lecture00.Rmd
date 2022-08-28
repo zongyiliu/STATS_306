@@ -1,0 +1,282 @@
+---
+title: "Stats 306: Lecture 0"
+subtitle: "Introduction to Stats 306"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+```
+
+## Stats 306: Introduction to Statistical Computing
+
+This course introduces basic concepts in computer programming and statistical computing techniques as they are applied to data extraction and manipulation, statistical processing and visualization. It is aimed primarily at undergraduate majors and minors in Statistics.
+
+*Enforced Pre-requisite: [DATASCI 101 or STATS 206 or STATS 250 OR STATS 280 OR STATS 412 or ECON 451 or IOE 265] AND prior or concurrent enrollment in [MATH 116 or MATH 121 or MATH 156 or MATH 176 or MATH 186 or any 200+ level math credit except for MATH 201].*
+
+## Learning Objectives
+
+By the end of this course, you will
+
+* have a rigorous understanding of the structure of computer programs including
+  * variables
+  * functions
+  * iteration
+  * input/output
+* have thorough familiarity with the R programming language and RStudio development environment
+* be able to load, manipulate, and present data
+* manage development projects using the Git version control package
+
+## Overview of Course
+
+We will reach our goals using:
+
+* **Lecture**: introduction of conceptual materials, frequent opportunities to try solutions (a laptop highly recommended)
+* **Lab**: hands on problem solving individually and in teams
+* **Homework assignments**: 2 week assignments distributed and collected via Canvas
+* **Quizzes**: alternate week conceptual quizzes
+* **Exams**: Two mid-term exams and one final exam/final project
+
+## Grading
+
+* Homework Assignments **(20%)**
+* Quizzes **(15%)**
+* Three Exams **(20%, each)** 
+  * Mid-term Exam 1, released 10/05, due 10/07
+  * Mid-term Exam 2, released 11/09, due 11/11
+  * Final Exam, due 12/14
+* Lab Attendance/Completion **(5%)**, two allowed absences
+
+## Working in Groups
+
+You are encouraged to work together on HW to discuss solutions and debug. You student **must** submit own work. Ask yourself, "Am I avoiding learning something in my actions?" If yes, don't do it.
+
+Quizzes and exams are your own work only.
+
+## Lab
+
+>* Victor Verma, Lab 201, Tuesday, 4:00PM - 5:30PM, B760 EH
+>* Benjamin Osafo Agyare, Lab 202, Tuesday, 5:30PM - 7:00PM, B760 EH
+>* Jesse Wheeler, Lab 203, Tuesday, 8:30AM - 10:00AM, 269 WEISER
+>* Yilei Zhang, Lab 204, Tuesday, 10:00AM - 11:30AM, 269 WEISER
+
+Lab attendance will be taken. Two allowed unexcused absences. Please contact your GSI if you require an excused absence.
+
+## Materials
+
+All books are freely available through our library system or online:
+
+* [R for Data Science](https://r4ds.had.co.nz/) by Hadley Wickham and Garett Grolemund
+* [Beginning Git and GitHub](https://search.lib.umich.edu/catalog/record/99187305231206381) by
+Mariot Tsitoara.
+* Several additional resources, documentation also listed on Canvas site.
+* Lectures will be recorded and available on Canvas.
+* Slides will be available before lecture.
+
+## Office Hours and Help
+
+* Instructor zoom office hours:
+  * Breakout room office hours: Tuesday 1pm to 3pm
+  * One-on-one meetings: Wednesday 1pm to 3pm
+* GSI office hours still being scheduled
+* You can go to any GSI's office hours, not just your lab instructor
+* Piazza via Canvas
+
+## Other policies
+
+Canvas includes more detailed policies on
+
+>* Academic Misconduct
+>* Classroom Culture of Care
+>* Course Recordings
+>* Disability Statement
+>* Mental Health and Well-Being
+>* Sexual Misconduct Policy
+
+## Canvas
+
+[Stats 306 on Canvas](https://umich.instructure.com/courses/554168)
+
+## Software
+
+* R: A statistical programming language
+* RStudio: A development environment for R
+* Git: Version control and collaboration for software projects
+
+## Getting Software
+
+Two options:
+
+* Install locally on your own computer, use campus computers (see directions on Canvas)
+* Use the Great Lakes cluster environment
+  * Request account (see canvas)
+  * Be on the university network or use the VPN (see canvas)
+  * Start a session on `greatlakes.arc-ts.umich.edu` (2 hours max)
+  
+## More on R
+
+R is a *statistical programming language*:
+
+* Statistical: designed for the manipulation and analysis of data
+* Programming: perform analysis through collection of instructions
+* Language: text based, as opposed to graphical, instructions
+
+## Why use R?
+
+* Purpose built for statistical analysis
+* Large collection of add-on libraries containing cutting edge resources
+* Being adopted by research, industry, government
+* Language of choice for statistical teaching (courses, books)
+
+## A tour of RStudio
+
+## What is Git?
+
+* A **version control system** manages changes from multiple sources simultaneously.
+* A reasonable analogy: Google Docs with track changes turned on
+* Useful for groups working together to track changes to the software package and document why changes were made
+* We will use it to disseminate homework assignments, labs, and lecture materials.
+
+## How does git work?
+
+* Creates a **repository** (a hidden directory/folder) to information about the history of files
+* When you make changes, you may **add** them to a **staging area**
+* When you like your staging area, you **commit** your changes.
+* Git stores the **differences** ("diffs") from the previous version to your new version.
+* You can **push** your changes to a shared repository for others to use
+* You can **pull** from a shared repository and **merge** the changes of others.
+* If there are **conflicts**, git will let you know and make you resolve them.
+* If you ever need to see what changed, you have the entire **history** of all changes to look at.
+
+## Command line interfaces
+
+While git has graphical interfaces, we will teach use a **command line interface** (CLI) for git.
+
+In an CLI you have an **interactive** prompt where you type a command. It might look something like this:
+
+```
+$ command -o --options argument1 argument2
+```
+
+* `$` is the prompt
+* `command` is what we want to do (e.g., `git`)
+* Optional flags have `-` or `--` in front and change behavior
+* We can tell what do with `argument1` and `argument2`. Some commands have no arguments.
+
+## Some basic CLI commands
+
+* `cd`: Change directory. 
+* `ls`: List files in current directory
+* `pwd`: Print working directory
+* `mkdir`: Make a new directory (folder)
+* `rm -r`: Recursively delete directories and everything inside (use carefully!)
+
+## Example Task
+
+>* Check the current directory
+>* Create a new directory for our stats 306 materials
+>* Edit a file in RStudio in this directory
+>* List all files in the directory using the CLI
+>* Get help on the `cat` to print out line numbered file
+
+## Git and the CLI
+
+When interacting with git, we will use commands like this:
+
+```
+$ git SUBCOMMAND -o --options ARG1 ARG2 ...
+```
+
+Some example subcommands will be `pull` to get updates, `log` to see the history, `add` to stage files, and `commit` to commit changes.
+
+## Let git know who you are
+
+```
+$ git config --global user.name "YOUR NAME"
+$ git config --global user.email "YOUR EMAIL"
+```
+
+## Getting a copy of the Stats 306 Repository
+
+Materials for this course are hosted at **GitHub**, a popular website front end for git. 
+
+To get a copy of them, **clone** the repository:
+
+```
+$ cd LOCATION_YOU_WANT_TO_STORE_REPO
+$ git clone https://github.com/markmfredrickson/stats306_fall_2022.git
+```
+
+## Getting future updates
+
+```
+$ cd PATH/TO/REPO
+$ git pull
+```
+
+## What can we do with the repo?
+
+>* Run these slides
+>* Edit an example homework and save changes to your local repository.
+
+## RMarkdown documents
+
+RMarkdown documents blend **code** and **presentation**. They will be the tool we use for
+
+>* Lecture slides
+>* Labs
+>* Homework assignments
+
+HW Workflow: edit document, knit, submit HTML 
+
+## What is markdown?
+
+* Markdown files are **plain text** files that have special interpretation.
+* Came out of common conventions for adding expression to emails.
+* They have a header (denoted by `---`) and a body. We can **render** them to HTML to view in any web browser.
+* See the "Help -> Markdown Quick Ref" in RStudio for more details.
+
+## RMarkdown
+
+* RMarkdown extends basic markdown to allow embedding R code within the document.
+* It addition to formatting text, you can include code **chunks**.
+* When you **knit** the document, first the code is evaluated, then the results are added to the markdown document. Then that is turned into a web page.
+* In addition to text and numeric output, plots and graphs are automatically inserted into the output.
+* There are options to control how chunks are presented, cache computations to speed up knitting, etc.
+
+## Working on the example HW again
+
+Task: Let's answer a few questions and prepare our HW for submission.
+
+## Interactive slides
+
+If you bring a laptop, you can run these slides and do interactive examples.
+
+Change the following to print out the number 8. Then make it print twice the value of `a`:
+```{r example-ex, exercise = TRUE}
+a <- 7
+print(a)
+```
+
+## Next Steps
+
+* Visit our Canvas site
+* Sign up for Piazza
+* Look at the recommended textbooks
+* Get a Great Lakes account
+* Try out RStudio on Great Lakes
+* Use git to clone the Stats 306 repository
+
+## Labs
+
+* No lab the first week
+* First lab 9/6
+* Please attend your assigned lab
+
+
+
