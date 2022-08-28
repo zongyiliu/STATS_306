@@ -1,0 +1,24 @@
+---
+title: "Example Homework"
+author: "Your Name, Your Unique Name"
+date: 'Due: Never'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Question 1 (3 points)
+
+List three software packages we will use in Stats 306.
+
+## Question 2 (5 points)
+
+Compute the mean and variance of the following observations:
+
+```{r}
+x <- c(30, 11, 29, 58, 38)
+```
+
