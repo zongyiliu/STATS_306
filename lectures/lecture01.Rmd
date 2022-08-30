@@ -1,0 +1,230 @@
+---
+title: "Stats 306: Lecture 1"
+subtitle: "Basic R and RMarkdown"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+```
+
+## Review 
+
+* Course overview, objectives, policies
+* Software: R, RStudio, Git
+* Great Lakes cluster environment
+* Command line interface (CLI)
+
+## Git and the CLI
+
+When interacting with git, we will use commands like this:
+
+```
+$ git SUBCOMMAND -o --options ARG1 ARG2 ...
+```
+
+Some example subcommands will be `pull` to get updates, `log` to see the history, `add` to stage files, and `commit` to commit changes.
+
+## Let git know who you are
+
+Last time we saw
+
+* `git config`
+* `git clone`
+
+## Getting future updates
+
+```
+$ cd PATH/TO/REPO
+$ git pull
+```
+
+## What can we do with the repo?
+
+>* Run these slides
+>* Edit an example homework and save changes to your local repository.
+
+## RMarkdown documents
+
+RMarkdown documents blend **code** and **presentation**. They will be the tool we use for
+
+>* Lecture slides
+>* Labs
+>* Homework assignments
+
+HW Workflow: edit document, knit, submit HTML 
+
+## What is markdown?
+
+* Markdown files are **plain text** files that have special interpretation.
+* Came out of common conventions for adding expression to emails.
+* They have a header (denoted by `---`) and a body. We can **render** them to HTML to view in any web browser.
+* See the "Help -> Markdown Quick Ref" in RStudio for more details.
+
+## RMarkdown
+
+* RMarkdown extends basic markdown to allow embedding R code within the document.
+* It addition to formatting text, you can include code **chunks**.
+* When you **knit** the document, first the code is evaluated, then the results are added to the markdown document. Then that is turned into a web page.
+* In addition to text and numeric output, plots and graphs are automatically inserted into the output.
+* There are options to control how chunks are presented, cache computations to speed up knitting, etc.
+
+## Chunks in Rmd files
+
+All chunks have the following form:
+
+<!-- The extra stuff is to get this print out as if
+it were an R chunk, even though it is not really one. -->
+<pre><code>```{r name, key = value, ...}
+... R code goes here ...
+<span>```</span></code></pre>
+
+* The `name` is optional but helps when you get an error.
+* The `key = value` controls the behavior of the chunk (optional). Example, `include = FALSE` to hide chunk.
+* `CTRL-ALT-I` inserts a new chunk your RMarkdown document.
+
+## Working on the example HW again
+
+Task: Let's answer a few questions and prepare our HW for submission.
+
+## Saving changes to our local repo
+
+```
+$ git status
+$ git add FILENAME
+$ ... perhaps other files ...
+$ git commit -m "a note explaining changes"
+```
+
+## R's Read-Evaluate-Print-Loop (REPL)
+
+* The **Console** in R lets you interact with a running R process.
+* When you type in in the console, R **reads** the command to make sure it is valid R code.
+* R **evaluates** the valid code -- produce the result of the computation
+* R **prints** the result back to the console.
+* The process then repeats (**loop**)
+
+## Trying out the REPL
+
+We will use exercises in the slides like a REPL. Use the math operations `*`, `\`, `+`, and `-` to compute twice the difference of 100 and 18. You can use `()` to group calculations.
+
+```{r repl, exercise = TRUE, exercise.lines = 1}
+
+```
+The "Start Over" button will give you a fresh environment.
+
+## Expressions and Statements
+
+If you stopped a running R program at some point in time, everything about the program is called its **state**.
+
+An **expression** is R code that, when run, provides a value (do not change state):
+
+```{r eval = F}
+3 + 4
+```
+
+Commands that change the **state** of the program are called **statements**, such as assignment:
+
+```{r}
+a <- 3 + 4
+```
+
+## Variables and Assignment
+
+A **variable** is a box to store data. We put the results of expressions into variables using **assignment**.
+```{r}
+a <- 7
+b <- 12
+c <- a + b
+print(c)
+```
+
+Rules for variable names: start with a letter then letters, numbers, `.`, `_`. 
+
+## REPL and State
+
+Suppose you entered the following at your R console:
+```{r}
+a <- 3 + 1
+a <- 10 + 2
+```
+```{r repl-state-setup}
+a <- 3 + 1
+a <- 10 + 2
+```
+What would happen if you did the following?
+```{r repl-state, exercise = TRUE}
+print(a)
+```
+
+## The REPL and Chunks
+
+When you **knit** an RMarkdown document, RStudio **starts a new process**.
+
+Every time it encounters a **R chunk** it **evaluates** the R code inside and inserts the output into the document (default; can be changed). Like a behind the scenes REPL.
+
+After running all code, it turns the markdown into a web page (`example-homework.Rmd` => `example-homework.html`)
+
+## Example of chunks and state
+
+(Feel free to look at `lecture01.Rmd` right now).
+
+Here is a code chunk:
+```{r}
+classname <- "Stats 306"
+```
+Here is some intervening text and a second chunk:
+```{r}
+print(classname)
+```
+
+## Order is important
+
+Because **statements** change the context, order of statements is very important. Compare
+```{r}
+a <- 7
+print(a)
+a <- 2
+```
+
+```{r}
+a <- 7
+a <- 2
+print(a)
+```
+
+## Working with code chunks, debugging hint
+
+You can send a line of code to the console using `CTRL-Enter`.
+
+You can run all of the code in a chunk at once using the green arrow or `CTRL-SHIFT-Enter`.
+
+If you run into a problem, use the `Session -> Restart R` to clean up, and the use "Run all chunks above" (`CTRL-ALT-SHIFT-p`). Then try the chunk again.
+
+## What can go in variables?
+
+R has several different **data types**. Some common types:
+* **Numeric**: `7`, `3.22`, `9.1e2`
+* **Strings**: `"Hello"` or `'Hello'` (also called "character vectors")
+* **Logicals**: `TRUE` and `FALSE`
+* We'll see more data types going forward
+* These are also referred to as the **class** of the data.
+
+## Why are variables useful?
+
+* Avoid repeatedly typing in the same thing
+* Save the results of computations
+* Avoid recomputing same values
+* Separate what we are computing from any particular input (**abstraction**)
+
+## Exercise: Using variables
+
+Find the difference between 193 and 7. What is this value divided by two? What is this value divided by three? (Only compute the difference once.)
+```{r using-variables, exercise = TRUE, exercise.lines = 5}
+
+```

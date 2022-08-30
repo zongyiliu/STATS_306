@@ -14,7 +14,14 @@ library(tidyverse)
 
 List three software packages we will use in Stats 306.
 
-## Question 2 (5 points)
+## Question 2 (2 points)
+
+Use this code chunk to compute the number of seconds in one day:
+```{r}
+
+```
+
+## Question 3 (5 points)
 
 Compute the mean and variance of the following observations:
 
