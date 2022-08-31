@@ -1,0 +1,21 @@
+---
+title: "Stats 306 Lab 1"
+author: "Your Name"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Variables
+
+## Function Calls
+
+## Vectors
+
+## Tables
+
+## Plotting
+
