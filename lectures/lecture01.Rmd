@@ -209,6 +209,7 @@ If you run into a problem, use the `Session -> Restart R` to clean up, and the u
 ## What can go in variables?
 
 R has several different **data types**. Some common types:
+
 * **Numeric**: `7`, `3.22`, `9.1e2`
 * **Strings**: `"Hello"` or `'Hello'` (also called "character vectors")
 * **Logicals**: `TRUE` and `FALSE`
@@ -228,3 +229,171 @@ Find the difference between 193 and 7. What is this value divided by two? What i
 ```{r using-variables, exercise = TRUE, exercise.lines = 5}
 
 ```
+
+## Style point: descriptive variable names
+
+* So far we have used names like `a` and `b`.
+* For large programs, having variable names that describe what they hold is much better
+* Compare `a` to `number_of_seconds_in_a_day`
+* In RStudio, it's just as easy to type with `TAB` completion
+* On HW assignments, GSIs will be awarding points for *style* (readable code)
+
+## Using variables: functions
+
+Once we have data stored in a variable, one of the main ways to use it is to **call a function.**
+
+```{r, eval = FALSE}
+function_name(argument1, argument2, named_argument = additional_data, ...)
+```
+
+## What do functions do?
+
+* Functions behave (mostly) like mathematical functions $f(x)$.
+* They take **arguments** and return **values**
+* Encapsulate code (mini-programs)
+* Make it easy to repeat operations
+
+## Converting from degrees to radians
+
+Recall two ways to measure an angle:
+
+>* Degrees: 0 to 360
+>* Radians: 0 to 2$\pi$
+
+Exercise: compute the radian equivalent of 45 degrees (use a good variable name!). Then use the `sin(your_variable_name)` function to compute the sine of 45 degrees. (Hint: there is a built in variable named `pi`.)
+
+```{r sin45, exercise = TRUE}
+
+```
+
+## Math operations are functions too
+
+Suppose we had `mult(x, y)` and `div(x, y)`.
+
+We could have written the previous calculation as 
+
+```{r eval = FALSE}
+mult(2, mult(pi, div(45, 360)))
+```
+Those aren't real functions, but R transforms `2 * pi * 45/360` into that behind the scenes.
+
+We call functions that do not have explicit function calls **operators**. See help pages for `Arithmetic Operators`, `Relational Operators`, and `Logical Operators` for some of the most common.
+
+## Function evaluation
+
+In R, when we call a function, first the **arguments** are evaluated, then the function is called.
+
+```{r eval = FALSE}
+sin(mult(2, mult(pi, div(45, 360))))
+```
+
+* Compute `value1 <- div(45, 360)` 
+* Compute `value2 <- mult(pi, value1)`
+* Compute `value3 <- mult(2, value2)`
+* Compute `sin(value3)`
+
+## Side effects
+
+Some functions also have **side effects** beyond just returning a value.
+
+* Load or save a file
+* Take input from a mouse
+* Display something on the screen
+
+## The `curve` function
+
+The `curve` function is a useful way to graph out a function:
+```{r, height = 4, width = 7}
+curve(sin(x))
+```
+
+Here `x` is a "special variable" that does not exist outside the use of `curve`.
+
+## Changing the bounds of the plot
+
+`curve` can take more than just one argument,
+
+```{r, height = 3, width = 5}
+curve(sin(x), 0, 2 * pi)
+```
+
+## Optional and named arguments
+
+R allows you to use the name of arguments to pass them in any order:
+
+```{r}
+curve(to = 2 * pi, expr = sin(x), from= 0)
+```
+
+By *default* `from = 0` and `to = 1`
+
+
+## Avoiding making variables we don't need
+
+Sometimes we only need to use something once, so taking the time to come up with a variable name is unncessary. For example,
+
+```{r}
+radians_45_degrees <- 2 * pi * 45/360
+sin(radians_45_degrees)
+```
+
+Instead we can use **pipes** to pass the first argument of function
+
+```{r}
+(2 * pi * 45/360) |> sin()
+```
+
+(NB: See the help page for `Syntax` for operator precedence.)
+
+## R's assignment operators
+
+R has two ways to store data in variables:
+
+```{r}
+variable_arrow <- 7
+variable_equal = 10
+variable_arrow + variable_equal
+```
+
+I like the arrow because it can be reversed
+```{r}
+7 -> variable_reversed
+pi * variable_reversed
+```
+
+## Some special values
+
+In addition to `pi`, R has some other built in variables (see help page for `Constants`).
+
+Also several special data values
+
+* `NA` means "missing". Including a `NA` value in a calculation will usually make the result also `NA`.
+* `NULL` means "not set yet" and is often used for optional arguments to functions
+* `NaN` means something was divided by zero or other mathematical impossibility.
+
+What will happen with this code?
+
+```{r na-prop, exercise = TRUE}
+angle_degrees <- NA
+angle_radians <- 2 * pi * angle_degrees / 360
+sin(angle_radians)
+```
+
+## Resassigning values
+
+What happens will the following code produce?
+```{r reassign, exercise = TRUE}
+some_data <- "SECRET CODE"
+some_data <- 777
+print(some_data)
+```
+
+## Summary
+
+* Git and the command line
+* RMarkdown documents: text and code chunks
+* R and the REPL
+* Variables: boxes to hold data
+* Functions: little programs that operate on data
+
+Next time: Lab on Tuesday, we will discuss more about R data next Wednesday
