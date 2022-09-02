@@ -9,6 +9,76 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
+# Logistics
+
+* Attendance via iClicker
+* TODO: Office Hours 
+
+# Git
+
+Git is going to be an important part of this course, and possibly your future! While it may be intimidating at first, but your effort will be well worth it.
+Git was already discussed in some detail in the first two lectures, so we won't cover it much now. 
+Instead, we will review some of the basic ideas and can provide help where needed. 
+
+### Resources
+
+* [Beginning Git and GitHub](https://search.lib.umich.edu/catalog/record/99187305231206381) by
+Mariot Tsitoara.
+* [Pro Git](https://git-scm.com/book/en/v2), free textbook by the maintainer of the Git homepage. 
+* Your GSIs! 
+
+### Basic Concepts
+
+* **repository**: A representation of the current state of a collection of files, along with its entire history of modifications. 
+* **commit** (noun): A recorded change made to the repository. 
+* **branch**: While we won't do a lot with branches in this course, they are a very useful way of collaborating. Branches are essentially additional versions of the repository that you can create, name, delete, and merge into the main (or master) branch of the repository. 
+
+### Common Git commands
+
+Git is a powerful version control system that allows us to share and edit code, as well as keep track of previous versions of code. 
+
+To get a "local" copy of a repository, you can use: 
+
+```{bash eval=FALSE}
+git clone <repository>
+```
+
+For example, if you want to get the course repository on your personal computer, you may run: 
+
+```{bash eval=FALSE}
+git clone https://github.com/Stats-306-Fall-2022-Teaching-Team/stats306_fall_2022.git
+```
+
+Once you have cloned a "remote" repository on to your personal computer, it's possible that changes to the "remote" repository are made. 
+To keep your "local" repository up to date, you can run:
+
+```{bash eval=FALSE}
+git pull
+```
+
+You can also check the status of the repository by running: 
+
+```{bash eval=FALSE}
+git status
+```
+
+This is a very useful command as it provides you with a basic summary about the status of a repository, for example, if any local changes have been made.
+
+Other useful `git` functions include: 
+
+* `git pull`
+* `git add <filename>`
+* `git commit -m "Commit Message"`
+* `git push`
+
+### Questions: 
+
+**What problems have you run into when trying to use Git in the past?**
+
+**What questions do you have about Git, or the command line?**
+
+# Intro to R
+
 ## Variables
 
 ## Function Calls
