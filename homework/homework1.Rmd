@@ -196,11 +196,79 @@ Put the output here:
 
 ## Question 2 (5 points)
 
-variables, vectors, tables
+### Keeping code DRY (1 point)
+
+A fundamental principle of good computer programming is avoiding repetition of
+code. The acronym DRY stands for Don't Repeat Yourself. Clean up the code below
+to avoid repetition.
+
+```{r}
+# A circle with diameter 7 has a circumfrence of
+7 * pi
+
+# A circle with diameter 7 has an area of
+(7 / 2)^2 * pi
+
+# A cylinder, with a face diameter of 7 and height of 16, has a volume of 
+(7 / 2)^2 * pi * 16
+```
+
+### Mean and Variance (2 points)
+
+The sample mean is defined as:
+
+$$ \bar X_n = \frac{1}{n} \sum_{i = 1}^n X_i$$
+
+and the sample variance is defined as
+$$ \hat \sigma^2 = \frac{1}{n - 1} \sum_{i=1}^n (X_i - \bar X_n)^2$$
+
+Using *vectorized* computations, compute the sample mean and sample variance of
+the `displ` column of the `mpg` data set. Do not use the functions `mean` or
+`var`. You may use `length` and `sum`.
+
+### Starwars Characters (2 points)
+
+Investigate the data set `starwars`. Answer the following
+
+* How many characters are listed?
+* What kind of data is the `mass` column?
+* What kind of data is the `species` column?
+* Explain what the value `NA` means in the `hair_color` column.
+* How many characters are from Tatooine?
+* For humans, what is the average (mean) age?
 
 ## Question 3 (5 points)
 
-plotting basics, something other than a scatter plot
+### Height and Mass (2 points)
+
+Create a scatter plot of the columns `height` and `mass` from the `starwars`
+data set. What jumps out from the plot? Do a little investigation to find out
+about that point.
+
+### Height and mass relationship (1 point)
+
+Create a data set that excludes the outlier from the previous question. Plot the
+relationship for height and mass again. Add a smoothed regression line.
+Interpret these results for the nature of relationship between height and mass.
+
+### Species (1 point)
+
+The following code creates a new column in the `starwars` data that groups all
+planets having only 1 character into an "Other" category.
+
+```{r}
+planet_counts <- table(starwars$homeworld)
+starwars <- mutate(starwars, homeworld_other = ifelse(planet_counts[homeworld] == 1, "Other", homeworld))
+```
+
+Use this data set to make a bar plot of the `homeworld_other` column. Excluding
+the "Other" category, what is the most common home world?
+
+### More plotting (1 point)
+
+Using the `starwars` data set, create a new plot that does not duplicate any of
+the previous plots. Briefly describe the key elements of the plot and interpret
+the results.
 
 ## Question 4 (5 points)
 
