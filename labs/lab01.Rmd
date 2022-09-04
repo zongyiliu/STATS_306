@@ -85,8 +85,6 @@ Other useful `git` functions include:
 
 **What questions do you have about Git, or the command line?**
 
-# Intro to R
-
 # Introduction to R
 
 ## R Packages
