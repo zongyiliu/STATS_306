@@ -272,7 +272,37 @@ the results.
 
 ## Question 4 (5 points)
 
-More relationships, facets, summaries
+### Plotting housing prices (1 point)
 
+Suppose we are interested in seasonal effects on the housing market. Here is a
+plot of median housing prices by month in Texas over the period 2000 to
+mid-2015.
 
+```{r}
+ggplot(txhousing, aes(x = month, y = median)) + geom_point() + geom_smooth()
+```
 
+What might be misleading about this plot? Refer to section 3.9 of R for Data
+Science to propose a better way of displaying these data. Comment on any
+seasonal effects you see.
+
+### Prices by region (2 points)
+
+Here is plot of median prices over time, attempting to breakdown the data by
+region.
+
+```{r fig.height = 10}
+ggplot(txhousing, aes(x = date, y = median, color = city)) + 
+  geom_point() + 
+  theme(legend.position="bottom")
+```
+
+What would be a better way to display these data? Implement this plot. What area
+saw the biggest increase in median price during this period? Which areas have
+the largest variation in prices in a given year?
+
+### Reducing volume of information (2 points)
+
+Create a plot that summarizes the number of listings for each city. For each
+city, show the minimum number of listings in a month, the maximum, and the
+median.
