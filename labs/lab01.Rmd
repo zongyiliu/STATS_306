@@ -4,6 +4,7 @@ author: "Your Name"
 output: 
   html_document:
     number_sections: true
+runtime: shiny_prerendered
 ---
 
 <style type="text/css">
@@ -14,7 +15,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
 ```
 
 # Logistics
@@ -92,17 +92,17 @@ Other useful `git` functions include:
 - Use the install.packages("<PACKAGE NAME>") command to install packages in R
 - To load a package (already installed) use the library(<PACKAGE NAME>) command
 
-```{r package1, include=TRUE}
-# run the first two lines if you have not installed the tidyverse and gapminder packages
+```{r package1}
+# run the first two lines if you have not installed the tidyverse and learnr packages
 # install.packages("tidyverse")
-# install.packages("gapminder") 
-library(gapminder)            
+# install.packages("learnr") 
+library(learnr)            
 library(tidyverse)            
 ```
 - You can load lots of packages together as library(<PACKAGE1>, <PACKAGE2>, <PACKAGE3>)
 
 ```{r package2}
-library(gapminder, tidyverse)
+library(learnr, tidyverse)
 ```
 
 ## Assignment and Operations
@@ -132,16 +132,19 @@ Exercise 1:
 
 What do you observe?
 
-```{r exercise1}
-# your code here
+```{r exercise1, exercise=T}
+x <- 6
+y <- "hello world"  ## also double quotes
+z <- TRUE    
 
+# your code here
 ```
 
 ## Function Calls
 
 We can use '?' to look up documentation of functions
 
-```{r lookup}
+```{r lookup, exercise=T}
 ?sqrt 
 sqrt(5)
 ```
@@ -174,11 +177,11 @@ dog <- function() {
 pow(2,3); dog()
 ```
 
-Exercise 2: write a function to print the volume of a cylinder of radius $r$ cm, and height $h$ cm. $h$ and $r$ are the inputs of the function.
+Exercise 2: write a function to print the volume of a cylinder of radius $r$ cm, and height $h$ cm. $h$ and $r$ are the inputs of the function. Also print the volume of a cylinder with $r=3$ and $h=5$
 
 *Hint: volume=$\pi r^2 h$*
 
-```{r exercise2}
+```{r exercise2, exercise=T}
 ## your code here.
 ```
 
@@ -208,6 +211,7 @@ We can also make a list of vectors of different types:
 my_list <- list(int_vec, fp_vec, string_vec, logical_vec) # Make a list
 str(my_list) # Describe the structure of the list
 ```
+
 We can name the components of a vector or a list.
 ```{r vecname}
 # Components can be named
@@ -215,21 +219,21 @@ named_string_vec <- c(fruit1 = "apple", fruit2 = "banana", fruit3 = "cherry")
 named_list <- list(the_int_vec = int_vec, the_string_vec = named_string_vec)
 ```
 
-```{r output.vec}
+```{r output-vec}
 named_string_vec
 ```
 
-```{r output.list2}
+```{r output-list2}
 named_list
 ```
 
 ### Subsetting
 
-- Subsetting refers to extracting a part of parts of an object
+- Subsetting refers to extracting parts of an object
 - Several ways to subset a vector
-  + [ usually used on atomic vectors
+  + [] usually used on atomic vectors
      + Can extract multiple components
-  + [[ usually used on lists
+  + [[]] usually used on lists
      + Can only extract one component
   + $ used on lists
      + Can only extract one component, by name
@@ -274,7 +278,7 @@ x >= y   ## greater than or equal to
 
 - 'and' and 'or'
 
-```{r and.or}
+```{r and-or}
 (5>2) | (1 == 0) 
 (5>2) & (1 == 0) 
 
@@ -299,7 +303,7 @@ Useful: More about base R can be found here: [base R cheat sheet](https://github
 
 Tibble construction syntax is as follows:
 
-```{r syntax, eval=F}
+```
 dataframe = tibble(
   col_name1 = c(some_vector),
   col_name2 = c(some other vector)
@@ -320,14 +324,16 @@ dat = tibble(
 
 dat
 ```
+
 We can extract elements from a tibble:
-```{r tibble.extract}
+```{r tibble-extract}
 dat[2,] # accessing a row
 dat[4, 4] #accessing a single value
 # syntax is: [row, column]
 dat[, 5]
 dat[2:3, c(1, 3, 4)]
 ```
+
 We can also use $ to access a single column:
 ```{r dollarsign}
 dat$name # accessing a single column
@@ -349,8 +355,18 @@ subset(dat, age < 100) # subset based on logical condition
 
 Exercise 3: Take a subset of Avatar characters who are benders and have a raw grade greater than 90%. Save this to a variable called `dat2`.
 
-```{r exercise3}
+```{r exercise3, exercise = T}
+dat = tibble(
+  name = c('Aang', 'Katara', 'Sokka', 'Toph', 'Zuko'), 
+  age = c(112, 14, 15, 12, 16), 
+  is_bender = c(T, T, F, T, T),
+  nationality = c("Air", "Water", "Water", "Earth", "Fire"),
+  grade = c(89, 94, 96, 86, 82),
+  extra_credit = rep(1, 5) 
+)
+
 # Your code here
+
 ```
 
 ### A Large Dataset
@@ -367,17 +383,29 @@ You can use `?diamonds` to check the meaning of each variables.
 
 ## Plotting with ggplot2
 
+Every ggplot2 plot has three key components:
+
+- data
+
+- A set of aesthetic mappings between variables in the data and visual properties, and
+
+- At least one layer which describes how to render each observation. Layers are usually created with a geom function.
+
+(Source: https://ggplot2-book.org/getting-started.html)
+
 ggplot is a layer-based function. We first create a coordinate system that you can add layers to using the function ggplot(data=...). This will creates an empty graph.
 
 ```{r step1}
 ggplot(data = diamonds)
 ```
-We then add the data points onto this empty graph using the function geom_point(). The argument mapping = aes(x = carat, y = price) tells R what variables (columns in diamonds) we want to plot on each axis.
+
+We then add the data points onto this empty graph using the function `geom_point()`. The argument `mapping = aes(x = carat, y = price)` tells R what variables (columns in diamonds) we want to plot on each axis.
 
 ```{r step2}
 ggplot(data = diamonds) + 
     geom_point(mapping = aes(x = carat, y = price))
 ```
+
 It would be helpful to also visualize the color of diamonds in the scatter plot. We can study this more in depth by making a third variable and map to some aesthetic (i.e., visual property) of the points. Some examples are color, shape, size, and transparency.
 
 ```{r step3}
@@ -386,6 +414,7 @@ ggplot(data = diamonds) +
     # alpha is the transparency of the points
     geom_point(mapping = aes(x = carat, y = price, color = color), alpha=0.7)
 ```
+
 Then we can use labs and ggtitle to specify axis labels and the title.
 
 ```{r step4}
@@ -397,7 +426,8 @@ ggplot(data = diamonds) +
     # specify the title
     ggtitle('Diamond price by carat count')
 ```
-You can get a better background by changing the theme:
+
+You can get a better background by changing the theme. You can find more information about ggplot [here](https://ggplot2.tidyverse.org/reference/ggtheme.html).
 
 ```{r step5}
 ggplot(data = diamonds) + 
@@ -410,8 +440,24 @@ ggplot(data = diamonds) +
   theme_bw()
 ```
 
+You can also create subplots for different cut types by using `facet_wrap()`:
+
+```{r facet}
+ggplot(data = diamonds) + 
+    geom_point(mapping = aes(x = carat, y = price, color = color), alpha=0.7) +
+    facet_wrap(~cut, ncol=3) +
+    labs(x = 'Carats', y = 'Price($)') + 
+    ggtitle('Diamond price by carat count') +
+  theme_bw()
+```
 
 Exercise 4: Recreate the box-plot below 
 
 *hint you need to use `geom_boxplot`*
-![](plot1.png)
+
+![](images/plot1.png)
+
+```{r exercise4, exercise=T}
+# your code here
+
+```
