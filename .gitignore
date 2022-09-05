@@ -44,3 +44,6 @@ lectures/lecture*_files
 
 # DS_store files
 *.DS_Store
+
+# Lab Files created after rendering 
+labs/lab*/lab*_files
