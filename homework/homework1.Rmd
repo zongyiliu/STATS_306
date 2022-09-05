@@ -1,0 +1,308 @@
+---
+title: "Stats 306, Fall 2022, Homework 1"
+author: "Your Name, Your Uniqname"
+date: "Due Sept 18, 11:59PM EST"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Question 1 (5 points, 1 each per subproblem)
+
+In this section, we will use git from the command line to learn more about
+version control. If you have this document, you have probably already used git
+to retrieve our class repository. If not, follow the directions on our Canvas
+home page to get your own copy of the repository.
+
+When you start RStudio, typically the *Terminal* pane will default to your home
+directory. If you open the `stats306_fall_2022.rpoj` file, then the terminal
+will open in the repository's directory. You verify this using the print working
+directory command,  `pwd`. You may need to use the change directory command
+(`cd`) to move into your repository. If you forget the name of your repository,
+use `ls` to list files.
+
+### Setting up git
+
+In the first lecture (`lectures/lecture00.Rmd` in this repository), there are
+directions to set up your git configuration to include your name and email
+address. Using the *Terminal* pane, use these commands to set up your name
+and email address.
+
+The `config` subcommand also lets you retrieve settings. Use `git config` with
+the `get` option (recall: how are *optional* arguments passed to the command
+line arguments) to retrieve your `user.name` and `user.email`.
+
+Put a copy of your session here:
+
+```
+
+```
+### Using the log
+
+Every commit in git gets its own identifier and log message. Using the `git log`
+command, fill out the following information:
+
+* Commit id:
+* Author:
+* Date:
+* Message:
+
+Commit ids are usually very long, but you really only need the first 5 or so
+characters to identify them. Verify this using `git show --name-only FULLID` and
+`git show --name-only FIRSTFIVE`.
+
+The `git show` commands provides the details on the commit beyond just the log
+info. What files where changed in this commit?
+
+> YOUR ANSWER
+
+Run `git show FIRSTFIVE`. What do you think this is telling you? What do you
+think a line with a `+` means? What would a `-` mean?
+
+> YOUR ANSWER
+
+
+### Commiting to your local repository
+
+By this point you have made some changes to this file. Save the file.
+
+Go to the *Terminal* and type `git status`. What is this telling your?
+
+> YOUR ANSWER
+
+Use `git add` to place your changes in the staging area. Type `git status` again
+to see what happened.
+
+Suppose you decide your changes aren't a good idea. Use `git restore --staged`
+to un-stage your changes. Verify the results again with `git status`.
+
+Now add your homework back to the staging area and commit it with `git commit -m
+"A COMMIT MESSAGE"`. What was the commit ID of your changes?
+
+```
+
+```
+
+Demonstrate that you had a commit message using `git show --name-only HEAD` and
+putting the results below. `HEAD` is shorthand for "the most recent commit".
+
+```
+
+```
+
+If you forgot to include a commit message the first time, you can **amend**
+your commit using
+`git commit --amend -m "message"`. This can also be used to add files or changes
+if you left them out of your staging area.
+
+### Undoing commits
+
+In the following box, write a sentence with a spelling or grammar mistake.
+
+```
+
+```
+
+Use `git add` and `git commit` to commit this change. Include the commit ID:
+
+```
+
+```
+
+Now use `git revert COMMITID`. What happens to this file?
+
+> YOUR ANSWER
+
+Correct the mistake and commit the changes. Demonstrate that the reverted change is no longer in the log using `git log -n 2` to show the last two commits.
+
+```
+
+```
+
+### Working on branches and repositories
+
+Before attempting this problem, make sure you have saved this file and committed
+your changes (remember, you can check if there are any changes in your working
+copy using `git status`).
+
+If your terminal is currently in your repository, use `cd ..` to up by one
+directory.
+
+Now, we will pretend we are a coworker or collaborator getting access to your
+repository.
+
+Assuming you have checked out the repository to `stats306_fall_2022`, do the following
+```
+$ git clone stats306_fall_2022 stats306_copy
+```
+
+Use `ls stats306_copy` to see what is inside this new folder. What did you get?
+
+> YOUR ANSWER
+
+Save this file. Use `cd stats306_fall_2022` to go back into this directory and
+commit the changes. Now use `cd ../stats306_copy` to go back to the other
+repository. Use `git log` to see recent changes. Did the new changes show up
+automatically? Use `git pull`. What do you see?
+
+> YOUR ANSWER
+
+We are now done with the copied repository. You may delete it if you wish using
+`rm -rf stats306_copy`. Go back to your main repository.
+
+You can also set up copies of your repository that you can share with others.
+Git calls these copies "branches". Use `git branch -a` to see a list of branches
+you currently have available. What branch are you own currently?
+
+> YOUR ANSWER
+
+Save your file and commit your changes. Create a new branch using
+
+```
+$ git checkout -b hw01
+```
+
+Use `git status` to verify that you are now on the `hw01` branch.
+
+Make a file and commit it using:
+
+```
+$ echo "YOURNAME" > newfile.txt
+$ git add newfile.txt
+$ git commit -m "adding a file with my name"
+```
+
+(`echo` prints out something and the `>` directs it into a file)
+
+Now, go back to the `main` branch using
+
+```
+$ git checkout main
+```
+
+Use `ls` and `git log` to verify that `newfile.txt` is not in this branch. You can even compare branches using
+
+```
+$ git diff HEAD hw01
+```
+Put the output here:
+
+```
+
+```
+
+## Question 2 (5 points)
+
+### Keeping code DRY (1 point)
+
+A fundamental principle of good computer programming is avoiding repetition of
+code. The acronym DRY stands for Don't Repeat Yourself. Clean up the code below
+to avoid repetition.
+
+```{r}
+# A circle with diameter 7 has a circumfrence of
+7 * pi
+
+# A circle with diameter 7 has an area of
+(7 / 2)^2 * pi
+
+# A cylinder, with a face diameter of 7 and height of 16, has a volume of 
+(7 / 2)^2 * pi * 16
+```
+
+### Mean and Variance (2 points)
+
+The sample mean is defined as:
+
+$$ \bar X_n = \frac{1}{n} \sum_{i = 1}^n X_i$$
+
+and the sample variance is defined as
+$$ \hat \sigma^2 = \frac{1}{n - 1} \sum_{i=1}^n (X_i - \bar X_n)^2$$
+
+Using *vectorized* computations, compute the sample mean and sample variance of
+the `displ` column of the `mpg` data set. Do not use the functions `mean` or
+`var`. You may use `length` and `sum`.
+
+### Starwars Characters (2 points)
+
+Investigate the data set `starwars`. Answer the following
+
+* How many characters are listed?
+* What kind of data is the `mass` column?
+* What kind of data is the `species` column?
+* Explain what the value `NA` means in the `hair_color` column.
+* How many characters are from Tatooine?
+* For humans, what is the average (mean) age?
+
+## Question 3 (5 points)
+
+### Height and Mass (2 points)
+
+Create a scatter plot of the columns `height` and `mass` from the `starwars`
+data set. What jumps out from the plot? Do a little investigation to find out
+about that point.
+
+### Height and mass relationship (1 point)
+
+Create a data set that excludes the outlier from the previous question. Plot the
+relationship for height and mass again. Add a smoothed regression line.
+Interpret these results for the nature of relationship between height and mass.
+
+### Species (1 point)
+
+The following code creates a new column in the `starwars` data that groups all
+planets having only 1 character into an "Other" category.
+
+```{r}
+planet_counts <- table(starwars$homeworld)
+starwars <- mutate(starwars, homeworld_other = ifelse(planet_counts[homeworld] == 1, "Other", homeworld))
+```
+
+Use this data set to make a bar plot of the `homeworld_other` column. Excluding
+the "Other" category, what is the most common home world?
+
+### More plotting (1 point)
+
+Using the `starwars` data set, create a new plot that does not duplicate any of
+the previous plots. Briefly describe the key elements of the plot and interpret
+the results.
+
+## Question 4 (5 points)
+
+### Plotting housing prices (1 point)
+
+Suppose we are interested in seasonal effects on the housing market. Here is a
+plot of median housing prices by month in Texas over the period 2000 to
+mid-2015.
+
+```{r}
+ggplot(txhousing, aes(x = month, y = median)) + geom_point() + geom_smooth()
+```
+
+What might be misleading about this plot? Refer to section 3.9 of R for Data
+Science to propose a better way of displaying these data. Comment on any
+seasonal effects you see.
+
+### Prices by region (2 points)
+
+Here is plot of median prices over time, attempting to breakdown the data by
+region.
+
+```{r fig.height = 10}
+ggplot(txhousing, aes(x = date, y = median, color = city)) + 
+  geom_point() + 
+  theme(legend.position="bottom")
+```
+
+What would be a better way to display these data? Implement this plot. What area
+saw the biggest increase in median price during this period? Which areas have
+the largest variation in prices in a given year?
+
+### Reducing volume of information (2 points)
+
+Create a plot that summarizes the number of listings for each city. For each
+city, show the minimum number of listings in a month, the maximum, and the
+median.
