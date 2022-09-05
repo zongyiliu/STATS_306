@@ -19,12 +19,57 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Logistics
 
-* Attendance via iClicker
-* TODO: Office Hours 
+## GSI Office Hours
+
+| Name                  | Time                            |
+|:----------------------|--------------------------------:|
+| Yilei Zhang           |       Monday 8:00 am - 10:00 am |
+| Jesse Wheeler         |     Wednesday 1:00 pm - 3:00 pm |
+| Victor Verma          |     Thursday 12:00 pm - 2:00 pm |
+| Benjamin Osafo Agyare |       Friday 12:00 pm - 2:00 pm |
+
+## Attendance 
+
+We will be keeping lab attendance. 
+
+* If you can't make it to lab, just let us know in advance.
+* If you missed class because you were sick then just let us know afterwards.
+
+We will be keeping track of attendance via the iClicker app.
+
+* The iClicker student app is free for both iOS and Android. 
+* We will only be using it for attendance, so no subscription is required. 
+
+### QR code for apple store: 
+
+<center>
+
+![Apple QR code](images/iClicker_Android.png)
+
+</center>
+
+### QR code for google play store: 
+
+<center>
+
+![Android QR code](images/iClicker_Android.png)
+
+</center>
+
+
+## Joining a course 
+
+Once you have the app, you need to either make a new account or sign in. 
+If you are making a new account, try to match your name with your name as listed in Canvas. 
+
+There are two ways you can join your iClicker attendance class: 
+
+1. Your lab instructor provides you with a join code, which lets you join the lab
+2. If your lab instructor permits it, you can search for the class in the app. 
 
 # Git
 
-Git is going to be an important part of this course, and possibly your future! While it may be intimidating at first, but your effort will be well worth it.
+Git is going to be an important part of this course, and possibly your future! While it may be intimidating at first, your effort will be well worth it in the long run.
 Git was already discussed in some detail in the first two lectures, so we won't cover it much now. 
 Instead, we will review some of the basic ideas and can provide help where needed. 
 
@@ -138,6 +183,8 @@ y <- "hello world"  ## also double quotes
 z <- TRUE    
 
 # your code here
+x + y # x is numeric, y is a string, you can't add a string to a number
+x + z # z is a logical value True, which is the same as 1.
 ```
 
 ## Function Calls
@@ -183,6 +230,13 @@ Exercise 2: write a function to print the volume of a cylinder of radius $r$ cm,
 
 ```{r exercise2, exercise=T}
 ## your code here.
+volume <- function(r, h){
+  v <- pi*r^2*h
+  return(v)
+}
+
+vol <- volume(3, 5)
+vol
 ```
 
 
@@ -356,6 +410,7 @@ subset(dat, age < 100) # subset based on logical condition
 Exercise 3: Take a subset of Avatar characters who are benders and have a raw grade greater than 90%. Save this to a variable called `dat2`.
 
 ```{r exercise3, exercise = T}
+library(tidyverse)
 dat = tibble(
   name = c('Aang', 'Katara', 'Sokka', 'Toph', 'Zuko'), 
   age = c(112, 14, 15, 12, 16), 
@@ -366,7 +421,8 @@ dat = tibble(
 )
 
 # Your code here
-
+dat2 <- subset(dat, is_bender & grade>90)
+dat2
 ```
 
 ### A Large Dataset
@@ -459,5 +515,9 @@ Exercise 4: Recreate the box-plot below
 
 ```{r exercise4, exercise=T}
 # your code here
+ggplot(data = diamonds) + 
+  geom_boxplot(aes(x=cut, y=price)) + 
+  labs(x = "Cut", y = "Price ($)") + 
+  ggtitle("Box Plot of Price by Cut")
 
 ```
