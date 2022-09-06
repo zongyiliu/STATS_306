@@ -44,7 +44,7 @@ Put a copy of your session here:
 
 Every commit in git gets its own identifier and log message. Using the `git log`
 command you can see the entire log. Since this is quite long, it will be
-"paginaged". You can scroll up and down using arrow keys or the space bar to
+"paginated". You can scroll up and down using arrow keys or the space bar to
 move pages. Hit 'q' to quit.
 
 For the most recent commit, fill out the following information:
