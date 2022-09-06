@@ -43,7 +43,11 @@ Put a copy of your session here:
 ### Using the log
 
 Every commit in git gets its own identifier and log message. Using the `git log`
-command, fill out the following information:
+command you can see the entire log. Since this is quite long, it will be
+"paginaged". You can scroll up and down using arrow keys or the space bar to
+move pages. Hit 'q' to quit.
+
+For the most recent commit, fill out the following information:
 
 * Commit id:
 * Author:
@@ -52,10 +56,12 @@ command, fill out the following information:
 
 Commit ids are usually very long, but you really only need the first 5 or so
 characters to identify them. Verify this using `git show --name-only FULLID` and
-`git show --name-only FIRSTFIVE`.
+`git show --name-only FIRSTFIVE`. Here "FULLID" means the entire commit id and
+"FIRSTFIVE" is just the first five characters of that
 
 The `git show` commands provides the details on the commit beyond just the log
-info. What files where changed in this commit?
+info. Use `git show --name-only 14e2c4b` (you can also use your previous commit
+if you already started this question).  What files where changed in this commit?
 
 > YOUR ANSWER
 
