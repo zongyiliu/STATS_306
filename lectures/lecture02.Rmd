@@ -1,0 +1,381 @@
+---
+title: "Stats 306: Lecture 2"
+subtitle: "Basic R and RMarkdown"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+```
+
+## Review 
+
+* More on RMarkdown documents
+* Variables: boxes for data
+* Functions: take inputs (arguments), return new values
+
+## Variable and Function application example
+
+```{r}
+name <- "Mark Fredrickson"
+name_tag <- paste("My", "name", "is", name)
+name_tag
+```
+
+## Side effects
+
+Some functions also have **side effects** beyond just returning a value.
+
+* Load or save a file
+* Take input from a mouse
+* Display something on the screen
+
+## The `curve` function
+
+The `curve` function is a useful way to graph out a function:
+```{r, height = 4, width = 7}
+curve(sin(x))
+```
+
+Here `x` is a "special variable" that does not exist outside the use of `curve`.
+
+## Changing the bounds of the plot
+
+`curve` can take more than just one argument,
+
+```{r, height = 3, width = 5}
+curve(sin(x), 0, 2 * pi)
+```
+
+## Optional and named arguments
+
+R allows you to use the name of arguments to pass them in any order:
+
+```{r}
+curve(to = 2 * pi, expr = sin(x), from= 0)
+```
+
+By *default* `from = 0` and `to = 1`
+
+
+## Avoiding making variables we don't need
+
+Sometimes we only need to use something once, so taking the time to come up with a variable name is unnecessary. For example,
+
+```{r}
+radians_45_degrees <- 2 * pi * 45/360
+sin(radians_45_degrees)
+```
+
+Instead we can use **pipes** to pass the first argument of function
+
+```{r}
+(2 * pi * 45/360) |> sin()
+```
+
+(NB: See the help page for `Syntax` for operator precedence.)
+
+## R's assignment operators
+
+R has two ways to store data in variables:
+
+```{r}
+variable_arrow <- 7
+variable_equal = 10
+variable_arrow + variable_equal
+```
+
+I like the arrow because it can be reversed
+```{r}
+7 -> variable_reversed
+pi * variable_reversed
+```
+
+## Some special values
+
+In addition to `pi`, R has some other built in variables (see help page for `Constants`).
+
+Also several special data values
+
+* `NA` means "missing". Including a `NA` value in a calculation will usually make the result also `NA`.
+* `NULL` means "not set yet" and is often used for optional arguments to functions
+* `NaN` means something was divided by zero or other mathematical impossibility.
+
+What will happen with this code?
+
+```{r na-prop, exercise = TRUE}
+angle_degrees <- NA
+angle_radians <- 2 * pi * angle_degrees / 360
+sin(angle_radians)
+```
+
+## Statistical programming
+
+Recall that R is a **statistical** programming language. In statistics we often work with:
+
+>* **Samples**, composed of individual units
+>* **Variables**, something measured on each unit in the sample
+
+Tabular data: columns are variables, rows are observations
+
+## Lists and Vectors
+
+* A **vector** is an ordered collection of the same type of data. Created using the `c` function (concatenate).
+* A **list** is an ordered collection of (potentially) different types of data. Created using the `list` function.
+* Both can have **names** to indicate individual items.
+* Lists can serve a similar role to dictionaries and hash tables in other languages.
+
+## Vectors, basic
+
+```{r}
+phone_digits <- c(8, 6, 7, 4, 3, 0, 9)
+phone_plus_area_code <- c(7, 3, 4, phone_digits)
+length(phone_plus_area_code)
+sum(phone_plus_area_code)
+```
+
+## Vectors, indexing
+
+The `runif` function will create randomly generated values in the range (0, 1).
+
+```{r}
+random_u01 <- runif(10) # create 10 values
+print(random_u01)
+random_u01[1] # first item
+random_u01[10] # last item
+random_u01[-1] # all but first
+random_u01[1:3] # first three
+random_u01[c(1, 3, 7, 1)]
+```
+
+## Vectors, subsetting based on qualities
+
+```{r}
+less_than_0.5 <- random_u01 < 0.5
+print(less_than_0.5)
+random_u01[less_than_0.5]
+keep(random_u01, random_u01 < 0.5)
+```
+
+## Lists, heterogenous collections
+
+Vectors must be the same type, lists can be **heterogeneous**:
+```{r}
+list("string", 7, 1:4)
+```
+
+## Named collections
+
+Vectors can have names (`c(first = 1, second = 22, third = 333)`), but names for lists are more common.
+```{r}
+named_list <- list(a_string = "A string", a_vector = 1:4)
+named_list[["a_string"]] # note double brackets
+named_list$a_vector
+```
+
+## Tables: Lists of Vectors
+
+* In a **sample**, we suppose we have $k$ variables measured for each of $n$ units.
+* For each variable, place the $n$ values in a vector.
+* Collect all such vectors into a list of length $k$.
+* Result: $n \times k$ table
+
+## Tables in R
+
+There are a few different types of tables in R (`data.frame`, `tibble`). We will treat them interchangeably for the most part.
+
+```{r}
+class(mpg)
+dim(mpg)
+colnames(mpg)
+head(mpg)
+```
+
+## Accessing individual columns
+
+Recall, the `$` operator lets us get items from lists:
+
+```{r}
+mpg$hwy |> mean() # equiv to mean(mpg$hwy)
+```
+
+## Plotting: Visual representation of data
+
+**Graphing** or **plotting** is the representation of data in a visual form, typically on a 2D plane.
+
+Humans have a wonderful ability to process visual stimuli quickly.
+
+Great for displaying large data sets that might be easy to describe.
+
+## Plotting ain't easy
+
+* What exactly can we put in a plot?
+* How to connect the plot to data?
+* What are our goals for the plot?
+* What additional information is necessary to understand the plot?
+
+## The Semiology of Graphics
+
+In 1967, **Jacques Bertin** published the *Semiology of Graphics* to describe common elements of plots and what they could achieve.
+
+Bertin described two ways of thinking about plots:
+
+1. Visual ("retinal") variables: connections between objects in the plot and underlying data
+2. Relationship what types of relationships can the visual variables express
+
+## Visual variables/retinal variables:
+
+* Position/planar dimensions
+* Size (small to large)
+* Value (light to dark)
+* Texture (pattern)
+* Color (discrete or continuously varying)
+* Orientation (angle/rotation)
+* Shape (usually distinct shapes)
+
+## Relationships
+
+* Selection: find groups that are the same
+* Association: find units in different groups that share qualities
+* Order: natural sequence in the variable
+* Quantitative: read relative differences as actual changes in data
+
+---
+
+![Visual Variables](./images/bertin_visual_variables.png)
+
+## The Grammar of Graphics and `ggplot`
+
+A follow up to Bertin's work was *The Grammar of Graphics* by Leland Wilkinson.
+This book described a programming language for graphics based on ideas in
+Bertin's system.
+
+The GoG was implemented for R in `ggplot` (and later replaced by `ggplot2`). (See
+the GGPlot Book on Canvas for more details.)
+
+## The components of a ggplot graph
+
+* The graph object itself (creating using `ggplot(data)`)
+* A set of *aesthetic* mappings (connecting data to visual variables)
+* Layers: collections of geometric elements (`geom_*()`) and statistical transformations (`stat_*()`)
+* Scales: information on the range or composition of variables
+* Coordinate systems: how the data are arranged spatially
+* Facet: breaking a single plot into many, similar plots
+* Theme: all the other color and printing aspects of the plot
+
+## Creating a ggplot
+
+Start use the `ggplot` function to start our plot
+```{r}
+efficiency <- ggplot(data = mpg)
+class(efficiency)
+efficiency # for now, blank
+```
+
+## Connecting columns to visual variables
+
+What can we plot?
+```{r}
+colnames(mpg)
+```
+
+"Aesthetic" mappings connect columns to visual variables
+```{r}
+efficiency <- ggplot(data = mpg,
+                     aes(x = displ, y = hwy, color = cyl))
+```
+
+## Geometries: objects on the plot
+
+In the previous we connected visual variables to columns, now we need to explain how to display them.
+
+We will use a **geometry function** (have the form `geom_TYPE()`).
+
+```{r}
+efficiency + geom_point()
+```
+
+## Alternative form
+
+```{r}
+ggplot(data = mpg) + geom_point(aes(x = displ, y = hwy, color = cyl))
+```
+
+## What aesthetic mappings can I use?
+
+Let's visit the docs: [`geom_point`](https://ggplot2.tidyverse.org/reference/geom_point.html)
+
+## Trying out some other mappings
+
+```{r}
+ggplot(data = mpg,
+       aes(x = displ, y = hwy,
+           size = cyl,
+           color = class)) + 
+  geom_point()
+```
+
+## Using expressions
+
+We can also use expressions involving columns.
+
+```{r}
+ggplot(data = mpg,
+       aes(x = displ, y = hwy,
+           shape = year > 2000)) + 
+  geom_point()
+```
+
+## Overriding parameters for all points
+
+We can pass in constants that apply to all points (size and transparency):
+
+```{r}
+ggplot(data = mpg,
+       aes(x = displ, y = hwy,
+           shape = year > 2000)) + 
+  geom_point(size = 5, alpha = 0.5)
+```
+
+## Jitter: useful noise
+
+```{r}
+ggplot(data = mpg,
+       aes(x = displ, y = hwy)) + 
+  geom_point(position = "jitter")
+```
+
+## Other geometries
+
+Points are great for graphing two **quantitative** or **continuous** variables.
+For **discrete** or **qualitative** we need other tools.
+
+```{r}
+ggplot(data = mpg,
+       aes(x = displ, y = class)) + 
+  geom_boxplot() 
+```
+
+## List of geometries
+
+[More ggplot documentation](https://ggplot2.tidyverse.org/reference/index.html#geoms).
+
+
+## General observations
+
+* Generally limit plots to having 3 or 4 distinct visual variables
+* Typically only one geometry type, but there are some great counter examples
+* Almost everything can be tweaked in ggplot, finding it is the tricky part
+* The [R Graph Gallery](https://r-graph-gallery.com/) is a great source of inspiration and instruction
+
+## Before next class
+
+* First quiz released on Thursday
+* Get the first homework
+* Read sections 3.5 to 3.9 of R for Data Science
