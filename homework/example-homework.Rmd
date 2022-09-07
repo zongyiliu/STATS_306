@@ -26,6 +26,6 @@ Use this code chunk to compute the number of seconds in one day:
 Compute the mean and variance of the following observations:
 
 ```{r}
-x <- c(30, 11, 29, 58, 38)
+x <- c(30, 11, 29, 59, 38)
 ```
 
