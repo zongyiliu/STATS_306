@@ -1,6 +1,6 @@
 ---
 title: "Stats 306: Lecture 2"
-subtitle: "Basic R and RMarkdown"
+subtitle: "Tables, Vectors, and ggplot"
 author: "Mark Fredrickson"
 output: 
   slidy_presentation:
