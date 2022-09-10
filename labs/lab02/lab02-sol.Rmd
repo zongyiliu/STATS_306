@@ -101,7 +101,7 @@ A *geometric element* or *geom* is a geometric object that is used in a plot to 
   * a group of observations;
   * all of the observations.
 
-A `ggplot2` plot consists of a base created by `ggplot()` and zero or more layers, each representing observations in a particular dataset using a particular geom. There are many geoms; several commonly used geoms are described below.
+A `ggplot2` plot consists of a base created by `ggplot()` and zero or more layers, each representing observations in a particular dataset using a particular geom. There are many geoms; several commonly used geoms are described below. The examples visualize a dataset called `midwest` that has data from the 2000 census on counties in several midwestern states.
 
 ### Plotting the Distribution of One Variable
 
