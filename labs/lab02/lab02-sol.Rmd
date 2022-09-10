@@ -102,3 +102,39 @@ A *geometric element* or *geom* is a geometric object that is used in a plot to 
   * all of the observations.
 
 A `ggplot2` plot consists of a base created by `ggplot()` and zero or more layers, each representing observations in a particular dataset using a particular geom. There are many geoms; several commonly used geoms are described below.
+
+### Plotting the Distribution of One Variable
+
+If we want to visualize the distribution of a single variable, we first need to determine whether it's categorical or numerical.
+
+If the variable is categorical, then we can make a bar chart. We use `geom_bar()` to do this. The plot below shows the number of counties for various midwestern states.
+
+```{r geom_bar_example}
+midwest %>%
+  ggplot(aes(state)) +
+  geom_bar()
+```
+
+There are several options if the variable is numerical. `perchsd` gives the percentage of high school graduates. We could make a histogram of `perchsd` using `geom_histogram()`.
+
+```{r geom_histogram_example}
+midwest %>%
+  ggplot(aes(perchsd)) +
+  geom_histogram()  
+```
+
+We could also make a frequency polygon with `geom_freqpoly()`.
+
+```{r geom_freqpoly_example}
+midwest %>%
+  ggplot(aes(perchsd)) +
+  geom_freqpoly()
+```
+
+Finally, we could use `geom_boxplot()` to make a boxplot.
+
+```{r geom_boxplot_example}
+midwest %>%
+  ggplot(aes(perchsd)) +
+  geom_boxplot()
+```
