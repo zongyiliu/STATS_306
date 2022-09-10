@@ -24,4 +24,16 @@ library(tidyverse)
 - The HW1 deadline has been pushed back one week; it's now due by 11:59 PM on 9/25.
 - HW2 will be released on 9/18 and will be due by 11:59 PM on 10/2.
 
-# Plotting with ggplot2
+# Plotting with `ggplot2`
+
+Recall from lecture that a plot made using `ggplot2` has several components:
+
+* The graph object itself (creating using `ggplot(data)`)
+* A set of *aesthetic* mappings (connecting data to visual variables)
+* Layers: collections of geometric elements (`geom_*()`) and statistical transformations (`stat_*()`)
+* Scales: information on the range or composition of variables
+* Coordinate systems: how the data are arranged spatially
+* Facet: breaking a single plot into many, similar plots
+* Theme: all the other color and printing aspects of the plot
+
+Today we'll talk about aesthetic mappings, geometric elements, and statistical transformations.
