@@ -138,3 +138,51 @@ midwest %>%
   ggplot(aes(perchsd)) +
   geom_boxplot()
 ```
+
+### Plotting the Relationship between Two Variables
+
+Just like in the one variable case, when we have two variables, we first need to determine the types of the variables before we make our plot.
+
+We can make a scatterplot with `geom_point()` if both variables are numerical. The plot below displays the relationship between `perchsd` and `percadultpoverty`, the percentage of adults below the poverty line.
+
+```{r geom_point_example}
+midwest %>%
+  ggplot(aes(perchsd, percadultpoverty)) +
+  geom_point()
+```
+
+Instead of plotting all of the points, we could plot a *smooth*, a curve that summarizes the trend in the data. This is done with `geom_smooth()`.
+
+```{r geom_smooth_example}
+midwest %>%
+  ggplot(aes(perchsd, percadultpoverty)) +
+  geom_smooth(se = FALSE)
+```
+
+A boxplot is one option if one variable is categorical and one is numerical. The following plot shows the distribution of `percollege`, the percentage of college graduates, by state.
+
+```{r geom_boxplot_example2}
+midwest %>%
+  ggplot(aes(state, percollege)) +
+  geom_boxplot()
+```
+
+We could also make a bar chart using `geom_col()`. Below, `midwest2` contains one row per state in `midwest` and has the number of counties for each state. We can use `geom_col()` to recreate the bar chart made with `geom_bar()` above.
+
+```{r geom_col_example}
+midwest2 <- midwest %>%
+  group_by(state) %>%
+  summarize(num_counties = n())
+midwest2 %>%
+  ggplot(aes(state, num_counties)) +
+  geom_col()
+```
+
+Finally, if both variables are categorical, we can plot them using `geom_count()`. `inmetro` is `TRUE` if a county is in a metro area and false otherwise.
+
+```{r geom_count_example}
+midwest %>%
+  ggplot(aes(state, inmetro)) +
+  geom_count()
+```
+
