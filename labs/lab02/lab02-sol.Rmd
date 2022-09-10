@@ -103,6 +103,13 @@ A *geometric element* or *geom* is a geometric object that is used in a plot to 
 
 A `ggplot2` plot consists of a base created by `ggplot()` and zero or more layers, each representing observations in a particular dataset using a particular geom. There are many geoms; several commonly used geoms are described below. The examples visualize a dataset called `midwest` that has data from the 2000 census on counties in several midwestern states.
 
+```{r convert_inmetro}
+# inmetro is an integer that equals 0 or 1; plots will look better if it's
+# logical
+midwest <- mutate(midwest, inmetro = as.logical(inmetro))
+```
+
+
 ### Plotting the Distribution of One Variable
 
 If we want to visualize the distribution of a single variable, we first need to determine whether it's categorical or numerical.
