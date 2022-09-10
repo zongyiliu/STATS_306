@@ -107,7 +107,7 @@ A `ggplot2` plot consists of a base created by `ggplot()` and zero or more layer
 
 If we want to visualize the distribution of a single variable, we first need to determine whether it's categorical or numerical.
 
-If the variable is categorical, then we can make a bar chart. We use `geom_bar()` to do this. The plot below shows the number of counties for various midwestern states.
+If the variable is categorical, then we can make a bar chart. We use `geom_bar()` to do this. The plot below shows the number of counties by state.
 
 ```{r geom_bar_example}
 midwest %>%
