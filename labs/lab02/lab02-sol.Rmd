@@ -15,6 +15,7 @@ runtime: shiny_prerendered
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(learnr)
 library(tidyverse)
 ```
 
@@ -64,4 +65,26 @@ Each layer has a set of aesthetic mappings. By default, a layer inherits its map
 ```{r aesthetic_mappings_example2}
 ggplot(data = mpg, mapping = aes(x = cty, y = hwy, color = drv)) + 
   geom_point()
+```
+
+### Exercise 1 {-}
+
+#### (a) {-}
+
+Modify the code below so that the point shape varies by drive train (`drv` value).
+
+```{r exercise1a, exercise=T}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = cty, y = hwy, color = drv, shape = drv))
+```
+
+#### (b) {-}
+
+Modify the code below so that each point is a triangle. How is your code different from your code for part (a)? Why is it different?
+
+*Hint: use the string "triangle"*
+
+```{r exercise1b, exercise=T}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = cty, y = hwy, color = drv), shape = "triangle")
 ```
