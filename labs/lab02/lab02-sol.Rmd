@@ -92,3 +92,13 @@ Modify the code below so that each point is a triangle. How is your code differe
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = cty, y = hwy, color = drv), shape = "triangle")
 ```
+
+## Geometric Elements
+
+A *geometric element* or *geom* is a geometric object that is used in a plot to represent observations. A geom can represent
+
+  * one observation;
+  * a group of observations;
+  * all of the observations.
+
+A `ggplot2` plot consists of a base created by `ggplot()` and zero or more layers, each representing observations in a particular dataset using a particular geom. There are many geoms; several commonly used geoms are described below.
