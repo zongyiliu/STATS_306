@@ -37,3 +37,31 @@ Recall from lecture that a plot made using `ggplot2` has several components:
 * Theme: all the other color and printing aspects of the plot
 
 Today we'll talk about aesthetic mappings, geometric elements, and statistical transformations.
+
+## Aesthetic Mappings
+
+An *aesthetic* is a visual property of the geometric elements in a plot.
+
+```{r aesthetic_mappings_example1}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = cty, y = hwy, color = drv))
+```
+
+Geometric elements represent observations in the dataset. In the plot above, the points are the geometric elements. Different geometric elements have different aesthetics. Some aesthetics of points are
+
+* `x`, or x-coordinate
+* `y`, or y-coordinate
+* `color`
+* `shape`
+* `size`
+
+The background, the gridlines, and the tick marks are not geometric elements because they don't represent any observations. This means that properties like the background color aren't aesthetics.
+
+An *aesthetic mapping* is an assignment of an aesthetic to a variable in the dataset. Aesthetic mappings are listed inside `aes()`. For example, in the previous plot, the aesthetic `x` was mapped to the variable `cty`. 
+
+Each layer has a set of aesthetic mappings. By default, a layer inherits its mappings from the base created by `ggplot()`. So, the code for the plot above could be changed to
+
+```{r aesthetic_mappings_example2}
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy, color = drv)) + 
+  geom_point()
+```
