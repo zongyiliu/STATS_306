@@ -67,11 +67,25 @@ ggplot(data = mpg, mapping = aes(x = cty, y = hwy, color = drv)) +
   geom_point()
 ```
 
+Mapping `color` to a categorical variable will cause the observations to be grouped by category in addition to being colored by category. That's why we get one boxplot for each drive train or `drv` category in the plot below.
+
+```{r mapping_color_example}
+ggplot(data = mpg, mapping = aes(y = hwy, color = drv)) + 
+  geom_boxplot()
+```
+
+To explicitly group by drive train, we can map the `group` aesthetic to `drv`. However, if we don't also map `color`, then the boxplots won't be colored differently, and there won't be a legend explaining which boxplot is for which drive train.
+
+```{r mapping_group_example}
+ggplot(data = mpg, mapping = aes(y = hwy, group = drv)) + 
+  geom_boxplot()
+```
+
 ### Exercise 1 {-}
 
 #### (a) {-}
 
-Modify the code below so that the point shape varies by drive train (`drv` value).
+Modify the code below so that the point shape varies by drive train.
 
 ```{r exercise1a, exercise=TRUE}
 ggplot(data = mpg) + 
