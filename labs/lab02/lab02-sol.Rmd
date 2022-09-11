@@ -123,7 +123,6 @@ A `ggplot2` plot consists of a base created by `ggplot()` and zero or more layer
 midwest <- mutate(midwest, inmetro = as.logical(inmetro))
 ```
 
-
 ### Plotting the Distribution of One Variable
 
 If we want to visualize the distribution of a single variable, we first need to determine whether it's categorical or numerical.
@@ -300,3 +299,68 @@ midwest %>%
   geom_count()
 ```
 
+## Statistical Transformations
+
+A *statistical transformation* or *stat* is an algorithm that computes from raw data values the values that will be plotted. The available stats are implemented in functions whose names begin with `stat_`. A stat is applied even when the raw values themselves are to be plotted. In that case, the stat that is applied is `stat_identity()`. For example, suppose that our dataset is
+
+```{r stat_identity_example1}
+(tbl <- tibble(x = 2^(-3:3), y = log(x)))
+```
+
+The result of applying `stat_identity()` to `tbl` would be `tbl`.
+
+Each geom has a default stat and each stat has a default geom. We can see which stat is the default stat for a geom by looking at the default value of the geom's `stat` argument. For instance, the default value of `stat` for `geom_point()` is `"identity"`.
+
+```{r geom_point_default_stat}
+geom_point
+```
+
+In a similar way, we can view the default geom for a stat:
+
+```{r stat_identity_default_geom}
+stat_identity
+```
+
+Because of the above, geoms and stats are interchangeable, i.e., you can do `ggplot() + stat_*()` instead of `ggplot() + geom_*()`. Thus, to make a scatterplot of `y` versus `x`, we could use the code below:
+
+```{r geom_point_example2}
+ggplot(tbl, aes(x, y)) +
+  geom_point()
+```
+
+Or we could use the code below:
+
+```{r stat_identity_example2}
+ggplot(tbl, aes(x, y)) +
+  stat_identity()
+```
+
+Stats are more of an issue for bar charts than for scatterplots. The default stat for `geom_bar()` is `stat_count()`. Suppose we wanted to use `midwest` to count counties in midwestern states like we did in a previous section. `stat_count()` takes `midwest` and computes the below tibble from it:
+
+```{r stat_count_example}
+(midwest2 <- midwest %>%
+  group_by(state) %>%
+  summarize(count = n(), prop = n() / n()) %>%
+  ungroup())
+```
+
+`geom_bar()` uses the new tibble to construct the plot - `x` is mapped to `state` and `y` is mapped to `count`.
+
+```{r geom_bar_example2}
+ggplot(midwest, aes(state)) +
+  geom_bar()
+```
+
+If we wanted to make the mapping of `y` explicit, we could use `after_stat()` as below. `after_stat(count)` indicates that we want to map the `count` variable in the tibble created by the stat.
+
+```{r after_stat_example1}
+ggplot(midwest, aes(state, after_stat(count))) +
+  geom_bar()
+```
+
+Note that a `prop` variable was also created by the stat. We can use `after_stat()` to map `prop` instead of `count`. This causes the height of each bar to be a proportion instead of a count. `group = 1` ensures that the denominator of each proportion is the total number of counties.
+
+```{r after_stat_example2}
+ggplot(midwest, aes(state, after_stat(prop), group = 1)) +
+  geom_bar()
+```
