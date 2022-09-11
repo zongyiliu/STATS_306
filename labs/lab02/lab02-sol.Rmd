@@ -227,7 +227,58 @@ midwest2 %>%
   geom_col()
 ```
 
-Finally, if both variables are categorical, we can plot them using `geom_count()`. `inmetro` is `TRUE` if a county is in a metro area and false otherwise.
+#### Exercise 3 {-}
+
+##### (a) {-}
+
+Instead of using boxplots to visualize the relationship between `percollege` and `state`, we could use histograms. Make one plot that has a histogram of `percollege` for each value of `state`. Give the histograms different colors. How does this plot compare to the boxplot?
+
+```{r exercise3a, exercise=TRUE}
+# This plot is harder to read than the boxplot. However, unlike the boxplot, it
+# does show that the different states have different numbers of counties.
+midwest %>%
+  ggplot(aes(percollege, color = state)) +
+  geom_histogram()
+```
+
+##### (b) {-}
+
+Now make a one plot that has a frequency polygon for each state instead of a histogram. Give the frequency polygons different colors. How does this plot compare to the preceding plots?
+
+```{r exercise3b, exercise=TRUE}
+# This plot is also hard to read, and it also shows the count information that
+# the boxplot doesn't show.
+midwest %>%
+  ggplot(aes(percollege, color = state)) +
+  geom_freqpoly()
+```
+
+##### (c) {-}
+
+Complete the code below to use boxplots to visualize the relationship between `inmetro` and `percollege`. `inmetro` is `TRUE` if a county is in a metro area and false otherwise.
+
+```{r exercise3c, exercise=TRUE}
+midwest %>%
+  mutate(inmetro = as.logical(inmetro)) %>%
+  ggplot(aes(inmetro, percollege)) +
+  geom_boxplot()
+```
+
+##### (d) {-}
+
+Now complete the code to use frequency polygons to visualize the relationship. Is this plot worse than the boxplot?
+
+```{r exercise3d, exercise=TRUE}
+# Unlike the previous frequency polygon plot, this one isn't hard to read. This
+# plot provides count information that the boxplot doesn't provide. So, unlike
+# previously, the frequency polygon plot isn't worse than the boxplot.
+midwest %>%
+  mutate(inmetro = as.logical(inmetro)) %>%
+  ggplot(aes(percollege, color = inmetro)) +
+  geom_freqpoly()
+```
+
+Finally, if both variables are categorical, we can plot them using `geom_count()`.
 
 ```{r geom_count_example}
 midwest %>%
