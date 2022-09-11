@@ -73,7 +73,7 @@ ggplot(data = mpg, mapping = aes(x = cty, y = hwy, color = drv)) +
 
 Modify the code below so that the point shape varies by drive train (`drv` value).
 
-```{r exercise1a, exercise=T}
+```{r exercise1a, exercise=TRUE}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = cty, y = hwy, color = drv, shape = drv))
 ```
@@ -84,7 +84,7 @@ Modify the code below so that each point is a triangle. How is your code differe
 
 *Hint: use the string "triangle"*
 
-```{r exercise1b, exercise=T}
+```{r exercise1b, exercise=TRUE}
 # The key difference here is that the shape = part goes outside aes() instead
 # of inside aes(). This is because here we're setting shape to a constant
 # instead of mapping it to a variable. Only aesthetic mappings go inside
