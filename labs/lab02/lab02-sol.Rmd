@@ -140,7 +140,7 @@ midwest %>%
 
 Finally, we could use `geom_boxplot()` to make a boxplot.
 
-```{r geom_boxplot_example}
+```{r geom_boxplot_example1}
 midwest %>%
   ggplot(aes(perchsd)) +
   geom_boxplot()
