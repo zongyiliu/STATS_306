@@ -166,6 +166,48 @@ midwest %>%
   geom_smooth(se = FALSE)
 ```
 
+#### Exercise 2 {-}
+
+##### (a) {-}
+
+Make a plot of `percadultpoverty` versus `perchsd` that has both points and a smooth.
+
+```{r exercise2a, exercise=TRUE}
+midwest %>%
+  ggplot(aes(perchsd, percadultpoverty)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+##### (b) {-}
+
+Make a plot that is the same as the one in part (a), except with a confidence interval around the smooth. What do you notice about the width of the interval? Why does it make sense for the width to be how it is?
+
+*Hint: look at the help page for `geom_smooth()` to make the interval*
+
+```{r exercise2b, exercise=TRUE}
+# The width increases toward the sides of the plot. This makes sense, as there
+# are few points near the sides, so the estimates of the trend there should be
+# highly uncertain.
+midwest %>%
+  ggplot(aes(perchsd, percadultpoverty)) +
+  geom_point() +
+  geom_smooth() # Inserting se = TRUE is unnecessary since se = TRUE by default
+```
+
+##### (c) {-}
+
+You might have noticed that the smooth in part (b) was calculated using a method called LOESS. Other methods can be used as well. Remake the plot, but with a smooth calculated using linear regression.
+
+*Hint: look at the help page for `geom_smooth()` again*
+
+```{r exercise2c, exercise=TRUE}
+midwest %>%
+  ggplot(aes(perchsd, percadultpoverty)) +
+  geom_point() +
+  geom_smooth(method = "lm") # lm() is the function used for linear regression
+```
+
 A boxplot is one option if one variable is categorical and one is numerical. The following plot shows the distribution of `percollege`, the percentage of college graduates, by state.
 
 ```{r geom_boxplot_example2}
