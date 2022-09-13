@@ -21,6 +21,7 @@ library(tidyverse)
 
 # Logistics
 
+- Quiz 1 feedback
 - Quiz 2 is due by 11:59 PM on 9/25.
 - The HW1 deadline has been pushed back one week; it's now due by 11:59 PM on 9/25.
 - HW2 will be released on 9/18 and will be due by 11:59 PM on 10/2.
