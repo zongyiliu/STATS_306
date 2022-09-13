@@ -364,3 +364,35 @@ Note that a `prop` variable was also created by the stat. We can use `after_stat
 ggplot(midwest, aes(state, after_stat(prop), group = 1)) +
   geom_bar()
 ```
+
+### Exercise 4 {-}
+
+#### (a) {-}
+
+Let's return to the situation considered in Exercise 2(a). Again make a plot of `percadultpoverty` versus `perchsd` that has both points and a smooth, but change a setting to make the smooth much wigglier. Why is it a bad idea to do this?
+
+*Hint: look at an appropriate help page*
+
+```{r exercise4a, exercise=TRUE}
+# A very wiggly smooth might capture quirks of the data that are due to chance
+# variation instead of the underlying pattern
+midwest %>%
+  ggplot(aes(perchsd, percadultpoverty)) +
+  geom_point() +
+  stat_smooth(span = 0.1) # Any small value is acceptable here
+```
+
+#### (b) {-}
+
+Like you did in Exercise 2(b), make a scatterplot of `percadultpoverty` versus `perchsd` with a confidence interval around the smooth. This time, create a confidence interval whose level is 0.5. Why is the interval different from the previous interval?
+
+*Hint: take another look at the documentation*
+
+```{r exercise4b, exercise=TRUE}
+# The confidence level for the previous interval was 0.95. The smaller the
+# confidence level, the narrower the interval is.
+midwest %>%
+  ggplot(aes(perchsd, percadultpoverty)) +
+  geom_point() +
+  stat_smooth(level = 0.5)
+```
