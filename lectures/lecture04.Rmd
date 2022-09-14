@@ -250,3 +250,132 @@ ggplot(data = aatemp, aes(x = factor(month), y = TMAX)) +
   geom_violin(aes(fill = factor(month))) +
   coord_polar()
 ```
+
+## Other misceallaneous `ggplot` items
+
+* Several other coordinate systems possible, in particular for represent geographic data.
+* We saw using the `position` argument to jitter data. Other geometries have more options with jitter. See documentation.
+* We'll revisit more with labels, themes, and other presentation later in the semester.
+
+## Data formats: recap
+
+We started working with data in the form of **tables**: (conceptually) lists of vectors.
+
+```{r}
+x <- 1:10
+y <- 100:109
+length(x)
+length(y)
+d <- list(column_x = x, column_y = y)
+d
+d$column_x
+```
+
+## Data formats: better types
+
+A list of vectors could not guarantee they are all the same length. Instead we use **`data.frame`** and **`tibble`**.
+
+```{r}
+d2 <- as.data.frame(d)
+dim(d2)
+d3 <- as_tibble(d2)
+d3
+```
+
+## Common operations on tables
+
+* Pulling out a single column: `d$col`
+* Creating a single column: `d$newcol <- EXPR`
+* Pulling out several columns: `select(d, col1, col2)` (and several other forms)
+* Creating new column (in new table): `mutate(d, newcol = f(col1, col2))`
+* Pulling out rows: `filter(d, criteria)`
+* Grouping and summarizing `group_by(d, discrete_column) |> summarize(new_name = a_function(col))`
+
+## Getting and setting columns (one at a time)
+
+Recall: to get something out of a list, use the dollar sign `$` operator
+
+```{r}
+d3$column_x
+d3$x_plus_y <- d3$column_x + d3$column_y
+head(d3, 2)
+```
+
+## Getting several columns at once
+
+```{r}
+select(d3, column_x, x_plus_y) |> head(2)
+```
+
+## Getting all but some columns
+
+```{r}
+select(d3, !column_x) |> head(2)
+```
+
+## Selectively grabbing columns
+
+```{r}
+d3$letter <- letters[d3$column_x]
+d3$LETTER <- LETTERS[27 - d3$column_x]
+head(d3, 2)
+```
+Get only "character" type columns:
+```{r}
+select(d3, where(is.character)) |> head(2)
+```
+
+Later, we'll introduce writing our own functions and see other things we can use instead of things like `is.character`.
+
+## Grabbing rows by index
+
+Tables in R allow for **two-dimensional indexing**: `tbl[rows, cols]`.
+
+```{r}
+d3[1, ]
+d3[2:4, ]
+d3[, c("column_x", "LETTER")]
+d3[1:3, c("letter", "LETTER")]
+```
+
+## Grabbing rows by criteria (old school)
+
+```{r}
+d3[d3$column_y > 105, ]
+```
+
+## Grabbing rows (new school)
+
+```{r}
+filter(d3, column_y > 105)
+```
+
+## Multiple criteria
+
+```{r}
+filter(d3, column_y > 105 & column_x < 9)
+```
+
+```{r}
+filter(d3, column_y > 108 | column_x  < 3)
+```
+
+## Exercise
+
+Combine `filter` and `select` to get only the columns `cty` and `hwy` for cars that have more than 4 cylinders.
+
+```{r}
+head(mpg, 1)
+```
+
+```{r filter-select, exercise = TRUE}
+
+```
+
+## Next time
+
+* Grouping
+* Summarizing
+* Creating new columns
+* Writing our own functions
+* R for DS: 5.6 - 5.7, 19.1 - 19.2
