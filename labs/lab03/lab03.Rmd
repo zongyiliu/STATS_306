@@ -1,0 +1,225 @@
+---
+title: "Stats 306: Lab 3"
+subtitle: "Graphics: Facets, Coordinate Systems; Working with tables"
+author: "Your Name"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+## Set up
+
+```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
+# This just checks if students need to install some packages that they might 
+# not have.
+
+if (!require(ggforce)) install.packages("ggforce")
+if (!require(maps)) install.packages("maps")
+if (!require(mapproj)) install.packages("mapproj")
+if (!require(lattice)) install.packages("lattice")
+```
+
+```{r setup, echo=TRUE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For ggplot2, dplyr
+library(maps)       # For plotting maps 
+library(ggforce)    # For hurricane map, later. 
+```
+
+## Logistics
+
+> - HW / Quiz dates 
+> - Questions?  
+
+## Today's Content
+
+* `ggplot2` facets.
+* `ggplot2` coordinate systems.
+* Table operations and `dplyr` verbs. 
+
+## Facets 
+
+Faceting allows us to split data into subset and plot similar graphs for each subset. 
+In lecture we saw that facets are often very useful to avoid over-fitting. 
+There are three types of facets in `ggplot2`: 
+
+* `facet_wrap`: Creates a one-dimensional set of plots, that are often shown in a 2d grid.
+* `facet_grid`: Creates a two-dimensional grid of panels, defined by two different columns. 
+* `facet_null`: This is the default facet, which is just a single plot
+
+## Difference between `facet_wrap` and `facet_grid`
+
+\
+\
+\
+
+<center>
+
+![A sketch difference between facetting systems. Figure borrowed from [ggplot2 book](https://ggplot2-book.org/facet.html)](images/facets.png)
+
+</center>
+
+## `facet_wrap` Example
+
+## `facet_grid` Example
+
+## `facet_wrap` Exercise
+
+For this exercise, we are going to use the `barley` data from the `lattice` package. 
+This is famous statistical dataset that has been cited in many papers.
+We will use it to create a *Cleveland dot plot*. 
+
+```{r}
+barley <- lattice::barley
+head(barley)
+```
+
+**Exercise**: Add a facets and colors to the following code to reduce over-plotting. 
+Do you notice anything strange about the data? 
+
+```{r}
+ggplot(barley) + 
+  geom_point(aes(x = yield, y = variety, col = year)) + 
+  facet_wrap(~site) + 
+  theme_bw()
+```
+
+## `facet_wrap` Solution 
+
+William Cleveland (to whom the term "data science" is often attributed) famously made a plot similar to the following in a textbook he published:
+
+```{r}
+ggplot(barley) + 
+  geom_point(aes(x = yield, y = variety, col = year)) + 
+  facet_wrap(~site) + 
+  theme_bw()
+```
+
+In this plot, he points out that an oddity in Morris: it's the only site in which the 1932 crop yield was higher than that in 1931! 
+Using this plot, he claimed that the data must have been mislabeled (although there is [some recent argument](https://blog.revolutionanalytics.com/2014/07/theres-no-mistake-in-the-barley-data.html) that this is not the case). 
+
+## Coordinate Systems
+
+In our last lecture, we looked closely at various *coordinate systems* in `ggplot2`. 
+Coordinate systems allow us to easily change how the data are displayed, with limited effort. 
+
+There are *linear* coordinate systems that don't change the shape of `geoms`: 
+
+> - `coord_cartesian()`: Default coordinate system
+> - `coord_flip()`: Default coordinate system, but flipping `x` and `y` axis. 
+> - `coord_fixed()`: Default coordinate system, but fixing the ratio between `x` and `y` axis. 
+
+There are also *non-linear* coordinate systems, that can change the shape of `geoms`: 
+
+> - `coord_polar()`: Polar coordinates.
+> - `coord_map()`: Map projections (spherical earth to 2D plane).
+> - `coord_trans()`: Custom transformations to `x` and `y` positions. 
+
+## Polar Coordinate Example
+
+## Polar Coordinate Exercise
+
+## `coord_map()` Example
+
+Let's take a look at a new coordinate system, using `coord_map()`. 
+First, we will use the `maps` package to get information about some North American Countries. 
+
+```{r NorthAmerica, echo=TRUE}
+world <- map_data("world") %>%
+  filter(region %in% c("USA", "Canada", "Mexico", "Jamaica",
+                       "Cuba", "Panama", "Guatemala", "Puerto Rico", 
+                       "Costa Rica", "Dominican Republic", "Haiti",
+                       "El Salvador", "Belize", "Bahamas", "Nicaragua",
+                       "Honduras", "Trinidad")) %>%
+  filter(long < 0)
+```
+
+We can plot this data using `ggplot2` and `geom_polygon()`. 
+Lets save the map to use later:
+
+```{r plotNorthAmerica, echo=TRUE}
+my_map <- ggplot(world) + 
+  geom_polygon(aes(x = long, y = lat, group = group), fill = 'white',
+               col = 'black') + 
+  theme_bw()
+
+print(my_map)
+```
+
+## `coord_map()` continued
+
+The problem with the previous slide is that the polygons are a bit distorted, so the polygons don't look exactly like we would expect.
+`coord_map()` can help fix this issue.
+In particular, we will start with `coord_quickmap()`, which is the simplest implementation. 
+
+```{r coordQuickMap, echo=TRUE}
+my_map + 
+  coord_quickmap()
+```
+
+## `coord_map()` Continued
+
+There are probably better ways to project the 3D world onto a 2D surface. 
+You can explore some of these options by looking at the help page for `coord_map` and `mapproj::mapproject`.
+Let's use the [globular](https://en.wikipedia.org/wiki/Nicolosi_globular_projection) projection
+
+```{r}
+my_map + 
+  coord_map('globular')
+```
+
+## Hurricane Map
+
+```{r}
+my_storms <- storms %>%
+  filter(year == 2016, name %in% c('Matthew', "Nicole", "Karl", "Otto"))
+
+my_map + 
+  coord_map('globular') + 
+  geom_path(data = my_storms, aes(x = long, y = lat), col = 'red') +
+  geom_circle(
+    data = my_storms, 
+    aes(x0 = long, y0 = lat, r = tropicalstorm_force_diameter/120),
+    col = 'red'
+  ) +
+  coord_map('globular') +  # results in distorted storm circles
+  guides(color = "none") + 
+  theme_bw() + 
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank()
+  ) + 
+  facet_wrap(~name) + 
+  ggtitle("Selected 2016 Tropical Storms and Hurricanes")
+```
+
+## Table operations
+
+Today we are going to focus on functions in the `dplyr` package, which is part of the `tidyverse`. 
+The `dplyr` package aims to provide a function for each basic "verb" of data manipulation. 
+Here are some common functions / "verbs" for data manipulation: 
+
+* Rows: 
+    + `filter()`: Select rows based on criteria on column values
+    + `slice()`: choose rows based on locations.
+    + `arrange()`: change the order of the rows.
+* Columns: 
+    + `select()`: Pick and choose columns to include in data.
+    + `pull()`: Select a single column (similar to `data$column`).
+    + `rename()`: Change the name of columns.
+    + `mutate()`: Change the values of columns / creates new columns. 
+* Groups (of rows):
+    + `group_by()`: Creates a group of rows.
+    + `summarise()` or `summarize()`: Calculate summary values for a given group. 
+
+## `mutate()`, `filter()`, `select()` Examples
+
+## `mutate()`, `filter()`, `select()`, `arrange()` Exercise
+
+## `group_by()` and `summarize()` (1-2 slides)
+
+Introduce the function `n = n()`
+
+## `group_by()` and `summarize()` examples. 
