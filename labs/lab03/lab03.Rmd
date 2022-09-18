@@ -14,10 +14,10 @@ runtime: shiny_prerendered
 # This just checks if students need to install some packages that they might 
 # not have.
 
-if (!require(ggforce)) install.packages("ggforce")
-if (!require(maps)) install.packages("maps")
-if (!require(mapproj)) install.packages("mapproj")
-if (!require(lattice)) install.packages("lattice")
+if (!require(ggforce)) install.packages("ggforce", repos = "http://cran.us.r-project.org")
+if (!require(maps)) install.packages("maps", repos = "http://cran.us.r-project.org")
+if (!require(mapproj)) install.packages("mapproj", repos = "http://cran.us.r-project.org")
+if (!require(lattice)) install.packages("lattice", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, echo=TRUE}
@@ -214,12 +214,141 @@ Here are some common functions / "verbs" for data manipulation:
     + `group_by()`: Creates a group of rows.
     + `summarise()` or `summarize()`: Calculate summary values for a given group. 
 
-## `mutate()`, `filter()`, `select()` Examples
+## `select()`, `filter()`, `mutate()` Examples
 
-## `mutate()`, `filter()`, `select()`, `arrange()` Exercise
+We are going to look at the `midwest` data again.
+
+```{r}
+head(midwest)
+```
+
+`select()` let's us select, or deselect, columns of interest
+
+```{r}
+midwest %>%
+  select(popwhite, popwhite) %>%
+  head()
+```
+
+```{r}
+midwest %>%
+  select(-PID, -poptotal) %>%
+  head()
+```
+
+We can also select by condition: 
+
+```{r}
+midwest %>%
+  select(where(is.character)) %>%
+  head()
+```
+
+`filter()` allows us to select certain rows. 
+
+```{r}
+midwest %>%
+  filter(state == 'MI') %>%
+  head()
+```
+
+You can include more than one condition at a time: 
+
+```{r}
+midwest %>%
+  filter(state == "MI", county == 'WASHTENAW')
+```
+
+`mutate()` can be used to either create or modify a column in a dataset. 
+We can pipe multiple functions together. 
+
+```{r}
+midwest %>%
+  filter(state == 'MI') %>%
+  mutate(school = ifelse(county == "WASHTENAW", "GO BLUE!!!", "OTHER")) %>%
+  mutate(county == tolower(county)) %>%
+  select(state, county, school) %>%
+  tail()
+```
+
+We can use `arrange()` to order the columns of the data. 
+
+```{r}
+midwest %>%
+  select(state, county) %>%
+  arrange(desc(state), county) %>%
+  head()
+```
+
+Another useful tool is `slice()`. This function allows us to select certain rows. There are a few versions of this that each give different results. See `?slice` for more details.
+
+```{r}
+midwest %>%
+  select(state, county, poptotal) %>%
+  filter(state == "MI") %>%
+  slice_max(poptotal)
+```
 
 ## `group_by()` and `summarize()` (1-2 slides)
 
-Introduce the function `n = n()`
+`group_by()` helps us great groups. 
+The following code will get the maximum population for each state in the dataset. 
 
-## `group_by()` and `summarize()` examples. 
+```{r}
+midwest %>%
+  select(state, county, poptotal) %>%
+  group_by(state) %>%
+  slice_max(poptotal)
+```
+
+`summarize()` (or equivalently, `summarise()`) is a function that's not particularly useful on it's own, but when combined with `group_by()` it can be very useful.
+The following code counts the number of counties in each state
+
+```{r}
+midwest %>%
+  group_by(state) %>%
+  summarize(n_counties = n()) %>%
+  arrange(-n_counties)
+```
+
+## `group_by()` and `summarize()` Exercise.
+
+Use `group_by()` and `summarize()` to get the total population in each state. 
+Then, arrange the states so that states with the smallest population comes first.
+
+```{r}
+midwest %>%
+  group_by(state) %>%
+  summarize(state_population = sum(poptotal)) %>%
+  arrange(state_population)
+```
+
+**BONUS** Modify your previous solution to also calculate the percentage of the population that is White, Black, and Asian. 
+
+## `group_by()` and `summarize()` Solution
+
+```{r}
+midwest %>%
+  group_by(state) %>%
+  summarize(state_population = sum(poptotal)) %>%
+  arrange(state_population)
+```
+
+```{r}
+midwest %>%
+  group_by(state) %>%
+  summarize(state_population = sum(poptotal),
+            precent_black = sum(popblack) / state_population,
+            percet_white = sum(popwhite) / state_population,
+            percent_asian = sum(popasian) / state_population) %>%
+  arrange(state_population)
+```
+
+Another possibility is to do all columns that start with *pop* at the same time: 
+
+```{r}
+midwest %>%
+  group_by(state) %>%
+  summarize(across(starts_with("pop"), ~ sum(.) / sum(poptotal)))
+```
+
