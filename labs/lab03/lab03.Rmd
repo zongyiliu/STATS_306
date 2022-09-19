@@ -273,6 +273,8 @@ my_map +
 
 ## Hurricane Map
 
+For this next plot, we will use the built in `storms` dataset, and we will look particularly at the storms in $2016$. 
+
 ```{r HurricaneMap, exercise=TRUE, exercise.setup="preLoadMap"}
 my_storms <- storms %>%
   filter(year == 2016, name %in% c('Matthew', "Nicole", "Karl", "Otto"))
@@ -296,6 +298,10 @@ my_map +
   facet_wrap(~name) + 
   ggtitle("Selected 2016 Tropical Storms and Hurricanes")
 ```
+
+The variable `tropicalstorm_force_diameter` gives the diameter in nautical miles of the area experiencing tropical storm force winds. 
+Because 1 degree of latitude corresponds to approximately 60 nautical miles, we can approximately display the impact area of each storm by adding circles with radius `tropicalstorm_force_diameter/120`. 
+Note that these circles can be distorted based on our projection. 
 
 ## Table operations
 
