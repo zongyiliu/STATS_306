@@ -256,7 +256,208 @@ Using the `mpg` data set, find the manufacturer (`manufacturer`) with the highes
 
 ```
 
+## Arranging output
+
+Sometimes we want to choose the ordering of rows in a table. I don't use this a lot for raw data, but it can be quite helpful for summaries:
+
+```{r}
+group_by(aatemp, year(DATE)) |> 
+  summarize(yearly_maxT = max(TMAX)) |> 
+  arrange(yearly_maxT)
+```
+
+## Descending order, multiple columns
+
+
+```{r}
+group_by(aatemp, year(DATE)) |> 
+  summarize(yearly_maxT = max(TMAX), yearly_minT = min(TMAX)) |> 
+  arrange(desc(yearly_maxT), yearly_minT)
+```
+
+## Exercise
+
+Group by both `manufacturer` and `class`. What manufacturer has the highest `cty` efficiency in the sense of the median of mean `cty` within class?
+
+```{r manufacturer-hwy, exercise = TRUE}
+```
+
 
 ## Useful functions for summaries
 
+* Seen before: `mean`, `median`, `sd`, `min`, `max`
+* Other common statistical measures: `quantile`, `IQR`
+* For boolean/logical columns: `any` and `all` ("or" and "and" across vectors)
+* The functions `n` and a `n_distinct` count units and distinct values
+
+## Some more summaries
+
+```{r}
+summarize(aat_year, n(), n_distinct(TMAX), any(SNOW > 10))
+```
+
+## Centered temperature
+
+```{r}
+mutate(aatemp, TMAX_centered = TMAX - mean(TMAX)) |>
+ ggplot(aes(y = TMAX_centered, x = factor(quarter(DATE)))) +
+    geom_violin() 
+```
+## `mutate` and `group_by`
+
+Observe some care when using `mutate` on grouped tables:
+
+```{r}
+group_by(aatemp, quarter(DATE)) |>
+  mutate(TMAX_centered = TMAX - mean(TMAX)) |>
+  ggplot(aes(y = TMAX_centered, x = factor(`quarter(DATE)`))) +
+    geom_violin()
+```
+You may need to use `ungroup` to remove grouping information to get the behavior your want.
+
+## Other R functions
+
+Most other R functions do not recognize grouping:
+
+```{r}
+mean(aatemp$TMAX, na.rm = TRUE)
+mean(aat_year$TMAX)
+summarize(aat_year, mean(TMAX))
+```
+
 ## Writing our own functions
+
+```{r eval = F}
+function_name <- function(required_argument, optional_argument = 0, ...) {
+  # function body
+  return(a_value)
+}
+```
+
+(NB: The last line is automatically returned.)
+
+## Exercise
+
+Write an R function to transform a vector into a $Z$-score
+```{r scale, exercise = TRUE}
+x <- c(-1, 2, 1.1)
+```
+
+(NB: this function is called `scale` in R)
+
+## Common use case: mutations and summaries
+
+Suppose we want to median center and scale in terms of the IQR. We are going to use this functionality on the original data, but also within years.
+
+```{r}
+myscale <- function(x) {
+  (x - median(x)) / IQR(x)
+}
+```
+```{r}
+mutate(aatemp, TMAX_myscale = myscale(TMAX)) |>
+  ggplot(aes(x = factor(year(DATE)), y = TMAX_myscale)) +
+    geom_violin()
+```
+
+```{r}
+summarize(aat_year, myscale(TMAX)) |>
+  ggplot(aes(x = factor(`year(DATE)`), y = `myscale(TMAX)`)) +
+    geom_violin()
+```
+
+## Summarizing with functions that return more than one value
+
+```{r}
+mean_var <- function(x) {
+  tibble(average = mean(x), variance = var(x))
+}
+
+summarize(aat_year, mean_var(TMAX))
+```
+
+Use caution when using this function more than once!
+
+```{r}
+summarize(aat_year, mean_var(TMAX), mean_var(TMIN))
+```
+
+## Predicates
+
+A **predicate** is a function that returns `TRUE` or `FALSE`.
+
+For example:
+```{r}
+no_missing <- function(x) {
+  !(any(is.na(x)))
+}
+
+no_missing(c(2,3,44))
+no_missing(c(7, NA, 122))
+```
+
+## Selecting columns with predicates
+
+We have seen several predicates used already: `is.numeric` or `is.character` in selecting columns. We can also use our own predicates.
+
+```{r}
+select(aatemp, where(no_missing)) |> colnames()
+```
+## Anonymous functions
+
+Sometimes we want to write short little functions that only get used once. We call these **anonymous functions** like this:
+
+```{r}
+select(aatemp, where(function(x) { !any(is.na(x)) })) |> ncol()
+```
+
+## Tidyverse anonymous function short hand
+
+Many of the tidyverse functions support using formulas to indicate an anonymous function:
+
+```{r}
+select(aatemp, where(~ !any(is.na(.x)))) |> ncol()
+```
+
+>* `~` starts a formula
+>* `.x` and `.y` are the arguments to the function
+
+We'll see more of this form when we discuss iteration.
+
+## Exercise
+
+Let's put it all together using the `mpg` data set.
+
+>* Get a list of manufacturers that produce cars in at least 2 different classes. (Recall `n_distinct` function)
+>* Using that list, subset the `mpg` data to just those manufactures
+>* Rescale the highway efficiency variable into Z-scores (using the common mean across all manufacturers)
+>* Group the observations by manufacturer. Which one has the smallest variance in `cty` efficiency?
+
+You may want to use `%in%`:
+```{r}
+c("Hi", "Low", "Low", "Medium") %in% c("Medium", "High")
+```
+
+```{r lastex, exercise = TRUE}
+
+```
+
+## Example solution
+
+```{r}
+at_least_2 <- group_by(mpg, manufacturer) |> 
+  summarize(per_class = n_distinct(class)) |>
+  filter(per_class > 1)
+
+at_least_2
+
+filter(mpg, manufacturer %in% at_least_2$manufacturer) |>
+  mutate(cty_z = scale(cty)) |>
+  group_by(manufacturer) |>
+  summarize(v = var(cty_z)) |>
+  arrange(v)
+```
+
+## Next time
+
+>* R for Data Science: 19.4 - 19.6, 7 - 7.3
