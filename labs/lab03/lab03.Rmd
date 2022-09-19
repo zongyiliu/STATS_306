@@ -29,7 +29,10 @@ library(ggforce)    # For hurricane map, later.
 
 ## Logistics
 
-> - HW / Quiz dates 
+> - HW 1 is due on September 25
+> - HW 2 is due on October 2
+> - Quiz 2 is due on September 25
+
 > - Questions?  
 
 ## Today's Content
@@ -62,7 +65,77 @@ There are three types of facets in `ggplot2`:
 
 ## `facet_wrap` Example
 
-## `facet_grid` Example
+Lets use the `ToothGrowth` dataset:
+
+```{r headTooth, exercise=TRUE}
+head(ToothGrowth)
+```
+
+```{r uniqueDose, exercise=TRUE}
+unique(ToothGrowth$dose)
+```
+
+A box-plot of all of the data: 
+
+```{r}
+tooth_gg <- ggplot(ToothGrowth) + 
+  geom_boxplot(aes(y = len)) + 
+  theme_bw()
+
+print(tooth_gg)
+```
+
+
+```{r createBasicBox, echo=TRUE, include=FALSE}
+tooth_gg <- ggplot(ToothGrowth) + 
+  geom_boxplot(aes(y = len)) + 
+  theme_bw()
+```
+
+Now if we want to summarize at the distribution for tooth growth for each supplement, we can facet on supplement: 
+
+```{r wrappedBox, exercise=TRUE, exercise.setup="createBasicBox"}
+tooth_gg + 
+  facet_wrap(~supp)
+```
+
+If we wanted to have two rows of figures instead of two columns, we can specify this with `ncol = 1` or `nrow = 2`
+
+```{r wrappedBox2, exercise=TRUE, exercise.setup="createBasicBox"}
+tooth_gg + 
+  facet_wrap(~supp, ncol = 1)
+```
+
+We can get the same figure (but with labels on the side) by using `facet_grid`.
+
+```{r gridBox1, exercise=TRUE, exercise.setup="createBasicBox"}
+tooth_gg + 
+  facet_grid(supp~.)
+```
+
+In the previous code, we are saying that we want the rows of the grid to correspond to the variable `supp`, and we want to give it an empty variable `.` for the columns. 
+We can "rotate" the figure by switching the order of these variables: 
+
+```{r gridBox2, exercise=TRUE, exercise.setup="createBasicBox"}
+tooth_gg + 
+  facet_grid(.~supp)
+```
+
+We can of course include a second variable rather than a missing variable if we wanted to do so: 
+
+```{r gridBox3, exercise=TRUE, exercise.setup="createBasicBox"}
+tooth_gg + 
+  facet_grid(supp~dose)
+```
+
+The order of the variables depends on what information we are most interested in showing.
+For example, in the previous plot, the order makes it easiest to compare the effect of various different levels of dose for each supplement. 
+If we were interested how supplements compare for similar dosages, the following plot may be preferred:
+
+```{r gridBox4, exercise=TRUE, exercise.setup="createBasicBox"}
+tooth_gg + 
+  facet_grid(dose~supp)
+```
 
 ## `facet_wrap` Exercise
 
@@ -75,13 +148,16 @@ barley <- lattice::barley
 head(barley)
 ```
 
+```{r loadBarley}
+barley <- lattice::barley
+```
+
 **Exercise**: Add a facets and colors to the following code to reduce over-plotting. 
 Do you notice anything strange about the data? 
 
-```{r}
+```{r facetExercise, exercise=TRUE, exercise.setup="loadBarley"}
 ggplot(barley) + 
-  geom_point(aes(x = yield, y = variety, col = year)) + 
-  facet_wrap(~site) + 
+  geom_point(aes(x = yield, y = variety)) + 
   theme_bw()
 ```
 
@@ -118,7 +194,18 @@ There are also *non-linear* coordinate systems, that can change the shape of `ge
 
 ## Polar Coordinate Example
 
-## Polar Coordinate Exercise
+One of the most common coordinate transformations we see for data visualizations is **Polar-Coordinates**. 
+The idea for polar coordinate mapping is that sometimes displaying the information as an angle and radius is more informative than displaying the information in the `x, y` Cartesian plane,
+for example polar coordinates often help us visualize seasonal effects. 
+
+```{r mtcarsPolar, exercise=TRUE}
+my_cars <- mtcars
+my_cars$model <- rownames(mtcars)
+ggplot(my_cars) + 
+  geom_bar(aes(y = mpg, x = model), stat = 'identity') + 
+  coord_polar() + 
+  theme_bw()
+```
 
 ## `coord_map()` Example
 
@@ -149,11 +236,26 @@ print(my_map)
 
 ## `coord_map()` continued
 
+```{r preLoadMap}
+world <- map_data("world") %>%
+  filter(region %in% c("USA", "Canada", "Mexico", "Jamaica",
+                       "Cuba", "Panama", "Guatemala", "Puerto Rico", 
+                       "Costa Rica", "Dominican Republic", "Haiti",
+                       "El Salvador", "Belize", "Bahamas", "Nicaragua",
+                       "Honduras", "Trinidad")) %>%
+  filter(long < 0)
+
+my_map <- ggplot(world) + 
+  geom_polygon(aes(x = long, y = lat, group = group), fill = 'white',
+               col = 'black') + 
+  theme_bw()
+```
+
 The problem with the previous slide is that the polygons are a bit distorted, so the polygons don't look exactly like we would expect.
 `coord_map()` can help fix this issue.
 In particular, we will start with `coord_quickmap()`, which is the simplest implementation. 
 
-```{r coordQuickMap, echo=TRUE}
+```{r coordQuickMap, exercise=TRUE, exercise.setup="preLoadMap"}
 my_map + 
   coord_quickmap()
 ```
@@ -164,25 +266,25 @@ There are probably better ways to project the 3D world onto a 2D surface.
 You can explore some of these options by looking at the help page for `coord_map` and `mapproj::mapproject`.
 Let's use the [globular](https://en.wikipedia.org/wiki/Nicolosi_globular_projection) projection
 
-```{r}
+```{r globularMap, exercise=TRUE, exercise.setup="preLoadMap"}
 my_map + 
   coord_map('globular')
 ```
 
 ## Hurricane Map
 
-```{r}
+```{r HurricaneMap, exercise=TRUE, exercise.setup="preLoadMap"}
 my_storms <- storms %>%
   filter(year == 2016, name %in% c('Matthew', "Nicole", "Karl", "Otto"))
 
 my_map + 
   coord_map('globular') + 
   geom_path(data = my_storms, aes(x = long, y = lat), col = 'red') +
-  geom_circle(
-    data = my_storms, 
-    aes(x0 = long, y0 = lat, r = tropicalstorm_force_diameter/120),
-    col = 'red'
-  ) +
+  # geom_circle(
+  #   data = my_storms, 
+  #   aes(x0 = long, y0 = lat, r = tropicalstorm_force_diameter/120),
+  #   col = 'red'
+  # ) +
   coord_map('globular') +  # results in distorted storm circles
   guides(color = "none") + 
   theme_bw() + 
@@ -224,13 +326,13 @@ head(midwest)
 
 `select()` let's us select, or deselect, columns of interest
 
-```{r}
+```{r midwestSelect1, exercise=TRUE}
 midwest %>%
   select(popwhite, popwhite) %>%
   head()
 ```
 
-```{r}
+```{r midwestSelect2, exercise=TRUE}
 midwest %>%
   select(-PID, -poptotal) %>%
   head()
@@ -238,7 +340,7 @@ midwest %>%
 
 We can also select by condition: 
 
-```{r}
+```{r midwestSelect3, exercise=TRUE}
 midwest %>%
   select(where(is.character)) %>%
   head()
@@ -246,7 +348,7 @@ midwest %>%
 
 `filter()` allows us to select certain rows. 
 
-```{r}
+```{r midwestFilter1, exercise=TRUE}
 midwest %>%
   filter(state == 'MI') %>%
   head()
@@ -254,15 +356,39 @@ midwest %>%
 
 You can include more than one condition at a time: 
 
-```{r}
+```{r midwestFilter2, exercise=TRUE}
 midwest %>%
   filter(state == "MI", county == 'WASHTENAW')
 ```
 
+**Exercise**: Subset the `midwest` data so that you only have data from the states of Wisconsin and Ohio, and only have the columns: `state`, `popdensity`, `inmetro`, and `percollege`. 
+
+```{r midwestExercise1, exercise=TRUE}
+midwest
+```
+
+## `filter` and `select` Solution
+
+There are a few possible solutions. 
+Here are two: 
+
+```{r midwestSolution1}
+midwest %>%
+  filter(state %in% c("WI", "OH")) %>%
+  select(state, popdensity, inmetro, percollege)
+```
+
+```{r midwestSolution2}
+midwest %>%
+  filter(state == "WI" | state == "OH") %>%
+  select(state, popdensity, inmetro, percollege)
+```
+
+## Mutate
 `mutate()` can be used to either create or modify a column in a dataset. 
 We can pipe multiple functions together. 
 
-```{r}
+```{r mutate1, exercise=TRUE}
 midwest %>%
   filter(state == 'MI') %>%
   mutate(school = ifelse(county == "WASHTENAW", "GO BLUE!!!", "OTHER")) %>%
@@ -273,7 +399,7 @@ midwest %>%
 
 We can use `arrange()` to order the columns of the data. 
 
-```{r}
+```{r arrange1, exercise=TRUE}
 midwest %>%
   select(state, county) %>%
   arrange(desc(state), county) %>%
@@ -282,7 +408,7 @@ midwest %>%
 
 Another useful tool is `slice()`. This function allows us to select certain rows. There are a few versions of this that each give different results. See `?slice` for more details.
 
-```{r}
+```{r slice1, exercise=TRUE}
 midwest %>%
   select(state, county, poptotal) %>%
   filter(state == "MI") %>%
@@ -294,7 +420,7 @@ midwest %>%
 `group_by()` helps us great groups. 
 The following code will get the maximum population for each state in the dataset. 
 
-```{r}
+```{r groupby1, exercise=TRUE}
 midwest %>%
   select(state, county, poptotal) %>%
   group_by(state) %>%
@@ -304,7 +430,7 @@ midwest %>%
 `summarize()` (or equivalently, `summarise()`) is a function that's not particularly useful on it's own, but when combined with `group_by()` it can be very useful.
 The following code counts the number of counties in each state
 
-```{r}
+```{r summarize1, exercise=TRUE}
 midwest %>%
   group_by(state) %>%
   summarize(n_counties = n()) %>%
@@ -313,14 +439,13 @@ midwest %>%
 
 ## `group_by()` and `summarize()` Exercise.
 
+**Exercise**
+
 Use `group_by()` and `summarize()` to get the total population in each state. 
 Then, arrange the states so that states with the smallest population comes first.
 
-```{r}
-midwest %>%
-  group_by(state) %>%
-  summarize(state_population = sum(poptotal)) %>%
-  arrange(state_population)
+```{r groupExercise, exercise=TRUE}
+midwest
 ```
 
 **BONUS** Modify your previous solution to also calculate the percentage of the population that is White, Black, and Asian. 
