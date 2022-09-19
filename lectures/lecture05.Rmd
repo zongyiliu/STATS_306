@@ -1,0 +1,85 @@
+---
+title: "Stats 306: Lecture 5"
+subtitle: "Grouping and Summaries"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+```
+
+## Review: `ggplot`
+
+* Using R's `factor` type to force categorical display (useful for color), some geometries
+* Introduced formulas `y ~ x1 + x2` (models, delayed computation)
+* Small multiples with `facet_wrap` and `facet_grid`
+* Coordinate systems for display and certain data types.
+
+## Review: operations on tables
+
+* Tables: lists of vectors, `tibble` and `data.frame`
+* Pulling out a single column: `d$col`
+* Creating a single column: `d$newcol <- EXPR`
+* Pulling out several columns: `select(d, col1, col2)` (and several other forms)
+* Pulling out rows: `filter(d, criteria)`
+
+## Temperature data for Ann Arbor, MI
+
+```{r}
+# to run this line from the console, use `setwd("lectures")` first
+aatemp <- read_csv("../data/ann_arbor_weather.csv.gz")
+```
+
+## Plotting temperature vs. time
+
+```{r}
+ggplot(data = aatemp, aes(x = DATE, y = TMAX)) +
+  geom_line()
+```
+
+## Days with large temp jumps
+
+```{r}
+temp_diff <- diff(aatemp$TMAX)
+length(temp_diff)
+dim(aatemp)
+aatemp$temp_diff <- abs(c(NA, temp_diff))
+```
+
+## Distributon of differences
+```{r}
+ggplot(data = aatemp, aes(x = temp_diff)) + geom_bar()
+```
+
+## Plotting when large jumps occur during the year
+
+Let's define a large jump in maximum temperature as being when one day is more than 10 degrees different than the subsequent day.
+
+```{r}
+ggplot(data = filter(aatemp, temp_diff > 10), aes(x = yday(DATE))) +
+  geom_histogram() + coord_polar()
+```
+## Exercise
+
+Combine `filter` and `select` to get only the columns `cty` and `hwy` for cars that have more than 4 cylinders.
+
+```{r}
+head(mpg, 1)
+```
+
+```{r filter-select, exercise = TRUE}
+
+```
+ 
+## Tasks
+* Creating new column (in new table): `mutate(d, newcol = f(col1, col2))`
+* Grouping and summarizing `group_by(d, discrete_column) |> summarize(new_name = a_function(col))`
+
+
