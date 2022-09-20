@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+if (!require(ggmap)) install.packages("ggmap", repos = "http://cran.us.r-project.org")
+library(ggmap)
 ```
 
 ## Question 1 (3 points): Working with directories
@@ -101,13 +103,41 @@ Using the `cut` function and `mutate`, make a new column that breaks the day int
 
 Using `group_by` and `summarize`, find the most common period of the day for a crime to occur.
 
-### Common Crimes by Zip Code
+### Common Crimes by Zip Code (2 points)
 
-Grouping first by `zip_code` and then by `charge_desription`, count up the number of kinds of crimes in each zip code (hint: recall the `n()` function).
+Grouping first by `zip_code` and then by `offense_cateogry`, count up the number of kinds of crimes in each zip code (hint: recall the `n()` function).
 
 Use `arrange` to sort the data within zip code by the number of crimes of each type in descending order. Use the `first` function inside of `summarize` to find the most common crime in each zip code. 
 
 At this point, you should have a table of zip codes with their most common crime. Group by the crime type to see what types of crime are common. What is the most common crime? Are other crimes also frequent across the zip codes?
 
+### Mapping homicide events (2 points)
 
+Use `filter` to create the table `homicide` that only includes events with `offense_cateogry` equal to `"HOMICIDE"`. 
+
+Next, we need to create a bounding box for our data. Use `summarize` to find the minimum longitude, minimum latitude, maximum longitude, and maximum latitude (in that order). Then set the next block to `eval = TRUE`.
+
+```{r eval = FALSE}
+bbox <- SUMMARIZE_HERE |> as.numeric()
+detroit_map <- get_map(bbox, zoom = 11, maptype = "roadmap")
+ggmap(detroit_map) + geom_point(data = homicide, mapping = aes(x = longitude, y = latitude))
+```
+
+### 2D histogram (3 points)
+
+While the previous plot showed all the data, it is not entirely clear where homicides are most common. To find out, let's create a 2D histogram. Before we do that, we need a function that, like `cut`, will break the continuous latitude and longitude into discrete bins, but we need to retain the latitude and longitude values (`cut` gives ranges).
+
+```{r}
+# with some ideas from: https://stackoverflow.com/questions/22312207/how-to-assign-cut-range-midpoints-in-r
+midpointcut <- function(x, breaks) {
+  orig <- cut(x, breaks, dig.lab = 8)
+  sapply(orig, function(y) mean(as.numeric(unlist(strsplit(gsub("\\(|\\)|\\[|\\]", "", as.character(y)), ",")))))
+} 
+```
+
+* Use the `midpointcut` function to break up `latitude` in to 30 bins. Likewise, cut up `longitude` into 30 bins as well.
+* `group_by` both cuts and count how many observations fall into each category.
+* Create a new map plot using the count data, making the size of the dot equal to the count.
+
+Do you notice any regions that seem more dangerous than others?
 
