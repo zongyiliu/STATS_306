@@ -1,0 +1,26 @@
+---
+title: "Data"
+author: "Mark Fredrickson"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+This file describes data used in the course Stats 306. Files are typically in compressed CSV form. To load the files, we recommend `readr::read_csv`.
+
+## `ann_arbor_wether.csv.gz`
+
+TODO
+
+## `RMS_Crime_Incidents.csv.gz`
+
+[City of Detroit crime event data](https://data.detroitmi.gov/datasets/detroitmi::rms-crime-incidents/explore), retrieved 2022-09-19.
+
+Description from the City of Detroit Open Data Portal:
+
+> This data reflects reported criminal offenses that have occurred in the City of Detroit. Offense data was extracted from the Detroit Police Department's records management system.
+>
+> This data reflects reported criminal offenses that have occurred in the City of Detroit. Offense data was extracted from the Detroit Police Department's records management system. This data set contains the most recent data available and is updated anytime DPD sends official crime records contributing to the Michigan Incident Crime Reporting (MICR) or the National Incident Based Reporting systems (reflected by the IBR Date field). It should be noted that some incidents involve the commission of multiple offenses, such as a domestic assault where property was also vandalized. Accordingly, the data describe all offenses associated with all reported incidents.

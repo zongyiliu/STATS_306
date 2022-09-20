@@ -1,0 +1,186 @@
+---
+title: "Stats 306, Fall 2022, Homework 2"
+author: "Your Name, Your Uniqname"
+date: "Due October 2, 11:59PM EST"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+if (!require(ggmap)) install.packages("ggmap", repos = "http://cran.us.r-project.org")
+library(ggmap)
+```
+
+## Question 1 (3 points): Working with directories
+
+If you haven't already done so, use the "File -> Open Project" menu to find the file `stats306_fall_2022.rproj` and open it up. Among other features, this will ensure that your *Terminal* pane starts located in the directory (folder on the file system) for your copy of our git repository.
+
+For this question, if you are running RStudio on Windows, you should make sure that the "Tools -> Global Options -> Terminal -> New Terminals Open With" menu is set to "Git Bash". For users on OS X, linux or Great Lakes, you are already properly configured.
+
+Open up your *Terminal*. Type in `pwd`. This is showing you the current directory that the terminal is operating in.
+
+Type `ls` ("ell-ess"). This lists the files in the current directory. A useful option is `ls -F` which will show which "files" in the current directory are subdirectories.
+
+Use `ls -F`. What are the names of the directories in our main repository directory? Replace (and perhaps add) to the bullet points below:
+
+* Directory name
+* Directory name
+
+The command `cd` causes the terminal to change it's current directory. Type `cd lectures` to move into the `lectures` folder. Type `pwd` to verify that you have made this change.
+
+It can be useful to limit the output of `ls` to only certain kinds of files. Type `ls` to see the files. Type `ls *.Rmd`. What did adding the `*.Rmd` do?
+
+> ANSWER
+
+Create a file in this directory using the command `echo "hello" > hello.txt"`. Use `ls` to verify you created the file.
+
+Type `git status`. What does it tell you about your file `hello.txt`? You don't have to do it, but what would happen if you used `git commit` right now? Would `hello.txt` be included in your commit?
+
+> ANSWER
+
+There is a special file called `..` that exists in every directory (except for the root directory of the filesystem). This special `..` represents the previous directory in the hierarchy. Use `cd ..` to get back to main repository directory.
+
+Type `git status` again. Is the message the same as before? What is git telling you about the location of the `hello.txt` file?
+
+> ANSWER
+
+If you need to jump back to your main repository directory, you can use the Terminal drop down menu and select "Go to Current Directory".
+
+## Question 2 (12 points)
+
+For this question, let's look at some some crime report information from the City of Detroit:
+```{r}
+crime <- read_csv("../data/RMS_Crime_Incidents.csv.gz")
+```
+
+If you want to see the source of this data: [City of Detroit crime event data](https://data.detroitmi.gov/datasets/detroitmi::rms-crime-incidents/explore).
+
+Description from the City of Detroit Open Data Portal:
+
+> This data reflects reported criminal offenses that have occurred in the City of Detroit. Offense data was extracted from the Detroit Police Department's records management system.
+>
+> This data reflects reported criminal offenses that have occurred in the City of Detroit. Offense data was extracted from the Detroit Police Department's records management system. This data set contains the most recent data available and is updated anytime DPD sends official crime records contributing to the Michigan Incident Crime Reporting (MICR) or the National Incident Based Reporting systems (reflected by the IBR Date field). It should be noted that some incidents involve the commission of multiple offenses, such as a domestic assault where property was also vandalized. Accordingly, the data describe all offenses associated with all reported incidents.
+
+### Getting to know the data (2 points)
+
+Answer the following questions about the data set:
+
+* How many rows and columns are in this data set?
+* Which column gives the most easily understood definition of the crime committed?
+* How may precincts are there?
+
+Plot the number of crimes group by day of the week. Assuming that Monday is 1, Tuesday 2, etc., would you say that criminals take the weekend off?
+
+### When do crimes occur? (3 points)
+
+The `cut` function is useful for breaking up a quantitative variable into discrete categories. Here is an example:
+
+```{r}
+x <- c(2, -1, 0.5, 10, 3, 4, -0.25, 6)
+cut(x, breaks = c(-Inf, 0, 5, Inf))
+```
+
+The notation `(a, b]` means that the interval is defined by $a < x \le b$ (i.e., a half closed interval).
+
+We can also include labels:
+```{r}
+cut(x, breaks = c(-Inf, 0, 5, Inf), labels = c("Small", "Medium", "Large"))
+```
+
+Note, you can give the same label twice to get two cuts to be the same group.
+```{r}
+cut(x, breaks = c(-Inf, 0, 5, Inf), labels = c("A", "B", "A"))
+```
+
+Using the `cut` function and `mutate`, make a new column that breaks the day into the following periods:
+
+* Night (10pm to 6am)
+* Early Day (6am to 2pm)
+* Late Day (2pm to 10pm)
+
+(Hints: `hour_of_day` is on a 24 clock, to capture all the observations, make the first `breaks` value strictly less than 0).
+
+Using `group_by` and `summarize`, find the most common period of the day for a crime to occur.
+
+### Common Crimes by Zip Code (2 points)
+
+Grouping first by `zip_code` and then by `offense_cateogry`, count up the number of kinds of crimes in each zip code (hint: recall the `n()` function).
+
+Use `arrange` to sort the data within zip code by the number of crimes of each type in descending order. Use the `first` function inside of `summarize` to find the most common crime in each zip code. 
+
+At this point, you should have a table of zip codes with their most common crime. Group by the crime type to see what types of crime are common. What is the most common crime? Are other crimes also frequent across the zip codes?
+
+### Mapping homicide events (2 points)
+
+Use `filter` to create the table `homicide` that only includes events with `offense_cateogry` equal to `"HOMICIDE"`. 
+
+Next, we need to create a bounding box for our data. Use `summarize` to find the minimum longitude, minimum latitude, maximum longitude, and maximum latitude (in that order). Then set the next block to `eval = TRUE`.
+
+```{r eval = FALSE}
+bbox <- SUMMARIZE_HERE |> as.numeric()
+detroit_map <- get_map(bbox, zoom = 11, maptype = "roadmap")
+ggmap(detroit_map) + geom_point(data = homicide, mapping = aes(x = longitude, y = latitude))
+```
+
+### 2D histogram (3 points)
+
+While the previous plot showed all the data, it is not entirely clear where homicides are most common. To find out, let's create a 2D histogram. Before we do that, we need a function that, like `cut`, will break the continuous latitude and longitude into discrete bins, but we need to retain the latitude and longitude values (`cut` gives ranges).
+
+```{r}
+# with some ideas from: https://stackoverflow.com/questions/22312207/how-to-assign-cut-range-midpoints-in-r
+midpointcut <- function(x, breaks) {
+  orig <- cut(x, breaks, dig.lab = 8)
+  sapply(orig, function(y) mean(as.numeric(unlist(strsplit(gsub("\\(|\\)|\\[|\\]", "", as.character(y)), ",")))))
+} 
+```
+
+* Use the `midpointcut` function to break up `latitude` in to 30 bins. Likewise, cut up `longitude` into 30 bins as well.
+* `group_by` both cuts and count how many observations fall into each category.
+* Create a new map plot using the count data, making the size of the dot equal to the count.
+
+Do you notice any regions that seem more dangerous than others?
+
+## Question 3 (5 points)
+
+Let's practice writing our own functions.
+
+### 90% Quantiles (1 points)
+
+Write a function that will compute the 90% quantile of a vector (see `quantile`). Demonstrate on the `mpg` data set by summarizing the 90% quantiles of `cty` and `hwy` within manufacturers.
+
+### Predicates (2 points)
+
+Write a predicate function (`positive`) that returns true if all values in a vector are strictly positive.
+
+Demonstrate your predicate using `select` on this data set:
+
+```{r}
+set.seed(30303222)
+n <- 100
+d <- tibble(x = runif(n), y = runif(n, -1, 1), z = rnorm(100)^2, w = log(runif(n)))
+```
+
+Write a predicate (`no_outliers`) that returns true if all observations are within 3 standard deviations of the mean.
+
+### `summary` using `summarize` (2 points)
+
+The `summary` method for tables will provide the following information for numeric columns
+
+* minimum
+* 1st quartile
+* median (2nd quartile)
+* mean
+* 3rd quantile
+* maximum
+* Number of missing observations
+
+(Note: when there are missing observations, the other quantities are calculated with `na.rm = TRUE` as an argument to various calculations).
+
+Demonstrate your function on the following data. Your result does not have to have the same format, but it should have the same information
+```{r}
+d2 <- d
+d2[10, 1] <- NA
+d2[50:70, 2] <- NA
+summary(d2)
+```
