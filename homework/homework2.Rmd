@@ -47,7 +47,7 @@ Type `git status` again. Is the message the same as before? What is git telling 
 
 If you need to jump back to your main repository directory, you can use the Terminal drop down menu and select "Go to Current Directory".
 
-## Question 2
+## Question 2 (12 points)
 
 For this question, let's look at some some crime report information from the City of Detroit:
 ```{r}
@@ -141,3 +141,46 @@ midpointcut <- function(x, breaks) {
 
 Do you notice any regions that seem more dangerous than others?
 
+## Question 3 (5 points)
+
+Let's practice writing our own functions.
+
+### 90% Quantiles (1 points)
+
+Write a function that will compute the 90% quantile of a vector (see `quantile`). Demonstrate on the `mpg` data set by summarizing the 90% quantiles of `cty` and `hwy` within manufacturers.
+
+### Predicates (2 points)
+
+Write a predicate function (`positive`) that returns true if all values in a vector are strictly positive.
+
+Demonstrate your predicate using `select` on this data set:
+
+```{r}
+set.seed(30303222)
+n <- 100
+d <- tibble(x = runif(n), y = runif(n, -1, 1), z = rnorm(100)^2, w = log(runif(n)))
+```
+
+Write a predicate (`no_outliers`) that returns true if all observations are within 3 standard deviations of the mean.
+
+### `summary` using `summarize` (2 points)
+
+The `summary` method for tables will provide the following information for numeric columns
+
+* minimum
+* 1st quartile
+* median (2nd quartile)
+* mean
+* 3rd quantile
+* maximum
+* Number of missing observations
+
+(Note: when there are missing observations, the other quantities are calculated with `na.rm = TRUE` as an argument to various calculations).
+
+Demonstrate your function on the following data. Your result does not have to have the same format, but it should have the same information
+```{r}
+d2 <- d
+d2[10, 1] <- NA
+d2[50:70, 2] <- NA
+summary(d2)
+```
