@@ -1,0 +1,308 @@
+---
+title: "Stats 306: Lecture 6"
+subtitle: "More Grouping and Summaries; Functions"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+aatemp <- read_csv("data/ann_arbor_weather.csv.gz")
+```
+
+## Review: `mutate`
+
+* `mutate`: Takes a table and returns a new table with columns added and/or subtracted
+* Give us access to columns of `tbl` without having to write `tbl$column_name`
+* `mutate(d, new_col = f(x, y), new_col2 = new_col1 + 1, old_col = NULL)`
+* `if_else(cond, true, false)` (all are vectors of same length or single values): used `TRUE` and `FALSE` values in `cond` to pick value from `true` and `false` (respectively)
+* Can use functions that summarize, e.g., `mutate(d, x_centered = x - mean(x))`
+
+## Review: `groups and summaries`
+
+* We often want to **partition** our data into smaller groups
+* Things like finding **conditional means** or **conditional medians**
+* `group_by` takes one or more grouping factors and creates a grouped table
+* `summarize` computes group level summaries
+* We'll see that `mutate` operates within groups, which can be quite helpful
+
+## Temperature data for Ann Arbor, MI
+
+```{r}
+# to run this line from the console, use `setwd("lectures")` first
+aatemp
+```
+
+## `mutate` to add a column
+
+```{r}
+aatemp_cel <- mutate(aatemp, TMAX_celsius = (TMAX - 32) * 5/9) |>
+  select(TMAX, TMAX_celsius)
+```
+
+## Grouping by year
+```{r}
+aat_year <- group_by(aatemp, year(DATE))
+summarize(aat_year, median(TMAX - TMIN, na.rm = TRUE))
+```
+## Useful functions for summaries
+
+* Seen before: `mean`, `median`, `sd`, `min`, `max`
+* Other common statistical measures: `quantile`, `IQR`
+* For boolean/logical columns: `any` and `all` ("or" and "and" across vectors)
+* The functions `n` and a `n_distinct` count units and distinct values
+
+## Some more summaries
+
+```{r}
+summarize(aat_year, n(), n_distinct(TMAX), any(SNOW > 10))
+```
+
+## Centered temperature
+
+```{r}
+mutate(aatemp, TMAX_centered = TMAX - mean(TMAX)) |>
+ ggplot(aes(y = TMAX_centered, x = factor(quarter(DATE)))) +
+    geom_violin() 
+```
+
+## `mutate` and `group_by`
+
+Observe some care when using `mutate` on grouped tables:
+
+```{r}
+group_by(aatemp, quarter(DATE)) |>
+  mutate(TMAX_centered = TMAX - mean(TMAX)) |>
+  ggplot(aes(y = TMAX_centered, x = factor(`quarter(DATE)`))) +
+    geom_violin()
+```
+
+## Normalizing by monthly averages?
+
+Let's center each observation by it's monthly average that we can understand if
+it was unusual for that time of year.
+
+```{r}
+aat_month_centered <- group_by(aatemp, month(DATE)) |>
+  mutate(TMAX_centered = TMAX - mean(TMAX, na.rm = TRUE)) # mean computed over months
+## verify as the variance should be pr
+summarize(aat_month_centered, var(TMAX_centered), sum(TMAX_centered^2) / (n() - 1)) |>
+  head(3)
+```
+
+## Unusual months continued: conversion to ranks
+
+*Ranks* are a useful robust replacement for values that are less susceptible to outliers. Let's rank days by how far they were from their monthly mean.
+
+**Danger**: mutate will operate within months!
+
+```{r}
+mutate(aat_month_centered, r = rank(TMAX_centered)) |> 
+  summarize(min(r), max(r))
+```
+
+## Ungrouping to fix
+
+We need to drop the grouping values so that we can rank across all days.
+
+```{r}
+ungroup(aat_month_centered) |> 
+  mutate(aat_month_centered, r = rank(TMAX_centered)) |>
+  summarize(min(r), max(r))
+```
+
+## Average rank within years
+
+Now that we can rank across all years and months, what year had the highest
+average ranks?
+
+```{r}
+ungroup(aat_month_centered) |> 
+  mutate(aat_month_centered, r = rank(TMAX_centered)) |>
+  group_by(year(DATE)) |>
+  summarize(mean(r)) |>
+  arrange(desc(`mean(r)`))
+```
+
+## Other R functions
+
+Most other R functions do not recognize grouping:
+
+```{r}
+mean(aatemp$TMAX, na.rm = TRUE)
+mean(aat_year$TMAX)
+summarize(aat_year, mean(TMAX))
+```
+
+## Writing our own functions
+
+```{r eval = F}
+function_name <- function(required_argument, optional_argument = 0, ...) {
+  # function body
+  return(a_value)
+}
+```
+
+(NB: The last line is automatically returned.)
+
+## Exercise
+
+Write an R function to transform a vector into a $Z$-score
+```{r scale, exercise = TRUE}
+x <- c(-1, 2, 1.1)
+```
+
+(NB: this function is called `scale` in R)
+
+## Common use case: mutations and summaries
+
+Suppose we want to median center and scale in terms of the IQR. We are going to use this functionality on the original data, but also within years.
+
+```{r}
+myscale <- function(x) {
+  (x - median(x)) / IQR(x)
+}
+```
+```{r}
+mutate(aatemp, TMAX_myscale = myscale(TMAX)) |>
+  ggplot(aes(x = factor(year(DATE)), y = TMAX_myscale)) +
+    geom_violin()
+```
+
+```{r}
+summarize(aat_year, myscale(TMAX)) |>
+  ggplot(aes(x = factor(`year(DATE)`), y = `myscale(TMAX)`)) +
+    geom_violin()
+```
+
+## Exericse: Converting all Fahrenheit to Celsius
+
+We have both `TMAX` and `TMIN` in Fahrenheit.
+
+```{r}
+select(aatemp, TMAX, TMIN)
+```
+
+Let's convert to Celsius ($C = (F - 32) \cdot 5/9$) by first creating a function.
+
+```{r celsius, exercise = TRUE}
+
+```
+
+## Summarizing with functions that return more than one value
+
+```{r}
+mean_var <- function(x) {
+  tibble(average = mean(x), variance = var(x))
+}
+
+summarize(aat_year, mean_var(TMAX))
+```
+
+Use caution when using this function more than once!
+
+```{r}
+summarize(aat_year, mean_var(TMAX), mean_var(TMIN))
+```
+
+## Predicates
+
+A **predicate** is a function that returns `TRUE` or `FALSE`.
+
+For example:
+```{r}
+no_missing <- function(x) {
+  !(any(is.na(x)))
+}
+
+no_missing(c(2,3,44))
+no_missing(c(7, NA, 122))
+```
+
+## Selecting columns with predicates
+
+We have seen several predicates used already: `is.numeric` or `is.character` in selecting columns. We can also use our own predicates.
+
+```{r}
+select(aatemp, where(no_missing)) |> colnames()
+```
+
+## Anonymous functions
+
+Sometimes we want to write short little functions that only get used once. We call these **anonymous functions** like this:
+
+```{r}
+select(aatemp, where(function(x) { !any(is.na(x)) })) |> ncol()
+```
+
+## Tidyverse anonymous function short hand
+
+Many of the tidyverse functions support using formulas to indicate an anonymous function:
+
+```{r}
+select(aatemp, where(~ !any(is.na(.x)))) |> ncol()
+```
+
+>* `~` starts a formula
+>* `.x` and `.y` are the arguments to the function
+
+We'll see more of this form when we discuss iteration.
+
+## Exercise
+
+Let's put it all together using the `mpg` data set.
+
+>* Get a list of manufacturers that produce cars in at least 2 different classes. (Recall `n_distinct` function)
+>* Using that list, subset the `mpg` data to just those manufactures
+>* Rescale the highway efficiency variable into Z-scores (using the common mean across all manufacturers)
+>* Group the observations by manufacturer. Which one has the smallest variance in `cty` efficiency?
+
+You may want to use `%in%`:
+```{r}
+c("Hi", "Low", "Low", "Medium") %in% c("Medium", "High")
+```
+
+```{r lastex, exercise = TRUE}
+
+```
+
+## Example solution
+
+```{r}
+at_least_2 <- group_by(mpg, manufacturer) |> 
+  summarize(per_class = n_distinct(class)) |>
+  filter(per_class > 1)
+
+at_least_2
+
+filter(mpg, manufacturer %in% at_least_2$manufacturer) |>
+  mutate(cty_z = scale(cty)) |>
+  group_by(manufacturer) |>
+  summarize(v = var(cty_z)) |>
+  arrange(v)
+```
+
+## Functions with optional arguments
+
+Recall that R functions with `argument = value` are optional. We can write functions this way too.
+
+```{r}
+
+addSomething <- function(x, to_add = 1) {
+  x + to_add
+}
+
+addSomething(7)
+addSomething(7 + 1)
+
+```
+
+## Next time
+
+>* R for Data Science: 19.4 - 19.6, 7 - 7.3
