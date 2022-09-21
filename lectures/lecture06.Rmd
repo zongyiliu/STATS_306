@@ -130,6 +130,40 @@ ungroup(aat_month_centered) |>
   arrange(desc(`mean(r)`))
 ```
 
+## Exercise
+
+Let's put it all together using the `mpg` data set.
+
+>* Get a list of manufacturers that produce cars in at least 2 different classes. (Recall `n_distinct` function)
+>* Using that list, subset the `mpg` data to just those manufactures
+>* Rescale the highway efficiency variable into Z-scores (using the common mean across all manufacturers)
+>* Group the observations by manufacturer. Which one has the smallest variance in `cty` efficiency?
+
+You may want to use `%in%`:
+```{r}
+c("Hi", "Low", "Low", "Medium") %in% c("Medium", "High")
+```
+
+```{r lastex, exercise = TRUE}
+
+```
+
+## Example solution
+
+```{r}
+at_least_2 <- group_by(mpg, manufacturer) |> 
+  summarize(per_class = n_distinct(class)) |>
+  filter(per_class > 1)
+
+at_least_2
+
+filter(mpg, manufacturer %in% at_least_2$manufacturer) |>
+  mutate(cty_z = scale(cty)) |>
+  group_by(manufacturer) |>
+  summarize(v = var(cty_z)) |>
+  arrange(v)
+```
+
 ## Other R functions
 
 Most other R functions do not recognize grouping:
@@ -254,40 +288,6 @@ select(aatemp, where(~ !any(is.na(.x)))) |> ncol()
 
 We'll see more of this form when we discuss iteration.
 
-## Exercise
-
-Let's put it all together using the `mpg` data set.
-
->* Get a list of manufacturers that produce cars in at least 2 different classes. (Recall `n_distinct` function)
->* Using that list, subset the `mpg` data to just those manufactures
->* Rescale the highway efficiency variable into Z-scores (using the common mean across all manufacturers)
->* Group the observations by manufacturer. Which one has the smallest variance in `cty` efficiency?
-
-You may want to use `%in%`:
-```{r}
-c("Hi", "Low", "Low", "Medium") %in% c("Medium", "High")
-```
-
-```{r lastex, exercise = TRUE}
-
-```
-
-## Example solution
-
-```{r}
-at_least_2 <- group_by(mpg, manufacturer) |> 
-  summarize(per_class = n_distinct(class)) |>
-  filter(per_class > 1)
-
-at_least_2
-
-filter(mpg, manufacturer %in% at_least_2$manufacturer) |>
-  mutate(cty_z = scale(cty)) |>
-  group_by(manufacturer) |>
-  summarize(v = var(cty_z)) |>
-  arrange(v)
-```
-
 ## Functions with optional arguments
 
 Recall that R functions with `argument = value` are optional. We can write functions this way too.
@@ -301,6 +301,19 @@ addSomething <- function(x, to_add = 1) {
 addSomething(7)
 addSomething(7 + 1)
 
+mutate(aatemp, TMAX1 = addSomething(TMAX),
+               TMAX2 = addSomething(TMAX, 2)) |> 
+  select(TMAX, TMAX1)
+```
+
+## Exercise
+
+Write a function `center` that **takes a function** as an argument computes
+$$x - f(x)$$
+Make the default argument be `mean`, but demonstrate using `median` centering as well.
+
+```{r higher-order, exercise = TRUE}
+myvec <- c(203404, 292, 1010, 3, -10930, 39)
 ```
 
 ## Next time
