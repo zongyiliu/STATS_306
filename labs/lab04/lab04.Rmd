@@ -27,8 +27,10 @@ library(gapminder)
 
 
 
-## Quiz 2 Review
+## 
 
+> - Review of Quiz 2
+> - Directory Commands
 
 
 ## Today's Content
