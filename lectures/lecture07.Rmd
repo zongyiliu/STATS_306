@@ -1,0 +1,180 @@
+---
+title: "Stats 306: Lecture 7"
+subtitle: "Writing Functions"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+aatemp <- read_csv("data/ann_arbor_weather.csv.gz")
+```
+
+## Review: `groupby` and `summarize`
+
+* Use `groupby` to **partition** tables into groups
+* Use `summarize` to compute **within group statistics**(e.g., conditional means)
+* Useful functions to know about: `any`, `all`, `n`, `n_distinct`
+* Interaction of `mutate` with `summarize`
+
+## Review: creating functions
+
+* Functions are variables like any other in R
+* General syntax: `fname <- function(required, optional = 123) { # fn body }`
+* Return will end a function and supply a value
+* Last line of function is automatic return value
+
+## Temperature data for Ann Arbor, MI
+
+```{r}
+aatemp
+```
+
+## From duplicated code to clean code
+
+How many interquartile ranges above or below the median? (Similar to a Z-score)
+
+```{r}
+mutate(aatemp, TMAX_scale_IQR = (TMAX - median(TMAX)) / IQR(TMAX),
+               TMIN_scale_IQR = (TMIN - median(TMIN)) / IQR(TMIN)) |>
+  group_by(abs(TMAX_scale_IQR) > 1.5, abs(TMIN_scale_IQR) > 1.5) |>
+  summarize(n())
+```
+
+## Writing our own functions: capturing common behavior
+
+```{r}
+scale_IQR <- function(x) {
+  (x - median(x)) / IQR(x)
+}
+
+temp_summary <- function(tbl) {
+  group_by(tbl, abs(TMAX_scale_IQR) > 1.5, abs(TMIN_scale_IQR) > 1.5) |>
+  summarize(n())
+}
+
+mutate(aatemp, TMAX_scale_IQR = scale_IQR(TMAX), 
+               TMIN_scale_IQR = scale_IQR(TMIN)) |>
+  temp_summary()
+```
+
+## Even better: `mtuate_at`
+
+We're still calling the function twice. `mutate_at` lets us pass in a
+**function** as an argument!
+
+If we give one function, it uses the original column names:
+
+```{r}
+mutate_at(aatemp, c("TMAX", "TMIN"), scale_IQR) |>
+  group_by(abs(TMAX) > 1.5, abs(TMIN) > 1.5) |>
+  summarize(n())
+```
+
+## More than one function, giving them names
+
+We can give a list of more than one function of the form
+```{r eval = FALSE}
+list(name1 = function1, name2 = function2)
+```
+
+```{r}
+
+```
+
+## Summarizing with functions that return more than one value
+
+```{r}
+mean_var <- function(x) {
+  tibble(average = mean(x), variance = var(x))
+}
+
+summarize(aat_year, mean_var(TMAX))
+```
+
+Use caution when using this function more than once!
+
+```{r}
+summarize(aat_year, mean_var(TMAX), mean_var(TMIN))
+```
+
+## Predicates
+
+A **predicate** is a function that returns `TRUE` or `FALSE`.
+
+For example:
+```{r}
+no_missing <- function(x) {
+  !(any(is.na(x)))
+}
+
+no_missing(c(2,3,44))
+no_missing(c(7, NA, 122))
+```
+
+## Selecting columns with predicates
+
+We have seen several predicates used already: `is.numeric` or `is.character` in selecting columns. We can also use our own predicates.
+
+```{r}
+select(aatemp, where(no_missing)) |> colnames()
+```
+
+## Anonymous functions
+
+Sometimes we want to write short little functions that only get used once. We call these **anonymous functions** like this:
+
+```{r}
+select(aatemp, where(function(x) { !any(is.na(x)) })) |> ncol()
+```
+
+## Tidyverse anonymous function short hand
+
+Many of the tidyverse functions support using formulas to indicate an anonymous function:
+
+```{r}
+select(aatemp, where(~ !any(is.na(.x)))) |> ncol()
+```
+
+>* `~` starts a formula
+>* `.x` and `.y` are the arguments to the function
+
+We'll see more of this form when we discuss iteration.
+
+## Functions with optional arguments
+
+Recall that R functions with `argument = value` are optional. We can write functions this way too.
+
+```{r}
+
+addSomething <- function(x, to_add = 1) {
+  x + to_add
+}
+
+addSomething(7)
+addSomething(7 + 1)
+
+mutate(aatemp, TMAX1 = addSomething(TMAX),
+               TMAX2 = addSomething(TMAX, 2)) |> 
+  select(TMAX, TMAX1)
+```
+
+## Exercise
+
+Write a function `center` that **takes a function** as an argument computes
+$$x - f(x)$$
+Make the default argument be `mean`, but demonstrate using `median` centering as well.
+
+```{r higher-order, exercise = TRUE}
+myvec <- c(203404, 292, 1010, 3, -10930, 39)
+```
+
+## Next time
+
+>* R for Data Science: 19.4 - 19.6, 7 - 7.3
