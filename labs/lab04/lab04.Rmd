@@ -23,9 +23,8 @@ library(gapminder)
 
 ## Logistics
 
-> - 
+> - HW2 is due on Oct 2.
 
-> - Questions?  
 
 
 ## Quiz 2 Review
@@ -163,7 +162,7 @@ Breaking down the syntax above:
 
 ## transmute
 
-`transmute` works exactly like `mutate`, the only difference being that only newly created columns produce in our new dataset(tibble). It is exactly the same as setting .keep = "none".
+`transmute` works exactly like `mutate`, the only difference being that only newly created columns will be retained in our new dataset (tibble). It is exactly the same as setting .keep = "none".
 
 We can create Sepal Area and Scaled Sepal Area columns as a separate dataset
 
@@ -187,21 +186,41 @@ head(iris2)
 
 We use `rename` to rename existing column names.
 
-dots(.) are not recommended for variable names, we want to rename all columns names in the iris dataset but displacing . with _
+dots(.) are not recommended for variable names, we want to rename all columns names in the iris dataset by replacing . with _
 
 ```{r}
-iris3 <- rename(iris, sepal_length = Sepal.Length,
+iris2 <- rename(iris, sepal_length = Sepal.Length,
                       sepal_width = Sepal.Width,
                       petal_length = Petal.Length,
                       petal_width = Petal.Width)
-head(iris3)
+head(iris2)
 ```
+
+We have many repetitive codes above. We can also use `rename_with()` to apply a (string) function to all columns by default or a specific subset.
+
+```{r}
+iris2 <- rename_with(iris, ~ str_replace(., pattern="\\.", replacement = "_"))
+head(iris2)
+```
+
+> - For all the columns in iris, we apply the function `str_replace()`.
+> - We use "\\\\" to escape.
 
 ## summarize and group_by
 
-`summarise` is used to compute a new dataset (tibble) by using agrregation functions. It is usually useful when used with `group_by`, as this helps to compute summaries for each category of a column of a dataset.
+`summarise` is used to compute a new dataset (tibble) by using aggregation functions. It is usually useful when used with `group_by`, as this helps to compute summaries for each category of a column of a dataset.
 
-> - summarise for entire dataset
+Some useful aggregation functions include:
+
+> - Center: mean(), median()
+> - Spread: sd(), IQR(), mad()
+> - Range: `min(), max(), quantile()
+> - Position: first(), last(), nth()
+> - Count: n(), n_distinct()
+> - Logical: any(), all()
+
+
+## Summarise for entire dataset
 
 To find the mean of Sepal Width and Sepla Length for the iris dataset:
 
@@ -248,7 +267,7 @@ Consider how the pipe (%>%) can help eliminate such hassle in the following sequ
 
 > - Filter the iris dataset for Petal Length greater than 1 and Sepal Width less than 3.3
 > - Select Sepal Length, Sepal Width and Species
-> - Rename the columns of Sepal Width and Sepal Length by displacing dot(.) with underscore(_)
+> - Rename the columns of Sepal Width and Sepal Length by replacing dot(.) with underscore(_)
 > - Convert the Species column to uppercase
 > - Group the resulting dataset by species and compute the 50th percentile and the mean for each group
 
