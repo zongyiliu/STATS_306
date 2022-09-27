@@ -70,7 +70,7 @@ Answer the following questions about the data set:
 * Which column gives the most easily understood definition of the crime committed?
 * How may precincts are there?
 
-Plot the number of crimes group by day of the week. Assuming that Monday is 1, Tuesday 2, etc., would you say that criminals take the weekend off?
+Plot the number of crimes grouped by day of the week. Assuming that Monday is 1, Tuesday 2, etc., would you say that criminals take the weekend off?
 
 ### When do crimes occur? (3 points)
 
@@ -105,7 +105,7 @@ Using `group_by` and `summarize`, find the most common period of the day for a c
 
 ### Common Crimes by Zip Code (2 points)
 
-Grouping first by `zip_code` and then by `offense_cateogry`, count up the number of kinds of crimes in each zip code (hint: recall the `n()` function).
+Grouping first by `zip_code` and then by `offense_category`, count up the number of each type of crime in each zip code (hint: recall the `n()` function).
 
 Use `arrange` to sort the data within zip code by the number of crimes of each type in descending order. Use the `first` function inside of `summarize` to find the most common crime in each zip code. 
 
@@ -113,7 +113,7 @@ At this point, you should have a table of zip codes with their most common crime
 
 ### Mapping homicide events (2 points)
 
-Use `filter` to create the table `homicide` that only includes events with `offense_cateogry` equal to `"HOMICIDE"`. 
+Use `filter` to create the table `homicide` that only includes events with `offense_category` equal to `"HOMICIDE"`. 
 
 Next, we need to create a bounding box for our data. Use `summarize` to find the minimum longitude, minimum latitude, maximum longitude, and maximum latitude (in that order). Then set the next block to `eval = TRUE`.
 
