@@ -314,6 +314,23 @@ tmp <- group_by(Batting, playerID) |>
 ggplot(tmp, aes(x = H)) + geom_histogram() + geom_vline(xintercept = bb_hr)
 ```
 
+## Very high level review for the midterm
+
+* Goal: Exploration and analysis of tabular data.
+* Programming style (one): talk about columns of data (measurement), not rows of data as much as possible
+  * Model of data: Lists of vectors of same length
+  * `ggplot`: Map columns to visual elements, place using geometries and summaries
+  * `filter/select/mutate/groupby/summarize`
+* Programming style (two): Don't Repeat Yourself (DRY)
+  * Create new variables/columns to avoid duplication
+  * Functions
+    * Capture common code
+    * Work with `select` or `summarize_at` like functions
+* Other aspects of data science
+  * Repeatable analysis (RMarkdown)
+  * Integrated tool chain (RStudio)
+  * Working with others (git)
+
 ## Next time
 
 >* R for Data Science 7 - 7.8
