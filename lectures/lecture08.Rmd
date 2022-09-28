@@ -225,20 +225,93 @@ Here's an example where we can only set one option for a function:
 food_order <- function(entree, side = NULL, dessert = NULL) {
   if (!is.null(side) && !is.null(dessert)) {
     return("You may only order one side or dessert")
-  } else if (!is.null(side)) {
-    return(paste("You ordered a main dish of", entree, "with a side of", side))
-  } else if(!is.null(dessert)) {
-    return(paste("You ordered a main dish of", entree, "with a dessert of", dessert))
-  } else {
-    # no side, no dessert
-    return("Are you sure you wouldn't like to order a side or dessert?")
-  }
+  } 
+  
+  extra <- 
+    if (!is.null(side)) {
+      paste("with a side of", side)
+    } else if (!is.null(dessert)) {
+      paste("with a dessert of", dessert)
+    } else {
+      # both NULL <=> nothing extra ordered
+      "with no other items"
+    }
+
+  paste("You ordered a main dish of", entree, extra)
+ 
 }
 
 food_order("soup")
 food_order("soup", side = "salad")
 food_order("soup", dessert = "cake")
 food_order("soup", "salad", "cake")
+```
+
+## Environments and functions
+
+An **environment** in R is all defined variables and their values (we can think of it like a list). 
+
+You have a **global** environment for your R session, and R packages and functions have their own environments.
+
+```{r}
+x <- 3
+f <- function(y) {
+  x <- 2
+  y + x
+}
+f(2)
+
+```
+
+## Lexical scoping
+
+Environments are **nested**. If we request a variable not in the current environment, we go up the chain. We call this lexical scoping.
+
+```{r}
+
+x <- 3
+f <- function(y) {
+  y + x
+}
+f(2)
+```
+
+## Why is this useful?
+
+This can be convenient if we want to calculate a quantity and then re-use it when summarizing or mutating.
+
+Barry Bonds has hit the most homeruns. 
+```{r}
+filter(Batting, playerID == "bondsba01") |>
+  group_by(playerID) |>
+  summarize(sum(HR)) |> 
+  select(`sum(HR)`) |> first() -> bb_hr
+bb_hr
+```
+
+How many players hit at least as many triples or doubles as Bonds hit HRs?
+```{r}
+group_by(Batting, playerID) |>
+  summarize_at(c("X2B", "X3B"), sum) |>
+  transmute_at(c("X2B", "X3B"), ~(.x > bb_hr)) |>
+  summarize_all(mean)
+```
+
+How many players had at least as many hits as Bonds had HRs?
+
+```{r}
+group_by(Batting, playerID) |>
+  summarize_at(c("H"), sum) |>
+  transmute_at(c("H", "H"), ~(.x > bb_hr)) |>
+  summarize_all(mean)
+```
+
+## Plotting hits
+
+```{r}
+tmp <- group_by(Batting, playerID) |>
+  summarize_at(c("H"), sum) 
+ggplot(tmp, aes(x = H)) + geom_histogram() + geom_vline(xintercept = bb_hr)
 ```
 
 ## Next time
