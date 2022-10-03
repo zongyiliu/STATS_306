@@ -1,0 +1,412 @@
+---
+title: "Stats 306: Lecture 9"
+subtitle: "Exploratory Data Analysis"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+library(Lahman) # install.packages("Lahman") if you don't have this
+```
+
+## Review
+
+* Variable number of arguments with `...`
+  * Useful for passing all arguments to another function ("wrapping")
+  * Optional arguments when functions are arguments (e.g., `mutate_all`)
+* Conditional program flow with `if`, `else`, `return`
+
+## Lahman data
+
+```{r}
+library(Lahman)
+colnames(Batting)
+```
+
+## Environments and functions
+
+An **environment** in R is all defined variables and their values (we can think of it like a list). 
+
+You have a **global** environment for your R session, and R packages and functions have their own environments.
+
+```{r}
+x <- 3
+f <- function(y) {
+  x <- 2
+  y + x
+}
+f(2)
+
+```
+
+## Lexical scoping
+
+Environments are **nested**. If we request a variable not in the current environment, we go up the chain. We call this lexical scoping.
+
+```{r}
+
+x <- 3
+f <- function(y) {
+  y + x
+}
+f(2)
+```
+
+## Why is this useful?
+
+This can be convenient if we want to calculate a quantity and then re-use it when summarizing or mutating.
+
+Barry Bonds has hit the most homeruns. 
+```{r}
+filter(Batting, playerID == "bondsba01") |>
+  group_by(playerID) |>
+  summarize(sum(HR)) |> 
+  select(`sum(HR)`) |> first() -> bb_hr
+bb_hr
+```
+
+How many players hit at least as many triples or doubles as Bonds hit HRs?
+```{r}
+group_by(Batting, playerID) |>
+  summarize_at(c("X2B", "X3B"), sum) |>
+  mutate_at(c("X2B", "X3B"), ~(.x > bb_hr)) |>
+  summarize_at(c("X2B", "X3B"), mean)
+```
+
+How many players had at least as many hits as Bonds had HRs?
+
+```{r}
+group_by(Batting, playerID) |>
+  summarize_at(c("H"), sum) |>
+  mutate_at(c("H"), ~(.x > bb_hr)) |>
+  summarize_at('H', mean)
+```
+
+## Plotting hits
+
+```{r}
+tmp <- group_by(Batting, playerID) |>
+  summarize_at(c("H"), sum) 
+ggplot(tmp, aes(x = H)) + geom_histogram() + geom_vline(xintercept = bb_hr)
+```
+
+## From last lecture: Very high level review for the midterm
+
+>* Goal: Exploration and analysis of tabular data.
+>* Programming style (one): talk about columns of data (measurement), not rows of data as much as possible
+>  * Model of data: List of vectors of same length
+>  * `ggplot`: Map columns to visual elements, place using geometries and summaries
+>  * `filter/select/mutate/groupby/summarize`
+>* Programming style (two): Don't Repeat Yourself (DRY)
+>  * Create new variables/columns to avoid duplication
+>  * Functions
+>    * Capture common code
+>    * Work with `select` or `summarize_at` like functions
+>* Other aspects of data science
+>  * Repeatable analysis (RMarkdown)
+>  * Integrated tool chain (RStudio)
+>  * Working with others (git)
+
+## Statistics and Data Science Workflow
+
+![Workflow Diagram](images/r4ds-whole-game.png)
+
+## Exploratory Data Analysis
+
+**Exploratory Data Analysis** (EDA) is the process of learning about a particular data source and generating questions. It is an **informal** process and is **data driven**. 
+
+* Generate questions about your data.
+* Search for answers by visualizing, transforming, and modelling your data.
+* Use what you learn to refine your questions and/or generate new questions.
+
+## EDA vs. Inference
+
+EDA is about looking at a particular data set.
+
+**Inference** is about making informed guesses about data we **do not* observe.
+
+Inference includes **estimating**, **testing hypotheses** or **performing prediction** with the aid of a statistical model.
+
+EDA helps generate questions we can answer more forcefully with inference.
+
+## Asking Questions, Maybe Answers
+
+* EDA is about finding out what questions to ask. This is harder than it sounds.
+* Quantity over quality (at least at the start)
+* Our biggest questions are about **variation**: why are not all the data the same?
+* We might phrase these more concretely as:
+  * What type of variation occurs within my variables?
+  * What type of covariation occurs between my variables? (Usually the more interesting question!)
+* Getting answers is nice, but not a necessary step just yet.
+
+## John Tukey, father of EDA
+
+<center>
+
+![John Tukey](images/John_Tukey.jpg)
+
+</center>
+
+>* The best thing about being a statistician is that you get to play in everyone's backyard.
+>* The first task of the analyst of data is quantitative detective
+work.
+>* Far better an approximate answer to the right question, which is often vague, than an exact answer to the wrong question, which can always be made precise.
+
+## Distributions and Variation
+
+* If all our observations had the same value, we could perfectly describe our data set with a single number (or category for nominal data).
+* Usually, observations differ in their values, exhibiting **variation**
+* One of the primary tasks of EDA is to describe and quantify the variation
+* The **distribution** of a measurement is the set of all possible values and their frequencies in the data set.
+* Might look at **summaries** of the distribution to understand variation.
+* Start by focusing on single measurements (**marginal distributions**), talk about **joint distributions** later
+  
+## Reminder: types of data
+
+We often describe a measurement as being one of three classes:
+
+>* Nominal/categorical: taking one of a fixed set of classes/categories
+>* Ordinal: still a set of categories, but now they can be ordered
+>* Quantitative (continuous): taking numeric values, possibly infinitely many
+
+## Distributions of nominal/categorical
+
+When observations fall into a set number of possible values, the distribution can be described with a table:
+
+```{r}
+group_by(People, bats) |> summarize(n())
+```
+or using this shortcut:
+```{r}
+count(People, bats)
+```
+
+## Proportions instead of counts
+
+It is often useful to work on the proportions scale, as this communicates what share of the data set is contained in each level of the categorical value.
+
+$$\frac{\text{number in group}}{\text{size of data set}}$$
+
+```{r}
+group_by(People, bats) |>
+  summarize(n = n()) |>
+  mutate(n / sum(n))
+```
+
+## Exercise
+
+Calculate the proportion of each type of position (`POS`) in the `Fielding` table from Lahman.
+
+```{r prop-field, exercise = TRUE}
+
+```
+
+
+## Displaying visually
+
+One advantage of visual displays is that we can give (approximately) both pieces of information at the same time:
+
+```{r}
+ggplot(People, aes(x = bats)) + geom_bar()
+```
+
+## Marginal distributions for quantitative/ordinal
+
+When we have observations that take on numeric values, or at least can be ordered, it doesn't make sense to report counts of unique values.
+
+```{r}
+summarize(People, n_distinct(weight))
+```
+
+but we can describe the **empirical cumulative distribution function**.
+
+$$\hat F(x) = \frac{\text{number of values no larger than x}}{\text{total data set size}}$$
+
+## Proportions and means
+
+When we are calculating a proportion, what are we doing?
+
+>* Finding all the units that match some condition
+>* Dividing by the sample size
+
+Suppose we wanted the proportion of players weighing less than 200 lbs:
+
+```{r}
+People_clean <- filter(People, !is.na(weight))
+filter(People_clean, weight <= 200) %>% nrow() / nrow(People_clean)
+```
+
+What is `weight <= 200`?
+
+```{r}
+summarize(People_clean, class(weight <= 200))
+```
+
+R treats `TRUE` like 1 and `FALSE` like 0 so:
+```{r}
+summarize(People_clean, sum(weight <= 200)) / dim(People_clean)[1] 
+```
+
+But what is a sum divided by the size of the data? The mean of the condition!
+
+```{r}
+summarize(People_clean, mean(weight <= 200))
+```
+
+
+
+## Computing the ECDF 
+
+What percentage of players have a weight no more than 200 pounds?
+
+```{r}
+summarize(People_clean, mean(weight <= 200))
+```
+
+What percentage have a weight no more than 250 pounds?
+```{r}
+summarize(People_clean, mean(weight <= 250))
+```
+
+## Exercise
+
+What is the proportion of players that have made more than 100 errors? 
+
+```{r errors-exercise, exercise = TRUE}
+# group_by(Fielding, playerID) |> summarize(E = sum(E))
+```
+
+How would you write this quantity in terms of the ECDF?
+## Plotting the ECDF
+
+```{r}
+ggplot(People, aes(x = weight)) + stat_ecdf() + ylab("Proportion less than x")
+```
+
+## What proportion between two values?
+
+We could also ask questions like, what proportion between 200 and 250 pounds?
+
+```{r}
+summarize(People_clean, mean(weight > 200 & weight <= 250))
+```
+
+Notice that we could also use the ECDF to answer this:
+
+$$\frac{between 200 and 250}{total players} = \frac{less or equal than 250 minus less than 200}{total players} = \hat F(250) - \hat F(200)$$
+
+```{r}
+summarize(People_clean, mean(weight <= 250) - mean(weight <= 200))
+```
+
+## Showing visually
+```{r}
+ggplot(People_clean, aes(x = weight)) + stat_ecdf() + ylab("Proportion less than x") +
+  annotate("rect", xmin = 200, xmax = 250, 
+           ymin = mean(People_clean$weight <= 200), 
+           ymax = mean(People_clean$weight <= 250),
+  alpha = .5)
+```
+
+## More than one box
+
+```{r}
+Fhat <- function(w) { mean(People_clean$weight <= w) }
+
+g <- ggplot(People_clean, aes(x = weight)) + stat_ecdf() + ylab("Proportion less than x")
+k <- 10
+b <- seq(min(People_clean$weight), max(People_clean$weight), length.out = k)
+for (i in 2:k) {
+  g <- g + annotate("rect", xmin = b[i - 1], xmax = b[i],
+                    ymin = Fhat(b[i - 1]), ymax = Fhat(b[i]),
+                    alpha = 0.5)
+}
+print(g)
+```
+
+## Exercise
+
+Create an ECDF of the number of errors made for **players making fewer than 100 errors**
+```{r ecdfplot-exercise, exercise = TRUE}
+# group_by(Fielding, playerID) |> summarize(E = sum(E))
+```
+
+What's the largest number of errors that 75% of players have made fewer errors than that number?
+
+Why must the point (100, 1.0) be on the line of the ECDF?
+
+
+## From ECDF to histogram
+
+```{r}
+ggplot(People_clean, aes(x = weight)) + 
+  geom_histogram(bins = k - 1, aes(y = stat(count / sum(count))))
+```
+
+## Histograms, the importance of bin widths
+
+A really bad idea:
+```{r}
+ggplot(People_clean, aes(x = weight)) +
+  geom_histogram(bins = 1)
+```
+Also probably a bad idea (though interesting!):
+
+```{r}
+ggplot(People_clean, aes(x = weight)) +
+  geom_histogram(bins = 154)
+```
+
+Goldilocks?
+```{r}
+ggplot(People_clean, aes(x = weight)) +
+  geom_histogram(bins = 40)
+```
+
+## Smoothing histograms: Density plots
+
+When creating a histogram, I need two things
+
+>* How wide are the bins
+>* Where the bins will start
+
+Rather than picking a particular starting location, let's think about averaging lots of starting locations (infinitely many). This yields a **density plot** (also known as a kernel density estimate plot):
+
+```{r}
+ggplot(People_clean, aes(x = weight)) + geom_density()
+```
+
+## Density plots: smooth versus noisy
+
+```{r}
+ggplot(People_clean, aes(x = weight)) + geom_density(bw = 100)
+```
+
+```{r}
+ggplot(People_clean, aes(x = weight)) + geom_density(bw = 1)
+```
+
+
+```{r}
+bw.nrd0(People_clean$weight) ## geom_density default
+ggplot(People_clean, aes(x = weight)) + geom_density()
+```
+
+## Exercise
+
+Experiment making a density plot for the number of errors made. Try different band widths (`bw`) argument.
+```{r}
+# group_by(Fielding, playerID) |> summarize(E = sum(E))
+```
+
+
+## Next time
+
+>* R for Data Science: 7.3 - 7.5
