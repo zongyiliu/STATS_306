@@ -1,7 +1,7 @@
 ---
 title: "Stats 306: Lab 4"
 subtitle: "Data Manipulation"
-author: "Yilei Zhang"
+author: "Your Name"
 output: 
   slidy_presentation:
     incremental: true

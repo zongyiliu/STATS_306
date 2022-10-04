@@ -1,6 +1,6 @@
 ---
 title: "STATS 306 Lab1"
-author: Yilei Zhang
+author: "Your Name"
 output: 
   html_document:
     number_sections: true
