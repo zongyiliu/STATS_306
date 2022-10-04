@@ -1,7 +1,7 @@
 ---
 title: "Stats 306: Lab 3"
 subtitle: "Graphics: Facets, Coordinate Systems; Working with tables"
-author: Yilei Zhang
+author: "Your Name"
 output: 
   slidy_presentation:
     incremental: true
