@@ -184,6 +184,7 @@ result does not have to have the same format, but it should have the same
 information.
 
 
+
 ```{r}
 d2 <- d
 d2[10, 1] <- NA
