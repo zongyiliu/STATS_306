@@ -1,6 +1,6 @@
 ---
 title: "STATS 306 Lab1"
-author: "Your Name"
+author: Yilei Zhang
 output: 
   html_document:
     number_sections: true
@@ -30,7 +30,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Attendance 
 
-We will be keeping lab attendance. 
+We will be keeping in-person lab attendance. Two unexcused absences are allowed.
 
 * If you can't make it to lab, just let us know in advance.
 * If you missed class because you were sick then just let us know afterwards.
@@ -38,13 +38,14 @@ We will be keeping lab attendance.
 We will be keeping track of attendance via the iClicker app.
 
 * The iClicker student app is free for both iOS and Android. 
-* We will only be using it for attendance, so no subscription is required. 
+* We will only be using it for attendance, so no subscription is required.
+* You need to enable the location access on your phone to check in.
 
 ### QR code for apple store: 
 
 <center>
 
-![Apple QR code](images/iClicker_Android.png)
+![Apple QR code](images/iClicker_Apple.png)
 
 </center>
 

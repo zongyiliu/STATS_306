@@ -1,6 +1,6 @@
 ---
 title: "STATS306 Lab2"
-author: "Your Name"
+author: Yilei Zhang
 output: 
   html_document:
     number_sections: true
@@ -341,7 +341,7 @@ Stats are more of an issue for bar charts than for scatterplots. The default sta
 ```{r stat_count_example}
 (midwest2 <- midwest %>%
   group_by(state) %>%
-  summarize(count = n(), prop = n() / n()) %>%
+  summarize(count = n(), prop = count / n()) %>%
   ungroup())
 ```
 
