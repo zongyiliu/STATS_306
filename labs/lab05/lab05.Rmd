@@ -181,7 +181,13 @@ The continuous variable is converted to a categorical variable, and the plot con
 ## Problem 4
 > - Discuss how to obtain each of the plot below
 
-![](images/fig.png){width=80%}
+
+<center>
+
+![Problem 4 Image](images/fig.png){width=80%}
+
+</center>
+
 
 > - Recreate the R code necessary to generate the following graphs.
 
