@@ -1,0 +1,336 @@
+---
+title: "Stats 306: Lecture 8"
+subtitle: "Wrapping up functions"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+library(Lahman) # install.packages("Lahman") if you don't have this
+```
+
+## Review
+
+* From duplicated to clean code:
+  * Common patterns in function
+  * Use of `mutate_at`
+  * Lists of functions as arguments
+* Return values: only one but can package up in vectors, lists, and tables
+* Predicates: functions that return `TRUE` or `FALSE`; use in `select`
+* Anonymous functions, tidyverse short hand notation `~ (.x - mean(.x))^2 / (length(.x) - 1)`
+
+## The `Lahman` package
+
+Sean Lahman maintains an extremely [detailed database of American baseball
+statistics](https://www.seanlahman.com/baseball-archive/statistics). The
+`Lahman` package conveniently imports this data for us.
+
+```{r}
+library(Lahman)
+data(package = "Lahman")
+dim(Batting)
+colnames(Batting)
+```
+
+We can look up the description of the columns using `?Batting` or the help menu.
+
+## Getting in the Lahmand data
+
+```{r}
+summarize(Batting, range(yearID))
+group_by(Batting, playerID) |> 
+  summarize_at(c("G", "HR", "RBI"), sum) |>
+  arrange(desc(HR)) |> head(5)
+```
+
+## From IDs to full names
+
+The `People` table has a `playerID` column. Does this uniquely identify players?
+
+```{r}
+dim(People)
+summarize(People, n_distinct(playerID))
+```
+
+Looking up players: 
+```{r}
+lookupPlayer <- function(pid) {
+  filter(People, playerID %in% pid) # result will be a table
+}
+
+lookupPlayer(c("aaronha01", "ruthba01")) |> select(nameFirst, nameLast)
+```
+
+## Successful players (batting)
+
+Which players had the most home runs? Games played? Stolen bases?
+
+```{r}
+top_players <- function(stat) {
+  group_by(Batting, playerID) |>
+    summarize_at(stat, list(stat_sum = sum)) |>
+    filter(stat_sum == max(stat_sum, na.rm = TRUE)) |>
+    mutate(lookupPlayer(playerID)) |>
+    select(playerID, stat_sum, nameFirst, nameLast) |>
+    mutate(type = stat)
+} 
+
+# rbind stacks tables
+rbind(
+  top_players("HR"),
+  top_players("G"),
+  top_players("SB"))
+```
+
+(NB: using the `list(new_col_name = summary_function)` lets us force the name of the column with the results of `summary_function`)
+
+## Variable number of arguments
+
+Recall our template for creating a function in R:
+
+```{r, eval = FALSE}
+fname <- function(required_arg, optiona_arg = 123, ...) {
+  # function body
+}
+```
+
+The `...` means "any number of additional arguments"
+
+## Example of variable arguments
+
+```{r}
+sum_summary <- function(...) {
+  select(...) |> summarize_all(sum)
+}
+
+sum_summary(Batting, HR, G, SB)
+```
+
+Notice how all three arguments get passed to `select` automatically.
+
+
+## Exercise
+
+The `paste` function will take more than one item to turn into a string using its `...` argument:
+
+```{r}
+paste("Welcome", "to", "Stats206", "and", "DataSci101")
+```
+
+Write a function that takes a `...` argument and passes it along to `paste`. Set the `sep = "+"` when calling `paste`.
+
+```{r exdots, exercise = TRUE}
+
+
+## plus_paste("Welcome", "to", "Stats206", "and", "DataSci101")
+```
+
+## Common use of `...`: passing optional arguments to called functions
+
+We have seen `na.rm = TRUE` pop up from time to time.
+
+```{r}
+d <- tibble(x = c(1, 10, NA, 7), y = c(1000, 2000, 10000, NA))
+d
+```
+
+What happens if we try to summarize using `mean`?
+
+```{r}
+summarize_all(d, mean)
+```
+`summarize` uses `...` to pass additional arguments to the summarizing functions.
+
+```{r}
+summarize_all(d, mean, na.rm = TRUE)
+```
+## Fixing a previous function
+
+```{r}
+sum_summary <- function(...) {
+  select(...) |> summarize_all(sum, na.rm = TRUE)
+}
+
+sum_summary(Batting, HR, G, SB)
+```
+
+## Conditional evaluation, short circuiting
+
+We have used `if_else` to make choices for an entire vector. We often need **conditional program flow** in functions.
+
+```{r}
+my_median <- function(x) {
+  x_sorted <- sort(x)
+  n <- length(x)
+  if (n %% 2 == 1) {
+    ## odd numer of observations
+    return(x_sorted[(n + 1)/2])
+  } else {
+    return(mean(x_sorted[c(n/2, n/2 + 1)]))
+  }
+  
+  return(Inf) # this line will never run
+}
+
+values_even <- c(19, 2, 4, 11)
+values_odd  <- c(19, 2, 4, 11, 9)
+
+my_median(values_even)
+my_median(values_odd)
+```
+
+## Careful about what you put in your `if` statements:
+
+```{r eval = FALSE}
+
+if (values_even > 3) {
+  ... code might assume all values are larger than 3 ...
+}
+```
+Would give the error message:
+```
+Error in if (values > 3) { : the condition has length > 1
+```
+
+Solution: use the `any` and `all` functions
+
+## Exercise: Safe variance
+
+Recall the usual (unbiased) estimator for variance:
+
+$$\frac{\sum_{i = 1}^n (X_i - \bar X)^2}{n - 1}$$
+
+If there is only one unit in the sample, this estimator is undefined. Instead, let's estimate the variance as 0 if we only have one observation.
+
+Write a function to estimate variance in this way. Demonstrate on a vector of size 1 and a longer vector. Use `var` in the case where $n > 1$.
+
+```{r}
+
+```
+
+## Combining more than one condition
+
+We can use `&&` for "and" and `||` for "or". We can use `!` to negate.
+
+Here's an example where we can only set one option for a function:
+
+```{r}
+food_order <- function(entree, side = NULL, dessert = NULL) {
+  if (!is.null(side) && !is.null(dessert)) {
+    return("You may only order one side or dessert")
+  } 
+  
+  extra <- 
+    if (!is.null(side)) {
+      paste("with a side of", side)
+    } else if (!is.null(dessert)) {
+      paste("with a dessert of", dessert)
+    } else {
+      # both NULL <=> nothing extra ordered
+      "with no other items"
+    }
+
+  paste("You ordered a main dish of", entree, extra)
+ 
+}
+
+food_order("soup")
+food_order("soup", side = "salad")
+food_order("soup", dessert = "cake")
+food_order("soup", "salad", "cake")
+```
+
+## Environments and functions
+
+An **environment** in R is all defined variables and their values (we can think of it like a list). 
+
+You have a **global** environment for your R session, and R packages and functions have their own environments.
+
+```{r}
+x <- 3
+f <- function(y) {
+  x <- 2
+  y + x
+}
+f(2)
+
+```
+
+## Lexical scoping
+
+Environments are **nested**. If we request a variable not in the current environment, we go up the chain. We call this lexical scoping.
+
+```{r}
+
+x <- 3
+f <- function(y) {
+  y + x
+}
+f(2)
+```
+
+## Why is this useful?
+
+This can be convenient if we want to calculate a quantity and then re-use it when summarizing or mutating.
+
+Barry Bonds has hit the most homeruns. 
+```{r}
+filter(Batting, playerID == "bondsba01") |>
+  group_by(playerID) |>
+  summarize(sum(HR)) |> 
+  select(`sum(HR)`) |> first() -> bb_hr
+bb_hr
+```
+
+How many players hit at least as many triples or doubles as Bonds hit HRs?
+```{r}
+group_by(Batting, playerID) |>
+  summarize_at(c("X2B", "X3B"), sum) |>
+  transmute_at(c("X2B", "X3B"), ~(.x > bb_hr)) |>
+  summarize_all(mean)
+```
+
+How many players had at least as many hits as Bonds had HRs?
+
+```{r}
+group_by(Batting, playerID) |>
+  summarize_at(c("H"), sum) |>
+  transmute_at(c("H", "H"), ~(.x > bb_hr)) |>
+  summarize_all(mean)
+```
+
+## Plotting hits
+
+```{r}
+tmp <- group_by(Batting, playerID) |>
+  summarize_at(c("H"), sum) 
+ggplot(tmp, aes(x = H)) + geom_histogram() + geom_vline(xintercept = bb_hr)
+```
+
+## Very high level review for the midterm
+
+* Goal: Exploration and analysis of tabular data.
+* Programming style (one): talk about columns of data (measurement), not rows of data as much as possible
+  * Model of data: Lists of vectors of same length
+  * `ggplot`: Map columns to visual elements, place using geometries and summaries
+  * `filter/select/mutate/groupby/summarize`
+* Programming style (two): Don't Repeat Yourself (DRY)
+  * Create new variables/columns to avoid duplication
+  * Functions
+    * Capture common code
+    * Work with `select` or `summarize_at` like functions
+* Other aspects of data science
+  * Repeatable analysis (RMarkdown)
+  * Integrated tool chain (RStudio)
+  * Working with others (git)
+
+## Next time
+
+>* R for Data Science 7 - 7.8
