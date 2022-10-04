@@ -14,7 +14,6 @@ runtime: shiny_prerendered
 if (!require(gapminder)) install.packages("gapminder", repos = "http://cran.us.r-project.org")
 
 if (!require(nycflights13)) install.packages("nycflights13")
-if (!require(imager)) install.packages("imager")
 ```
 
 ```{r setup, echo=FALSE, include=FALSE}
@@ -22,7 +21,6 @@ library(learnr) # For interactive exercises
 library(tidyverse) # For ggplot2, dplyr
 library(gapminder)
 library(nycflights13)
-library(imager)
 ```
 
 ## Logistics
@@ -100,11 +98,11 @@ The continuous variable is converted to a categorical variable, and the plot con
 ## Problem 4
 > - Discuss how to obtain each of the plot below
 
-```{r fig}
-myimg <- load.image("fig.png")
-plot(myimg, axes = FALSE)
-```
+<center>
 
+![Problem 4 Image](images/fig.png){width=80%}
+
+</center>
 
 > - Recreate the R code necessary to generate the following graphs.
 
