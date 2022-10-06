@@ -1,0 +1,98 @@
+---
+title: "Stats 306: Lecture 10"
+subtitle: "Exploratory Data Analysis"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+library(Lahman) # install.packages("Lahman") if you don't have this
+
+People_clean <- filter(People, !is.na(weight))
+```
+
+
+## Review
+
+* Environments in R: variables and values
+* Private environments for functions, access to global scope
+* Exploratory data analysis: trying to find the right questions
+* Main questions:
+  * What kind of variation for the measurements in in my sample?
+  * What kinds of covariation among measurements (relationships)?
+  
+## Distributions for single variables
+
+* Nominal/categorical: counts/proportions
+* Ordinal and quantitative: Empirical cumulative distribution function $\hat F(x) = \text{proportion of $X_i \le x$}$
+* Connection between ECDF and histogram
+
+
+
+## Histograms, the importance of bin widths
+
+A really bad idea:
+```{r}
+ggplot(People_clean, aes(x = weight)) +
+  geom_histogram(bins = 1)
+```
+Also probably a bad idea (though interesting!):
+
+```{r}
+ggplot(People_clean, aes(x = weight)) +
+  geom_histogram(bins = 154)
+```
+
+Goldilocks?
+```{r}
+ggplot(People_clean, aes(x = weight)) +
+  geom_histogram(bins = 40)
+```
+
+## Smoothing histograms: Density plots
+
+When creating a histogram, I need two things
+
+>* How wide are the bins
+>* Where the bins will start
+
+Rather than picking a particular starting location, let's think about averaging lots of starting locations (infinitely many). This yields a **density plot** (also known as a kernel density estimate plot):
+
+```{r}
+ggplot(People_clean, aes(x = weight)) + geom_density()
+```
+
+## Density plots: smooth versus noisy
+
+```{r}
+ggplot(People_clean, aes(x = weight)) + geom_density(bw = 100)
+```
+
+```{r}
+ggplot(People_clean, aes(x = weight)) + geom_density(bw = 1)
+```
+
+
+```{r}
+bw.nrd0(People_clean$weight) ## geom_density default
+ggplot(People_clean, aes(x = weight)) + geom_density()
+```
+
+## Exercise
+
+Experiment making a density plot for the number of errors made. Try different band widths (`bw`) argument.
+```{r}
+# group_by(Fielding, playerID) |> summarize(E = sum(E))
+```
+
+
+## Next time
+
+>* R for Data Science: 7.3 - 7.5
