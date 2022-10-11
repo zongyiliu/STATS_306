@@ -20,6 +20,7 @@ if (!require(nycflights13)) install.packages("nycflights13")
 library(learnr) # For interactive exercises
 library(tidyverse) # For ggplot2, dplyr
 library(gapminder)
+library(ggmap)
 library(nycflights13)
 ```
 
@@ -32,11 +33,7 @@ library(nycflights13)
 crime <- read_csv("../data/RMS_Crime_Incidents.csv.gz")
 ```
 
-How many rows and columns are in this data set?
-
-```{r}
-dim(crime)
-```
+## Question 2: When do crimes occur?
 
 Using the `cut` function and `mutate`, make a new column that breaks the day into the following periods:
 
@@ -68,6 +65,96 @@ mutate(crime, period = hour_to_period(hour_of_day)) |>
 ```
 
 Here we see that Early is the least common, with Night slightly edging out Late for the most common category.
+
+## Question 2: Common Crimes by Zip Code
+
+Grouping first by `zip_code` and then by `offense_category`, count up the number of each type of crime in each zip code (hint: recall the `n()` function).
+
+Use `arrange` to sort the data within zip code by the number of crimes of each type in descending order. Use the `first` function inside of `summarize` to find the most common crime in each zip code.
+
+At this point, you should have a table of zip codes with their most common crime. Group by the crime type to see what types of crime are common. What is the most common crime? Are other crimes also frequent across the zip codes?
+
+```{r}
+group_by(crime, zip_code, offense_category) |>
+  summarize(count = n()) |>
+  arrange(desc(count)) |>
+  summarize(offense_category = first(offense_category)) |>
+  group_by(offense_category) |>
+  summarize(n())
+```
+
+Here we see that assualt is the most common category. There is not much variation in most common category, as the only other most common crime is larcency.
+
+## Question 2: Mapping homicide events
+
+Use `filter` to create the table `homicide` that only includes events with `offense_category` equal to `"HOMICIDE"`.
+
+Next, we need to create a bounding box for our data. Use `summarize` to find the minimum longitude, minimum latitude, maximum longitude, and maximum latitude (in that order). Then set the next block to `eval = TRUE`.
+
+```{r}
+homicide <- filter(crime, offense_category == "HOMICIDE")
+detroit_bbox <- summarize(homicide, min(longitude),
+                                    min(latitude),
+                                    max(longitude),
+                                    max(latitude))
+```
+
+```{r}
+bbox <- detroit_bbox |> as.numeric()
+detroit_map <- get_map(bbox, zoom = 11, maptype = "roadmap")
+```
+
+```{r}
+ggmap(detroit_map) + geom_point(data = homicide, mapping = aes(x = longitude, y = latitude))
+```
+
+## Question 2: 2D histogram
+
+While the previous plot showed all the data, it is not entirely clear where homicides are most common. To find out, let’s create a 2D histogram. Before we do that, we need a function that, like `cut`, will break the continuous latitude and longitude into discrete bins, but we need to retain the latitude and longitude values (`cut` gives ranges).
+
+```{r}
+# with some ideas from: https://stackoverflow.com/questions/22312207/how-to-assign-cut-range-midpoints-in-r
+midpointcut <- function(x, breaks) {
+  orig <- cut(x, breaks, dig.lab = 8)
+  sapply(
+    orig,
+    function(y) {
+      mean(
+        as.numeric(
+          unlist(
+            strsplit(gsub("\\(|\\)|\\[|\\]", "", as.character(y)), ",")
+          )
+        )
+      )
+    }
+  )
+} 
+```
+
+>- Use the `midpointcut` function to break up `latitude` in to 30 bins. Likewise, cut up `longitude` into 30 bins as well.
+>- `group_by` both cuts and count how many observations fall into each category.
+>- Create a new map plot using the count data, making the size of the dot equal to the count.
+
+Do you notice any regions that seem more dangerous than others?
+
+```{r}
+mutate(homicide, 
+       lat = midpointcut(latitude, 30),
+       lon = midpointcut(longitude, 30)) |>
+  group_by(lon, lat) |>
+  summarize(n()) -> homicide_counts
+```
+
+```{r}
+ggmap(detroit_map) +
+  geom_point(
+    data = homicide_counts,
+    mapping = aes(x = lon, y = lat, size = `n()`),
+    alpha = 0.75
+  )
+```
+
+
 
 ## Today's Content
 
