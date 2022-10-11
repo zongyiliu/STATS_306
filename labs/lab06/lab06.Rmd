@@ -164,18 +164,29 @@ q90 <- function(x) {
 }
 
 # regular summarize is also fine
-summarize_at(mpg, c("cty", "hwy"), q90) 
+group_by(mpg, manufacturer) %>% summarize_at(c("cty", "hwy"), q90) 
 ```
 
 ## Question 3: Predicates
 
 Write a predicate function (`positive`) that returns true if all values in a vector are strictly positive.
 
+```{r}
+positive <- function(x){
+  all(x>0)
+}
+```
+
+
 Demonstrate your predicate using `select` on this data set:
 ```{r}
 set.seed(30303222)
 n <- 100
 d <- tibble(x = runif(n), y = runif(n, -1, 1), z = rnorm(100)^2, w = log(runif(n)))
+```
+
+```{r}
+select(d, where(positive)) |> head()
 ```
 
 Write a predicate (`no_outliers`) that returns true if all observations are within 3 standard deviations of the mean.
