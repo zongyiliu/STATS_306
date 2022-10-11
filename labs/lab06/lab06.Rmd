@@ -523,3 +523,86 @@ We could instead create categories for `carat` that have the same number of valu
 ggplot(data = diamonds, mapping = aes(x = carat, y = price)) + 
   geom_boxplot(mapping = aes(group = cut_number(carat, 20)))
 ```
+
+## Challenge 1
+
+>- Subset the `gapminder` data for only the year 2007
+>- Make a histogram for GDP per capita
+>- Superimpose your plot with a density plot. [Hint: To make this work, go back to step two change the y axis of the histogram to density]
+
+How many modes do you see?
+
+```{r}
+head(gapminder)
+```
+
+
+```{r challenge1, exercise = T}
+
+```
+
+
+## Solution
+
+There are two modes.
+
+```{r}
+gapminder %>%
+  filter(year == 2007) %>%
+  ggplot() +
+  geom_histogram(aes(x = gdpPercap, y = stat(density)), alpha = 0.3) +
+  geom_density(aes(x = gdpPercap), color = "darkorange", size = 2)
+```
+
+## Challenge 2
+
+The goal of this task is to use visualization to inspect the distribution of a continuous variable in the `gapminder` dataset. While this may look challenging, you are encouraged to follow the instructions to help complete the task.
+
+>- Make a histogram for GDP per capita
+>- Superimpose your plot with a density plot
+
+
+We know that a distribution is positively skewed (skewed to the right) when the mean is greater than the median. We wish to visualize the mean and median as lineplots superimposed on our previous plot:
+
+>- Create a new tibble containing the mean and median from the `gapminder` data
+>- Superimpose vertical-dashed line plots (see `geom_vline`) for both the mean and median onto the previous plot; differentiating these two lines by your choice of color:
+  >    - You can create a color tibble and map the vertical line plots to each color.
+  >    - With the help of `scale_color_manual`, you can then obtain a legend matching those colors
+  
+```{r challenge2, exercise = T}
+
+```
+
+## Solution
+
+```{r}
+##### tibble for the averages #####
+averages = gapminder %>% 
+               summarise(mean_gdppcap = mean(gdpPercap, na.rm = TRUE),
+                         median_gdppcap = median(gdpPercap, na.rm = TRUE)
+               )
+
+
+##### tibble for colors #####
+plt_colors = tibble(mean = "red",
+                    median = "dodgerblue")
+
+
+##### plot ######
+gapminder %>%
+  ggplot() +
+  geom_histogram(aes(x = gdpPercap, y = stat(density)), alpha = 0.3) +
+  geom_density(aes(x = gdpPercap), color = "darkorange", size = 2) +
+  ## adding mean and median marks; use the averages dataset
+  geom_vline(data = averages,
+             mapping = aes(xintercept = mean_gdppcap, color = "mean"),
+             linetype = "dashed",
+             size = 2) +
+  geom_vline(data = averages,
+             mapping = aes(xintercept = median_gdppcap, color = "median"),
+             linetype = "dashed", 
+             size = 2) +
+  ## make the color tibbles map to the specified colors in the geom_line aesthetics
+  scale_color_manual(values = plt_colors) +
+  theme_bw()
+```
