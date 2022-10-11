@@ -26,6 +26,49 @@ library(nycflights13)
 ## HW 2 Review
 > - HW 2 review
 
+## Question 2
+
+```{r}
+crime <- read_csv("../data/RMS_Crime_Incidents.csv.gz")
+```
+
+How many rows and columns are in this data set?
+
+```{r}
+dim(crime)
+```
+
+Using the `cut` function and `mutate`, make a new column that breaks the day into the following periods:
+
+> - Night (10pm to 6am)
+> - Early Day (6am to 2pm)
+> - Late Day (2pm to 10pm)
+
+(Hints: hour_of_day is on a 24 clock, to capture all the observations, make the first breaks value strictly less than 0).
+
+Using `group_by` and `summarize`, find the most common period of the day for a crime to occur.
+
+```{r}
+# first, let's write a helper function to do the cutting
+
+hour_to_period <- function(x){
+  cut(x, breaks = c(-Inf, 6, 14, 22, 24), labels = c("Night", "Early", "Late", "Night"))
+}
+
+# now test it on some examples: (should be N, N, E, L, N, N)
+hour_to_period(c(0, 5, 10, 16, 23, 24))
+```
+
+```{r}
+# now creating the new column, grouping, and counting
+
+mutate(crime, period = hour_to_period(hour_of_day)) |>
+  group_by(period) |>
+  summarize(n())
+```
+
+Here we see that Early is the least common, with Night slightly edging out Late for the most common category.
+
 ## Today's Content
 
 > - Topics in exploratory data analysis
