@@ -1,0 +1,397 @@
+---
+title: "Stats 306: Lecture 10"
+subtitle: "EDA: Visualizing and Quantifying Variation"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+wae <- read_tsv("data/WikiArt-Emotions-All.tsv.gz")
+set.seed(2939394)
+```
+
+
+## Review
+
+* Environments in R: variables and values
+* Private environments for functions, access to global scope
+* Exploratory data analysis: trying to find the right questions
+* Main questions:
+  * What kind of variation for the measurements in in my sample?
+  * What kinds of covariation among measurements (relationships)?
+  
+## Distributions for single variables
+
+* Nominal/categorical: counts/proportions
+* Ordinal and quantitative: Empirical cumulative distribution function $\hat F(x) = \text{proportion of $X_i \le x$}$
+* Connection between ECDF and histogram
+
+## WikiArt Emotions Database
+
+```{r}
+wae <- read_tsv("data/WikiArt-Emotions-All.tsv.gz")
+dim(wae)
+head(wae)
+```
+
+
+## Most liked piece of art
+
+```{r}
+favorite <- filter(wae, `Ave. art rating` == max(`Ave. art rating`))
+favorite$Artist
+favorite$Title
+```
+
+<center>
+
+![Young mother contemplaing her sleeping child in candlelight](images/young_mother.jpg)
+
+</center>
+
+## ECDF for Rating
+
+Recall that the **empirical cumulative distribution function** for a variable is a function that takes an input $x$ and gives back the proportion $X_i \le x$.
+
+What proportion of works had negative (technically non-positive) ratings (i.e. $\hat F(0)$)
+
+```{r}
+summarize(wae, mean(`Ave. art rating` <= 0)) 
+```
+
+## Plotting the ECDF
+
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) + stat_ecdf() + ylab("Proportion less than x")
+```
+
+ * x-axis is range of observed data
+ * y-axis is 0 to 1
+
+## From ECDF to Histogram
+
+```{r}
+Fhat <- ecdf(wae$`Ave. art rating`) # function that returns a function
+Fhat(0)
+
+g <- ggplot(wae, aes(x = `Ave. art rating`)) + stat_ecdf() + ylab("Proportion less than x")
+k <- 10
+b <- seq(min(wae$`Ave. art rating`), 
+         max(wae$`Ave. art rating`),
+         length.out = k)
+for (i in 2:k) {
+  g <- g + annotate("rect", xmin = b[i - 1], xmax = b[i],
+                    ymin = Fhat(b[i - 1]), ymax = Fhat(b[i]),
+                    alpha = 0.5)
+}
+print(g)
+```
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) + geom_histogram(bins = k - 1)
+```
+
+## Exercise
+Experiment making a histogram plot for the `Ave. art rating` column with different `bins` arguments or `binwidth` arguments.
+
+```{r ratinghist, exercise = TRUE}
+
+```
+
+
+## Histograms, the importance of bin widths
+
+A really bad idea:
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) +
+  geom_histogram(bins = 1)
+```
+
+Also probably a bad idea (though interesting!):
+
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) +
+  geom_histogram(bins = 500)
+```
+
+Goldilocks?
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) +
+  geom_histogram(bins = 50)
+```
+
+
+
+## Smoothing histograms: Density plots
+
+When creating a histogram, I need two things
+
+>* How wide are the bins
+>* Where the bins will start
+
+Rather than picking a particular starting location, let's think about averaging lots of starting locations (infinitely many). This yields a **density plot** (also known as a kernel density estimate plot):
+
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) + geom_density()
+```
+
+## Exercise
+Experiment making a density plot for the `Ave. art rating` column. You can use the function `bw.nrd0` to find a good starting value.
+
+```{r densityrating, exercise = TRUE}
+
+```
+
+## Density plots: smooth versus noisy
+
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) + geom_density(bw = 5)
+```
+
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) + geom_density(bw = 0.03)
+```
+
+
+```{r}
+bw.nrd0(wae$`Ave. art rating`) ## geom_density default
+ggplot(wae, aes(x = `Ave. art rating`)) + geom_density()
+```
+
+## Things to look for in plots
+
+Recall our goal is finding and understanding *variation*. Here are some things we might look for in our plots:
+
+* What is a typical or common value for the data? 
+* How closely clustered are the data to the typical value? Are they clustered in a single location or multiple locations?
+* Where, within the range of the values, is the variation located? Do we have more variation in small values or more variation in large values?
+
+## Revisiting some density plots
+
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) + geom_density()
+ggplot(wae, aes(x = as.numeric(Year))) + geom_density()
+```
+
+## Investigating
+
+Let's look at the histogram for year:
+
+```{r}
+class(wae$Year)
+ggplot(wae, aes(x = as.numeric(Year))) + geom_histogram(binwidth = 10) # 10 years
+```
+
+* Most of the works from the 19th and 20th century
+* We see we get some warnings
+* No observations in 18th century?
+
+## Exercise
+
+Use `stat_ecdf()` to make an empirical cumulative distribution function plot for `as.numeric(Year)`. What do you see in the range 1700 - 1800 (approx) in this plot?
+
+```{r yearecdf, exercise = TRUE}
+## wae, as.numeric(Year)
+```
+
+## Digging in more
+
+Recall R's special "missing value" indicator is `NA`. There is also `NaN` which is used when try to compute undefined values (e.g.. 1/0) The `is.na` method tells us if a value is marked as missing/NaN.
+
+```{r}
+is.na(c(1, NA, NaN))
+```
+
+```{r}
+mutate(wae, year_num = as.numeric(Year), missing_year_num = is.na(year_num)) |>
+  summarize(missing_year = mean(is.na(Year)),
+            missing_year_num = mean(missing_year_num))
+```
+What do some of these look like?
+```{r}
+filter(wae, is.na(as.numeric(Year))) |> sample_n(10) |> select(Year)
+```
+
+## Dealing with missing values
+
+Can we find a way to get years? We could try getting the first 4 digits.
+
+```{r}
+wae_year <- mutate(wae, 
+                   year4 = substring(Year, 1, 4),
+                   year_num = as.numeric(Year),
+                   year4_num = as.numeric(year4))
+
+summarize(wae_year, mean(is.na(year_num)), mean(is.na(year4_num)))
+
+ggplot(wae_year, aes(x = year4_num)) + geom_histogram(binwidth = 10)
+```
+
+## Other ways of dealing with missingness
+
+* Case-wise deletion: drop all rows with missing values for variables we care about (`drop_na`, many functions have `na.rm` option)
+* Simple imputation (make guesses, such as the mean of all other values)
+* Model based imputation
+
+## Exercise
+
+Use `drop_na` to remove rows with years that are missing after using `as.numeric` and compare to original data using `dim`
+```{r missing, exercise = TRUE}
+## wae is the name of the table, Year is the column
+```
+
+
+## Finding unusual patterns
+
+```{r, echo = FALSE}
+art_image_ratings <- select(wae, starts_with("Art (image+title):"))
+colnames(art_image_ratings) <- substring(colnames(art_image_ratings), 20)
+
+art_image_ratings |> pivot_longer(everything()) -> combined_emo
+ggplot(combined_emo, aes(x = value)) + geom_histogram(bins = 100) + facet_wrap(~ name)
+```
+
+## Happiness
+
+```{r}
+ggplot(wae, aes(x = `Art (image+title): happiness`)) + geom_histogram(bins = 100)
+```
+
+## Why spiky values?
+
+> Each piece of art was annotated by at least 10 annotators.
+
+```{r, echo = FALSE}
+## This code won't run without the rest of the data set (not included
+## in our repo), but here is where `number_of_ratings` came from.
+##
+## waa <- read_csv("data/WikiArt-Emotions/WikiArt-annotations.csv")
+## ids <- select(waa, matches("Art .* ID"))
+## ids |> pivot_longer(everything()) |> group_by(value) |> summarize(n_ratings = n()) |> group_by(n_ratings) |> summarize(n()) -> number_of_ratings
+## dput(number_of_ratings)
+
+number_of_ratings <- structure(list(n_ratings = c(10L, 11L, 12L, 13L, 14L, 15L, 16L, 
+17L, 19L, 44L, 45L, 47L, 48L, 49L, 50L, 51L, 52L, 55L, 59L, 60L, 
+61L, 62L, 64L, 65L, 66L, 67L, 68L, 69L, 70L, 71L, 72L, 73L, 74L, 
+75L, 76L, 77L, 78L, 79L, 80L, 81L, 82L, 83L, 84L, 87L, 89L, 90L, 
+112L), `n()` = c(2200L, 840L, 385L, 190L, 100L, 35L, 15L, 10L, 
+10L, 5L, 5L, 10L, 5L, 10L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 
+5L, 5L, 30L, 10L, 5L, 5L, 15L, 5L, 15L, 10L, 10L, 10L, 20L, 5L, 
+10L, 10L, 15L, 5L, 10L, 20L, 5L, 5L, 5L, 5L)), class = c("tbl_df", 
+"tbl", "data.frame"), row.names = c(NA, -47L))
+```
+
+```{r}
+ggplot(number_of_ratings, aes(x = `n_ratings`, y = `n()`)) + geom_col()
+```
+
+## Zooming in
+
+```{r}
+filter(number_of_ratings, n_ratings < 20) |>
+  ggplot(aes(x = `n_ratings`, y = `n()`)) + geom_col()
+```
+
+## Happiness
+
+```{r}
+ggplot(wae, aes(x = `Art (image+title): happiness`)) + geom_histogram(bins = 100)
+```
+
+
+## Covariation s
+
+We see that these works of art *vary* in their "happiness" ratings. What differences are there in songs that are rated as showing happiness compared to songs that had low happiness ratings? 
+
+This is asking about **covariation**, how do more than one measurement vary together? 
+
+How we deal with covariation depends on the types of data we have (nominal/categorical, quantitative/continuous).
+
+##  Joint Distributions and Conditional distributions
+
+For two variables, $X$ and $Y$, the **joint distribution** tells us how often each possible combination of $(X, Y)$ appears in our data set. 
+
+If we fix one variable, say $X$, at a particular value, say $x$, then look at all $Y$ such that $X = x$, we get the **conditional distribution**.
+
+Joint distributions contain slightly more information, but conditional distributions are often a little easier to work with. In particular, it's often easier to condition on categorical/nominal variables.
+
+## Categorical: Stratifying data
+
+For the "happiness" rating, since the values are close to 0.1, 0.2, etc., let's round and **stratify** (group):
+
+```{r}
+mutate(wae, happy_round = round(`Art (image+title): happiness`, 1)) |>
+  group_by(happy_round) -> wae_happy_strat
+
+summarize(wae_happy_strat, n() / nrow(wae_happy_strat))
+```
+
+NB: that is the marginal distribution of `happy_round`
+
+## Using stratification
+
+One thing we've seen already is looking at summaries of the **conditional distributions** of rating given happiness.
+
+```{r}
+summarize_at(wae_happy_strat, "Ave. art rating", list(med = median, me = mean, sd = sd))
+```
+
+## Violin plot
+
+To visualize all the conditional distributions
+```{r}
+ggplot(wae_happy_strat, aes(x = factor(happy_round), y = `Ave. art rating`)) + geom_violin()
+```
+
+Q: What information do we lose with this plot of conditional distributions that we know about the distribution of happiness?
+
+## Joint distributions for two quantitative
+
+```{r}
+ggplot(wae_year, aes(x = as.numeric(year4), y = `Ave. art rating`)) + geom_point()
+```
+
+## 2D histogram
+
+```{r warning = FALSE}
+ggplot(wae_year, aes(x = as.numeric(year4), y = `Ave. art rating`)) + geom_bin2d()
+```
+
+## Stratifying on year categories
+
+```{r warning = FALSE}
+mutate(wae_year, year_cat = cut(as.numeric(year4), 10)) |>
+  ggplot(aes(x = year_cat, y = `Ave. art rating`)) + geom_violin()
+```
+
+## Locally weighted least squares (loess) 
+
+What if we don't want to stratify, can we still look at conditional distributions of one continuous variable given another?
+
+**Locally weighted least squares** or loess (smoothed trend lines) gives us a way:
+
+```{r warning = FALSE}
+ggplot(wae_year, aes(x = as.numeric(year4), y = `Ave. art rating`)) + geom_point() + stat_smooth()
+```
+
+## Models for relationships
+
+We tend to hit our limit for showing joint distributions with two variables (maybe three). We also want to describe what we observe with more specific numerical quantities (like loess lines). For these purposes we need to employ **models**.
+
+Some questions we might approach with models:
+
+* Could this pattern be due to coincidence (i.e. random chance)?
+* How can you describe the relationship implied by the pattern?
+* How strong is the relationship implied by the pattern?
+* What other variables might affect the relationship?
+* Does the relationship change if you look at individual subgroups of the data?
+
+## Next time
+
+>* R for Data Science: 9 - 10

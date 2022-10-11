@@ -300,7 +300,7 @@ summarize(People_clean, mean(weight > 200 & weight <= 250))
 
 Notice that we could also use the ECDF to answer this:
 
-$$\frac{between 200 and 250}{total players} = \frac{less or equal than 250 minus less than 200}{total players} = \hat F(250) - \hat F(200)$$
+$$\frac{\text{between 200 and 250}}{\text{total players}} = \frac{\text{less than/eq 250} - \text{less than/eq 200}}{\text{total players}} = \hat F(250) - \hat F(200)$$
 
 ```{r}
 summarize(People_clean, mean(weight <= 250) - mean(weight <= 200))
@@ -349,63 +349,6 @@ Why must the point (100, 1.0) be on the line of the ECDF?
 ggplot(People_clean, aes(x = weight)) + 
   geom_histogram(bins = k - 1, aes(y = stat(count / sum(count))))
 ```
-
-## Histograms, the importance of bin widths
-
-A really bad idea:
-```{r}
-ggplot(People_clean, aes(x = weight)) +
-  geom_histogram(bins = 1)
-```
-Also probably a bad idea (though interesting!):
-
-```{r}
-ggplot(People_clean, aes(x = weight)) +
-  geom_histogram(bins = 154)
-```
-
-Goldilocks?
-```{r}
-ggplot(People_clean, aes(x = weight)) +
-  geom_histogram(bins = 40)
-```
-
-## Smoothing histograms: Density plots
-
-When creating a histogram, I need two things
-
->* How wide are the bins
->* Where the bins will start
-
-Rather than picking a particular starting location, let's think about averaging lots of starting locations (infinitely many). This yields a **density plot** (also known as a kernel density estimate plot):
-
-```{r}
-ggplot(People_clean, aes(x = weight)) + geom_density()
-```
-
-## Density plots: smooth versus noisy
-
-```{r}
-ggplot(People_clean, aes(x = weight)) + geom_density(bw = 100)
-```
-
-```{r}
-ggplot(People_clean, aes(x = weight)) + geom_density(bw = 1)
-```
-
-
-```{r}
-bw.nrd0(People_clean$weight) ## geom_density default
-ggplot(People_clean, aes(x = weight)) + geom_density()
-```
-
-## Exercise
-
-Experiment making a density plot for the number of errors made. Try different band widths (`bw`) argument.
-```{r}
-# group_by(Fielding, playerID) |> summarize(E = sum(E))
-```
-
 
 ## Next time
 
