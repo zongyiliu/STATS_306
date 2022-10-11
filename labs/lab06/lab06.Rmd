@@ -154,6 +154,77 @@ ggmap(detroit_map) +
   )
 ```
 
+## Question 3: 90% Quantiles
+
+Write a function that will compute the 90% quantile of a vector (see `quantile`). Demonstrate on the `mpg` data set by summarizing the 90% quantiles of `cty` and `hwy` within manufacturers.
+
+```{r}
+q90 <- function(x) {
+  quantile(x, 0.9)
+}
+
+# regular summarize is also fine
+summarize_at(mpg, c("cty", "hwy"), q90) 
+```
+
+## Question 3: Predicates
+
+Write a predicate function (`positive`) that returns true if all values in a vector are strictly positive.
+
+Demonstrate your predicate using `select` on this data set:
+```{r}
+set.seed(30303222)
+n <- 100
+d <- tibble(x = runif(n), y = runif(n, -1, 1), z = rnorm(100)^2, w = log(runif(n)))
+```
+
+Write a predicate (`no_outliers`) that returns true if all observations are within 3 standard deviations of the mean.
+```{r}
+no_outliers <- function(x) {
+  all(abs((x - mean(x))/sd(x)) <= 3)
+}
+
+summarize_all(d, no_outliers)
+```
+
+## Question 3: `summary` using `summarize`
+
+The `summary` method for tables will provide the following information for numeric columns
+
+>- minimum
+>- 1st quartile
+>- median (2nd quartile)
+>- mean
+>- 3rd quantile
+>- maximum
+>- Number of missing observations
+
+(Note: when there are missing observations, the other quantities are calculated with `na.rm = TRUE` as an argument to various calculations).
+
+Write a function that computes all of the above information. Use it with `summarize` or `summarize_all` and demonstrate on the following data. Your result does not have to have the same format, but it should have the same information.
+
+```{r}
+d2 <- d
+d2[10, 1] <- NA
+d2[50:70, 2] <- NA
+summary(d2)
+```
+
+The two main aspects of this problem are writing a function and displaying the output so it shows the same information. Here, `rbind` is used to join the tables into multiple rows for presentation, but that’s not strictly necessary. Just calling `summarize` for each column is fine.
+
+```{r}
+main_features <- function(x) {
+  q <- quantile(x, c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+  tibble(min = q[1], q1 = q[2], med = q[3], mean = mean(x, na.rm = TRUE),
+         q3 = q[4], max = q[5], NAs = sum(is.na(x)))
+}
+
+rbind(summarize(d2, main_features(x)),
+      summarize(d2, main_features(y)),
+      summarize(d2, main_features(z)),
+      summarize(d2, main_features(w))) |>
+  cbind(column = c("x", "y", "z", "w"))
+```
 
 
 ## Today's Content
