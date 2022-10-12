@@ -23,7 +23,7 @@ dim(bbwater)
 ```
 ### Q 1.1
 
-Provide a short summary of the data. How many columns are there? What kinds of data do we have? How many columns are quantitative? How many are nominal? Are there any dates or times?
+Provide a short summary of the data. How many columns are there? What kinds of data do we have (what classes of R data)? How many columns are quantitative? How many are nominal? Are there any dates or times?
 
 ### Q 1.2
 
@@ -103,7 +103,7 @@ Convert the result of 4.1 to a tibble. Demonstrate by printing out the result.
 
 ### Q 4.3
 
-Create two tibbles to create the table of lectures and topics on our [Syllabus page](https://umich.instructure.com/courses/554168/assignments/syllabus). In the first, use `tibble`. For the second, use `tribble`.
+Create two tibbles to recreate the first 4 rows of the table of lectures and topics on our [Syllabus page](https://umich.instructure.com/courses/554168/assignments/syllabus). In the first, use `tibble`. For the second, use `tribble`.
 
 ### Q 4.4
 
