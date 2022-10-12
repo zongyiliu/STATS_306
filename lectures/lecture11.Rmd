@@ -1,0 +1,395 @@
+---
+title: "Stats 306: Lecture 11"
+subtitle: "Wrapping up EDA, Wrangling"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate) # install.packages("lubridate") if you don't have this
+wae <- read_tsv("data/WikiArt-Emotions-All.tsv.gz") |>
+  mutate(year4 = substring(Year, 1, 4),
+         year4_num = as.numeric(year4))
+set.seed(2939394)
+```
+
+
+## Review
+
+* Continued our formalization of EDA:
+  * What kind of variation for the measurements in in my sample?
+  * What kinds of covariation among measurements (relationships)?
+* ECDFs, histograms, density plots
+* Importance of bin width (histogram) and bandwidth (density)
+* Plots: typical values, clusters (how many, narrow/wide), where is variation?
+* Missing data (`NA`): dropping, imputing, modeling
+* Covariation
+
+## WikiArt Emotions Database
+
+```{r}
+wae <- read_tsv("data/WikiArt-Emotions-All.tsv.gz") |>
+  mutate(year4 = substring(Year, 1, 4),
+         year4_num = as.numeric(year4))
+dim(wae)
+head(wae)
+```
+
+```{r}
+ggplot(wae, aes(x = `Ave. art rating`)) +
+  geom_histogram(bins = 50)
+```
+
+## Covariation
+
+We see that these works of art *vary* in their "happiness" ratings. What differences are there in songs that are rated as showing happiness compared to songs that had low happiness ratings? 
+
+This is asking about **covariation**, how do more than one measurement vary together? 
+
+How we deal with covariation depends on the types of data we have (nominal/categorical, quantitative/continuous).
+
+##  Joint Distributions and Conditional distributions
+
+For two variables, $X$ and $Y$, the **joint distribution** tells us how often each possible combination of $(X, Y)$ appears in our data set. 
+
+If we fix one variable, say $X$, at a particular value, say $x$, then look at all $Y$ such that $X = x$, we get the **conditional distribution**.
+
+Joint distributions contain slightly more information, but conditional distributions are often a little easier to work with. In particular, it's often easier to condition on categorical/nominal variables.
+
+## Categorical: Stratifying data
+
+For the "happiness" rating, since the values are close to 0.1, 0.2, etc., let's round and **stratify** (group):
+
+```{r}
+mutate(wae, happy_round = round(`Art (image+title): happiness`, 1)) |>
+  group_by(happy_round) -> wae_happy_strat
+
+summarize(wae_happy_strat, n() / nrow(wae_happy_strat))
+```
+
+NB: that is the marginal distribution of `happy_round`
+
+## Using stratification
+
+One thing we've seen already is looking at summaries of the **conditional distributions** of rating given happiness.
+
+```{r}
+summarize_at(wae_happy_strat, "Ave. art rating", list(med = median, me = mean, sd = sd))
+```
+
+## Violin plot
+
+To visualize all the conditional distributions
+```{r}
+ggplot(wae_happy_strat, aes(x = factor(happy_round), y = `Ave. art rating`)) + geom_violin()
+```
+
+Q: What information do we lose with this plot of conditional distributions that we know about the distribution of happiness?
+
+## Mixture distributions
+
+A **mixture distribution** is a single distribution that is composed of two or more **component** distributions. We often call those components **clusters**.
+
+We can think of it as the **opposite of stratifying**: we combine conditional distributions into a marginal distribution.
+
+## Mixture distribution simulated example
+
+Suppose there were a certain shade of color that people really liked. If this color were in a painting, people would rate it higher. Let's call that "blue" and compare it to another shade "red" that people don't like as much. More paintings use "red."
+
+```{r}
+blue_ratings <- runif(100, -1, 3)
+red_ratings  <- runif(200, -2, 1)
+```
+
+## Graphing Separately (conditional distributions)
+
+```{r}
+tblue <- tibble(rating = blue_ratings, color = "blue")
+ggplot(tblue, aes(x = rating)) + geom_histogram(bins = 20)
+```
+
+```{r}
+tred <- tibble(rating = red_ratings, color = "red")
+ggplot(tred, aes(x = rating)) + geom_histogram(bins = 20)
+```
+
+## Mixing together
+
+The **mixture distribution** recombines the conditional distributions in a single **marginal distribution**.
+
+We already have tables for both types of paintings. The `bind_rows` function will take two tables and make a new table with one stacked on the other. 
+
+```{r}
+redblue <- bind_rows(tblue, tred)
+dim(redblue)
+summary(redblue)
+```
+
+## Graphing together
+
+```{r}
+ggplot(redblue, aes(x = rating)) + geom_histogram(bins = 50)
+```
+
+## Stratifying
+
+Often our goal is to identify the **components**/**clusters** that make up mixture distributions.
+
+```{r}
+
+ggplot(redblue, aes(x = color, y = rating)) + geom_violin()
+```
+
+Rarely are we so lucky as to have zero red paintings above 1 or zero blue paintings below -1.
+
+
+
+
+## Joint distributions for two quantitative
+
+```{r}
+ggplot(wae, aes(x = year4_num, y = `Ave. art rating`)) + geom_point()
+```
+
+## 2D histogram
+
+```{r warning = FALSE}
+ggplot(wae, aes(x = year4_num, y = `Ave. art rating`)) + geom_bin2d()
+```
+
+## Stratifying on 100 year categories
+
+```{r warning = FALSE}
+wae_yc <- mutate(wae, year_cat = cut_width(year4_num, 100))
+ggplot(wae_yc, aes(x = year_cat, y = `Ave. art rating`)) + geom_violin()
+```
+
+## Summaries by category
+
+```{r}
+group_by(wae_yc,  year_cat) |> summarize(mean(`Ave. art rating`))
+```
+
+## Coloring by year category
+```{r warning = FALSE}
+ggplot(wae_yc, aes(x = year4_num, y = `Ave. art rating`, color = year_cat)) + 
+  geom_point() +
+  geom_line(data = group_by(wae_yc, year_cat)|> 
+               summarize(midyear = (max(year4_num) + min(year4_num))/2, 
+                         avg = mean(`Ave. art rating`)),
+             mapping = aes(x = midyear, y = avg),
+             size = 3, color = "black")
+```
+
+## Locally weighted least squares (loess/lowess) 
+
+What if we don't want to stratify, can we still look at summaries of conditional distributions of one continuous variable given another?
+
+**Locally weighted least squares** or loess/lowess (smoothed trend lines) gives us a way to get conditional means:
+
+```{r warning = FALSE}
+ggplot(wae, aes(x = as.numeric(year4), y = `Ave. art rating`)) + geom_point() + stat_smooth()
+```
+
+## Exercise
+
+The `nchar` function will tell you how long a string is. Use this to graph the log of the length of the `Title` column against the `Ave. art rating`. Use `stat_smooth` with the `method = "loess"` to play around with the `span` argument (try values in the range 0.8 to 0.95).
+
+```{r rate_loglength, exercise = TRUE}
+
+
+```
+
+## Example
+
+```{r}
+ggplot(wae, aes(y=`Ave. art rating`, x = log(nchar(Title)))) + 
+  geom_point() + 
+  stat_smooth(method = "loess", span = 0.3)
+```
+
+
+## Models for relationships
+
+We tend to hit our limit for showing joint distributions with two variables (maybe three). We also want to describe what we observe with more specific numerical quantities (like loess lines). For these purposes we need to employ **models**.
+
+Some questions we might approach with models:
+
+* Could this pattern be due to coincidence (i.e. random chance)?
+* How can you describe the relationship implied by the pattern?
+* How strong is the relationship implied by the pattern?
+* What other variables might affect the relationship?
+* Does the relationship change if you look at individual subgroups of the data?
+
+## Workflow
+
+![Workflow](images/r4ds-whole-game.png)
+
+## Wrangling
+
+For the **import**, **tidy** and **transform** portions of the workflow, we'll learn about (or more about)
+
+* Tables 
+* Data storage types
+* Tidying data
+* Relational data (data in more than one table)
+* Other data types
+
+## Tables: from lists of vectors to particular classes
+
+We introduced our **model of rectangular data** as **lists of vectors**. 
+
+There are several R classes that implement this idea:
+
+>* `matrix`: all vectors of same type
+>* `data.frame`: vectors of different types, fewer ammenities
+>* `tibble`: vectros of different types, more features
+>* `data.table`: for data too large to fit in memory
+
+## `fun(x)<-` syntax
+
+We are about to see a few uses of the arrow syntax that looks like this:
+
+```{r, eval = FALSE}
+function_name(x) <- ... input ...
+```
+
+This is effectively short hand notation for:
+
+```{r, eval = FALSE}
+x <- function_name(x, input)
+```
+
+i.e., updating an object in place.
+
+You have to write a special `function_name<-` function to do this, but then R will know you want to allow this behavior.
+
+
+## `matrix`, just one type
+
+Both classes are built in to "base" R. 
+
+Matrix is just all one type (behind the scenes it is just one vector!):
+
+```{r}
+(m <- matrix(1:9, nrow = 3))
+m[, 2] # square bracket indexing
+```
+Can be useful for fast linear algebra computations and very compact storage.
+
+NB: the `array` type can be used for $k$-dimensional objects (tensors).
+
+## `data.frame`, multiple types
+
+`data.frame` can be mixed type vectors (our preferred style):
+```{r}
+(d <- data.frame(colname1 =  1:3, c("a", "b", "c")))
+```
+
+`data.frame`s can be a little surprising with names. Always to give them explicitly,
+```{r}
+colnames(d) <- c("c1", "c2")
+d
+```
+or
+```{r}
+(d <- data.frame(colname1 =  1:3, c2 = c("a", "b", "c")))
+```
+
+Convert to a `data.frame`:
+
+```{r}
+as.data.frame(m)
+```
+
+## Displaying 
+
+```{r}
+data.frame(x = 1:30)
+```
+
+## Row names
+
+`data.frames` always get unique row names. Or we can set them:
+
+```{r}
+rownames(d) <- c("NY", "OH", "MI")
+```
+
+Then you can look up rows by position or name,
+```{r}
+d[2, ]
+d["OH", ]
+```
+
+
+
+
+## `tibbles`, modern `data.frame`s
+
+`tibbles` are lighter weight as they don't try to rename as many things or create row names
+
+```{r}
+(tb <- tibble(colname1 =  1:3, c("a", "b", "c")))
+```
+
+But they also give more convenient large table output
+```{r}
+tibble(1:90)
+```
+
+## `tibble` creation
+
+You can list columns with `tibble` or use `as_tibble` to convert a matrix or `data.frame`,
+
+```{r warning = FALSE}
+as_tibble(m) # fyi, I suppressed a warning here
+as_tibble(d)
+```
+
+But notice that the row names went away! We can ask to save them:
+```{r}
+as_tibble(d, rownames = "state")
+```
+
+## Creation by row
+
+Like our data model (lists of vectors), all of these methods are **column oriented**. 
+
+If we would prefer to specify our data by row, we can 
+```{r}
+
+matrix(c(1, 2, 3, 50, 60, 70), nrow = 2, byrow = TRUE)
+tribble(
+  ~ column_name_1, ~ column_name_2,
+  1, "make sure",
+  2, "that you have the right number",
+  7, "per row")
+```
+
+## Final notes on tibbles and data.frames
+
+Observe:
+
+```{r}
+colnames(d)
+d$co
+tb$co
+
+d$doesnotexist
+```
+
+If for some reason you need to use a `data.frame` but you only have a `tibble`,
+```{r}
+as.data.frame(tb)
+```
+
+## Next time
+
+>* R for Data Science: 11, 16
