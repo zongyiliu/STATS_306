@@ -33,3 +33,10 @@ Description from the City of Detroit Open Data Portal:
 
 Paper citation: Saif M. Mohammad and Svetlana Kiritchenko. (2018). WikiArt Emotions: An Annotated Dataset of Emotions Evoked by Art. In Proceedings of the 11th edition of the Language Resources and Evaluation Conference, May 2018, Miyazaki, Japan.
 
+## Backbay National Wildlife Refuge Water Quality
+
+* File: `BKB_WaterQualityData_2020084.csv`
+* Date retrieved: 2022-10-11
+* URL: https://data.doi.gov/dataset/water-quality-data
+
+> Water quality data for the Refuge collected by volunteers collected once every two weeks: Turbidity, pH, Dissolved oxygen (DO), Salinity & Temperature. Sampling will occur at designated locations in the following water bodies: the Bay, D-Pool (fishing pond), C-Pool, B-Pool and A-Pool.
