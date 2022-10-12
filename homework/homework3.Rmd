@@ -1,0 +1,112 @@
+---
+title: "Stats 306, Fall 2022, Homework 2"
+author: "Your Name, Your Uniqname"
+date: "Due October 2, 11:59PM EST"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+## Question 1
+
+Let's look at some water quality data from the Backbay National Wildlife Refuge:
+
+> Back Bay National Wildlife Refuge is located in the southeastern corner of the City of Virginia Beach. The refuge was established in 1938 to protect and provide habitat for migrating and wintering waterfowl. Diverse habitats, including beachfront, freshwater marsh, dunes, shrub-scrub and upland forest are home to hundreds of species of birds, reptiles, amphibians, mammals and fish.
+
+```{r}
+bbwater <- read_csv("../data/BKB_WaterQualityData_2020084.csv")
+dim(bbwater)
+```
+### Q 1.1
+
+Provide a short summary of the data. How many columns are there? What kinds of data do we have? How many columns are quantitative? How many are nominal? Are there any dates or times?
+
+### Q 1.2
+
+Use `group_by` or `count` to find the number of observations at each `Site_Id`. Update the `bbwater` to remove any sites that have fewer than 5 observations.
+
+### Q 1.3
+
+Create an ECDF plot for the `Year` variable.
+
+What is this plot telling you about measurements made before the late 1980s? Remember the refuge was started in 1938. Do any of these measurements seem out of place? Remove them from the `bbwater` table. Make a second ECDF after removing these probably erroneous entries.
+
+### Q 1.4
+
+Here's a little code that puts all of the numeric data into a table with two columns: `name` (which column) and `value` (the observed value for that variable).
+
+```{r}
+bbnumeric <- select(bbwater, where(is.numeric)) |> pivot_longer(everything())
+```
+
+Use this data to make a facet plot that shows a histogram plots for all the variables. Use the `scales = "free"` option to `facet_wrap`. Try a few different number of bins to pick a good number
+
+After seeing the small multiples plot, select a variable to generate histogram where you carefully select the number of bins.   
+
+## Question 2
+
+### Q 2.1
+
+Create a histogram for `Water Temp (?C)`. Try several numbers of bins to get a useful plot. Would you say that there is one clear typical value for this plot or would you say it contains more than one cluster of values?
+
+
+### Q 2.2
+
+Create a facet plot for `Water Temp (?C)` that breaks out a histogram by `Site_Id`.
+
+Do you think the multiple clusters could be explained by different locations having different temperatures?
+
+### Q 2.3
+
+Look at the `Read_Date` column. Which `lubridate` function could parse this format to a date object? Use it to update the `bbwater` table with `real_date` column. Demonstrate with an ECDF plot of the dates.
+
+```{r}
+head(bbwater$Read_Date)
+```
+
+### Q 2.4
+
+Now use the `month` function to extra the month from each date. Create a facet plot of histograms of the water temp broken out by month. Does this help explain the multiple clusters we saw in the water temp?
+
+## Question 3
+
+### Q 3.1
+
+Create plots of the distributions of `Site_Id` and `Water Depth (m)` (separately). What kinds of data (qualitative, ordinal, nominal) are these two measurements?
+
+### Q 3.2
+
+Do you think either of these measurements would benefit from a data a logarithmic transformation? Implement this transformation and update the plot(s).
+
+Did you get any warnings? What happened?
+
+### Q 3.3
+
+Create a plot to show the two variables from 3.1 on one plot. Clearly state if this plot shows the **joint distribution** or a set of **conditional distributions**. Describe the plot and if you see any sites with particularly unusual water levels.
+
+
+## Question 4
+
+### Q 4.1
+
+Suppose instead of using `tidyverse`'s `read_csv` function we had instead used R's built in `read.csv` function to load our data.
+
+Use this function to load the same water quality data set. What are three differences in how the type of data loaded by `read.csv` can be used compared to the data from `read_csv`.
+
+### Q 4.2
+
+Convert the result of 4.1 to a tibble. Demonstrate by printing out the result.
+
+### Q 4.3
+
+Create two tibbles to create the table of lectures and topics on our [Syllabus page](https://umich.instructure.com/courses/554168/assignments/syllabus). In the first, use `tibble`. For the second, use `tribble`.
+
+### Q 4.4
+
+Open up the file 'homework3.txt'. Use a `read_` function to load this data. You will probably need to read the documentation to deal with a few problems in the file.
+
+

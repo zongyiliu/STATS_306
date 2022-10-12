@@ -1,0 +1,7 @@
+This line just introduces the file, but should not be loaded. 
+Notice: delimiter is |
+Missing values are coded with NONE
+column1|The Second Column|3rd Col
+1|'hello'|NONE
+3|'this|has|a|bar'|99
+2.7|moretext |-1
