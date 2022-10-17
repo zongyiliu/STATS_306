@@ -76,11 +76,11 @@ Now use the `month` function to extra the month from each date. Create a facet p
 
 ### Q 3.1
 
-Create plots of the distributions of `Site_Id` and `Water Depth (m)` (separately). What kinds of data (qualitative, ordinal, nominal) are these two measurements?
+Create plots of the distributions of `Site_Id` and `Water Depth (m)` (separately). What kinds of data (quantitative, ordinal, nominal) are these two measurements?
 
 ### Q 3.2
 
-Do you think either of these measurements would benefit from a data a logarithmic transformation? Implement this transformation and update the plot(s).
+Do you think either of these measurements would benefit from a logarithmic transformation? Implement this transformation and update the plot(s).
 
 Did you get any warnings? What happened?
 
