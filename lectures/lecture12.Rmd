@@ -112,6 +112,19 @@ read_csv(ex_csv, col_types = cols(column3 = col_date("%m/%d/%Y")))
 
 See the help for the `cols` function for more. `col_skip` allows not importing column.
 
+## Exercise
+
+Read in the following table using `read_csv`. Make the first column be logical/boolean values. Make any "NONE" values be missing in R.
+
+```{r settingcols, exercise = TRUE}
+csv <- '
+1,hello,NONE
+0,goodbye,-3
+1,NONE,1.111111
+'
+```
+>* [`read_csv`](https://readr.tidyverse.org/reference/read_delim.html)
+>* [`cols`](https://readr.tidyverse.org/reference/cols.html)
 ## Saving data
 
 There are complementary `write_csv` and `write_delim` functions.
@@ -150,10 +163,11 @@ Can also read month names and abbreviations.
 
 ## Extensions to date-times
 
-If we also have times, the `_hms` version trieds to parse 
+If we also have times, the `_hms` version will parse `HOURS:MINUTES:SECONDS` while `_hm` will just be `HOURS:MINTUES`. AM/PM can be included, otherwise 24 clock assumed. 
 
 ```{r}
 mdy_hms("10/01/2022 12:01:37")
+mdy_hm("10/01/2022 12:01am")
 ```
 
 The UTC stands for "Coordinated Universal Time" (was Greenwich Mean Time)
@@ -163,4 +177,102 @@ We can select timezone using the nearest major city:
 mdy_hms("10/01/2022 12:01:37", tz = "America/Detroit")
 mdy_hms("12/01/2022 12:01:37", tz = "America/Detroit")
 ```
+
+## Exercise
+
+Parse the following into dates or date times:
+```{r parsedt, exercise = TRUE}
+dt1 <- "31/10/89"
+dt2 <- c("2022-07-01 3:10am",
+         "1852-01-15 7:00pm")
+```
+
+## Parsing dates in files
+
+We saw earlier the use of `cols(colname = col_date("EXPRESSION"))`. There is also `col_datetime` and `col_time`.
+
+For these we need to give a pattern to match using various keys:
+
+>* Year: four digit `"%Y"`, two digit `"%y"`
+>* Month: number `"%m"`, abbreviation `%b`, full name `%B`
+>* Day: number in month `"%d"`
+>* Hours:minutes:seconds: `"%H:%M:%S"`
+>* See `parse_datetime` for more
+
+```{r}
+parse_datetime("22/10/1, 10:01:00", 
+               format = "%y/%m/%d, %H:%M:%S")
+```
+
+## Extracting components
+
+```{r}
+right_now <- now()
+day(right_now) # same as mday()
+month(right_now)
+year(right_now)
+yday(right_now) # day within year ("Julian date")
+wday(right_now) # day within week, starting with Sunday
+hour(right_now)
+minute(right_now)
+second(right_now)
+```
+
+## Time Math 
+
+```{r}
+ymd("2023/01/04") - mdy("12/16/2022")
+```
+
+The `seconds`, `minutes`, `hours`, `days`, `weeks` can be used to get offsets:
+```{r}
+right_now <- now()
+right_now
+right_now + minutes(10)
+right_now + weeks(7)
+```
+
+## Durations
+
+After doing math, you might want to convert the units.
+
+```{r}
+semester_end <- dmy_hms("16122022 23:59:59") - now()
+
+(sed <- as.duration(semester_end))
+
+as.numeric(sed, "days")
+as.numeric(sed, "minutes")
+
+```
+
+There are equivalent `d*` functions (`dyears`, etc) for constructing durations directly.
+
+
+## Difftimes vs. durations vs. periods
+
+In the previous we did not really distinguish between three different classes of "time differences"
+
+>* Difftime: R's built in method
+>* Durations: differences in seconds
+>* Periods: differences that are more human readble ("two months", which months?)
+
+We'll leave further exploration as personal exploration.
+
+## Exercise
+
+Parse these dates.
+
+If you wanted to set a reminder one month before each of these dates, when would the reminders be?
+
+hat's the range of the dates? What is the mean date? What is the median date? 
+
+```{r diffex, exercise = TRUE}
+ds <- c("1981-09-25", "1982-03-06", "2010-12-14", "2012-10-18", "2019-04-03")
+```
+
+## Next time
+
+R4DS: 12, 13
+
 
