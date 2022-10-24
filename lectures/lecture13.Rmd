@@ -1,0 +1,337 @@
+---
+subtitle: "Stats 306: Lecture 13"
+title: "Tidy Data"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+set.seed(2939394)
+
+table1 <- bind_cols(tidyr::table1, continent = c("Asia", "Asia", "South America", "South America", "Asia", "Asia"))
+
+table2 <- pivot_longer(table1, c("cases", "population"))
+
+mi_population <- structure(list(name = c("Detroit", "Grand Rapids", "Warren", 
+"Flint", "Sterling Heights", "Lansing", "Ann Arbor", "Livonia", 
+"Dearborn"), county = c("Wayne", "Kent", "Macomb", "Genesee", 
+"Macomb", "Ingham, Clinton, Eaton", "Washtenaw", "Wayne", "Wayne"
+), `2010` = c(713777, 188040, 134056, 102434, 129699, 114297, 
+113934, 96942, 98153), `2000` = c(951270, 197800, 138247, 124943, 
+124471, 119128, 114024, 100545, 97775), area_km2 = c(359.4, 115, 
+89, 86.6, 95, 93.4, 72.1, 92, 62.7)), row.names = c(NA, -9L), spec = structure(list(
+    cols = list(name = structure(list(), class = c("collector_character", 
+    "collector")), county = structure(list(), class = c("collector_character", 
+    "collector")), population...3 = structure(list(), class = c("collector_number", 
+    "collector")), population...4 = structure(list(), class = c("collector_number", 
+    "collector")), area_km2 = structure(list(), class = c("collector_double", 
+    "collector"))), default = structure(list(), class = c("collector_guess", 
+    "collector")), delim = ","), class = "col_spec"), problems = NULL, class = c("spec_tbl_df", 
+"tbl_df", "tbl", "data.frame"))
+
+table4ab <- pivot_wider(table1, id_cols = c("country", "continent"), names_from = "year", values_from = c("cases", "population"))
+
+tmp <- mi_population
+colnames(tmp)[3:4] <- c("population_2010", "population_2000")
+mi_pop_tall <- pivot_longer(tmp, c("population_2010", "population_2000", "area_km2"), names_to = "measurement")
+
+```
+
+
+## Review: Loading data
+
+- Format: **plain text, delimited**, proprietary, data bases
+- Delimited files: lines are rows, columns separated by **delimiter** (like ",")
+- Headers, column types
+- Writing CSV files, RDS files
+
+## Review: Handling dates
+
+- Types: `Date` and `POSXIct` (date-time)
+- Parsing: permutations of `ymd`, `%` keys
+- Date-times, time zones
+- Math and durations
+
+## "Tidy" data, wide data
+
+In this class we have focused on **tabular data**. Data organzied as **rows** and **columns**.
+
+If we have a sample of $n$ items and have measured $k$ features of each item, our usual representation is:
+
+- $k$ columns, one for each measurment
+- $n$ rows, one for each unit
+
+Our book calls this data "tidy." Our perspectives label this as "wide" data -- as we add more measurements, the table becomes wider.
+
+## Tall formats
+
+How else could we arrange data?
+
+- One row per **value**
+- Minimum two columns: "name" and "value"
+- Additional columns to identify units
+
+## Relational data
+
+Sometimes we have multiple levels of data. For example,
+
+- Clinics with patients
+- Countries, measured over years
+- Pitchers with many pitches thrown
+
+It may be inefficient to duplicate upper level information for every lower level observation.
+
+Solution: **relate** in two tidy tables
+
+## Example: Tidy/Wide
+
+```{r, echo = FALSE}
+
+```
+```{r}
+table1
+```
+
+
+What are the units? What are the measurments?
+
+## Example: Tall table
+```{r echo = FALSE}
+```
+```{r}
+table2
+```
+
+
+## Example: Relational (I)
+
+```{r, echo= FALSE}
+table3_countries <- group_by(table1, country) |> summarize(continent = first(continent))
+table3_years <- tidyr::table1
+```
+
+```{r}
+table3_countries 
+table3_years
+```
+
+
+## Example: Relational (II)
+
+```{r}
+table4a # cases
+table4b # population
+```
+
+## Why tall/untidy/relational data?
+
+* Certain data sets just come that way
+* Useful for plotting or summaries
+* Space efficient for sparse data
+
+## Exercise: summarizing on tall data
+
+Recall our homework exercise to recreate R's built in `summary` function:
+
+```{r}
+summary(select(table1, cases, population))
+```
+
+Use `table2` to compute summaries per variable (just do mean, median, and max).
+
+```{r}
+table2
+```
+
+```{r summaryex, exercise = TRUE}
+
+```
+
+## Pivoting
+
+If want to go from wide to tall or from tall to wide, we need to **pivot** our table.
+
+* `pivot_longer`: takes a wide table and makes it tall
+* `pivot_wider`: takes a tall table and makes it wide
+
+## `pivot_longer`
+
+Let's look at an abbreviated usage for [`pivot_longer`](https://tidyr.tidyverse.org/reference/pivot_longer.html):
+
+```{r, eval = FALSE}
+pivot_longer(
+  data,
+  cols,
+  names_to = "name",
+  values_to = "value",
+  ...
+)
+```
+
+>* `data`: a wide table
+>* `cols`: the columns we want to place into the `value` column, the colnames will then populate the `names` column
+>* `names_to` and `values_to` let you rename these columns if you wish
+
+
+## Table 1 to Table 2: 
+
+```{r}
+colnames(table1)
+pivot_longer(table1, c("cases", "population"))
+```
+
+**Note**: columns not included in list will be kept in original form (but duplicated per entry)
+
+## More involved example from recent HW
+
+```{r}
+bbwater <- read_csv("../data/BKB_WaterQualityData_2020084.csv")
+bbnumeric <- select(bbwater, where(is.numeric)) |> pivot_longer(everything())
+bbnumeric
+```
+
+## Keeping other identifying columns
+
+```{r}
+bigwater <- pivot_longer(bbwater, where(is.numeric)) |>
+  select(Site_Id, Read_Date, name, value)
+
+bigwater
+```
+
+## Using in a plot
+
+```{r}
+ggplot(bigwater, aes(x = Site_Id, y = value)) + geom_boxplot() +
+  facet_wrap(~ name, scales = "free")
+```
+
+
+## Untidy tall data
+
+Sometimes we get data where **more than one observation** is placed on a row.
+
+```{r}
+table4a # cases
+table4a # population
+```
+These are **country-year** observations.
+
+## Using `pivot_longer` to fix
+
+```{r}
+cases <- pivot_longer(table4a, c("1999", "2000"), values_to = "cases", names_to = "year")
+population <- pivot_longer(table4b, c("1999", "2000"), values_to = "population", names_to = "year")
+cases
+population
+```
+
+## Exercise
+
+Pivot the following table to a tall format (what columns would make sense to go in `value`?). Would it make sense to use the `names_to` argument?
+
+```{r}
+mi_population 
+```
+
+```{r pivot_longer_ex, exercise = TRUE}
+
+```
+
+## Setting type of `name` column
+
+In the previous we converted the years to strings. We probably want integers:
+
+Method 1:
+```{r}
+pivot_longer(table4a, c("1999", "2000"), values_to = "cases", names_to = "year") |>
+  mutate(year = as.integer(year))
+```
+
+Method 2:
+```{r}
+pivot_longer(table4a, c("1999", "2000"), values_to = "cases", names_to = "year",
+             names_transform = as.integer)
+```
+
+## Prefixed columns
+
+```{r, echo = FALSE}
+table4a2 <- table4ab[1:4]
+```
+
+```{r}
+table4a2
+```
+
+The `names_prefix` can remove the leading string:
+```{r}
+pivot_longer(table4a2, where(is.numeric), names_prefix = "cases_", 
+             names_to = "year", values_to = "cases")
+```
+
+
+
+
+## More involved names
+
+Another variation on tables we've seen so far looks like this:
+
+```{r}
+table4ab
+```
+
+```{r}
+pivot_longer(table4ab, where(is.numeric), names_to = c("measurment", "year"), names_sep = "_")
+```
+
+## Going from tall tables to wide tables
+
+When we have tables with too many rows, we can use [`pivot_wider`](https://tidyr.tidyverse.org/reference/pivot_wider.html) to restore one observation per row.
+
+Abbreviated usage:
+```{r, eval = FALSE}
+pivot_wider(
+  data,
+  names_from = name,
+  values_from = value,
+  ...
+)
+```
+
+>* `data` is a tall table
+>* `names_from` is the `name` column of the tall table
+>* `values_from` is the `value` column of the tall table
+
+## `pivot_wider` example
+
+```{r}
+table2
+pivot_wider(table2)
+```
+
+## Exercise 
+
+Pivot the following table to an improved version.
+```{r}
+mi_pop_tall
+```
+
+```{r pwex, exercise = TRUE}
+
+```
+
+## Exercise continued
+
+Continuing with `mi_pop_tall`, after moving population and area to own columns, use `pivot_longer` to get city-year measurements
+
+```{r bigex1, exercise = TRUE}
+
+```
+
