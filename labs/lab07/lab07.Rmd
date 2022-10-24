@@ -1,0 +1,429 @@
+---
+title: "Stats 306: Lab 7"
+author: "Your Name"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+## Set up
+
+```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
+# This just checks if students need to install some packages that they might 
+# not have.
+
+if (!require(nycflights13)) install.packages("nycflights13", repos = "http://cran.us.r-project.org")
+```
+
+```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For ggplot2, dplyr, readr
+library(lubridate)  # For some functions involving dates
+library(nycflights13)
+
+tutorial_options(exercise.reveal_solution = FALSE)
+```
+
+```{r fake_setup, echo=TRUE, eval=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For ggplot2, dplyr, readr
+library(lubridate)  # For some functions involving dates
+library(nycflights13)
+```
+
+## Logistics
+
+* HW 4 has been posted (or will be posted later today)
+* Quiz 3 is due October 30
+* Exam 2 is due on Nov 11, more details to come. 
+
+* Questions?  
+
+## Today's Content
+
+* Dates in R 
+* Pivoting 
+* Dealing with Missing Data
+
+## Dates in `R`
+
+Dates and times are common types of data that are often tricky to deal with. 
+Consider, for example, the number of days in a year, number of hours in a day, and the number of seconds in a minute.
+
+* On leap years the number of days in a year changes.
+* While normally 24, the number of hours in a day changes due to daylight savings. 
+* The number of seconds in a minute even sometimes changes (leap seconds, which are rare events used to adjust for the slowing of earth's rotation)!
+
+To help us deal with the complex nature of time, we will use the `lubridate` package, which includes a lot of nice functionality for dates and times. 
+We will also use the functions `readr::parse_date` and `readr::parse_datetime` (note that `readr` is part of the `tidyverse` and is already loaded.)
+
+## Creating Dates in `R`
+
+In lecture, we saw various ways to create date objects in `R`. 
+For example: 
+
+* We could use `lubridate::now()` to get a `date-time` object (called a  `POSIXct` in `R`)
+* We could use `lubridate::today()` to get a `date` object.
+* We can "parse" strings in `R` using functions like `lubridate::mdy("10/01/2022")` and `lubridate::ymd("2022-10-01)`,
+
+**Exercise** Parse the following strings into `Date` or `date-time` objects in `R`:
+
+```{r dates1, exercise=TRUE}
+d1 <- "January 1, 2021"
+d2 <- "11-21-1986"
+d3 <- "01/24, '11 2:01 PM EST"
+```
+
+```{r dates1-hint-1}
+# Look at the help page for parse_date and parse_datetime:
+?parse_date  
+# In particular, look at the "Format specification" section. 
+```
+
+```{r dates1-hint-2}
+out1 <- parse_date(d1, format = ...)
+out2 <- parse_date(d2, format = ...)  # You could also use lubridate::mdy
+out3 <- parse_date(d3, format = ...)
+```
+
+```{r dates1-solution}
+out1 <- parse_date(d1, format = "%B %d, %Y")
+out2 <- parse_date(d2, format = "%m-%d-%Y")  # or lubridate::mdy(d2)
+out3 <- parse_datetime(d3, format = "%m/%d, '%y %H:%M %p %Z")
+```
+
+## Creating dates from individual components
+
+In the previous examples, we took a string that represents a date and converted that into a `Date` or `date-time` object. 
+Another form of data that we might see includes individual components of the date, such as having a column for `year`, a column for `month`, and a column for `day`.
+
+* In this case, we can still create a `Date` object using the function: ` lubridate::make_date`:
+
+```{r}
+make_date(year = 2022, month = 2, day = 8)
+```
+
+**Exercise**: 
+
+a. Create a date object that represents your birthday using `make_date`. Then, subtract that day from today's date (you can get this using `today()`) to see how old you are.  
+b. What happens if you input a non-existent date, like using `year = 2020` `month = 2`, `day = 31`?
+c. What happens if you use only a `month` and `day`, but not a `year`? 
+
+```{r dates2, exercise=TRUE}
+
+```
+
+```{r dates2-hint}
+# Part (a)
+my_bd <- make_date(...)
+today() - my_bd
+```
+
+## Difftimes vs. durations vs. periods
+
+We could often be interested in performing basic arithmetic with `Date` objects, such as adding days/hours to a `Date` or subtracting two dates from each other.
+Because of challenges in working with dates and times, this is more difficult than it may initially appear. 
+For example, consider adding one year to the date `"2016-01-01"`. 
+Because 2016 was a leap year, if you add 365 days, you will get `"2016-12-31"`, which may be unexpected and undesirable behavior. 
+Because of this, we need to think carefully about adding and subtracting dates. 
+
+With date arithmetic, we will use what we call *Time Spans*. Time Spans in `R` have four main classes in `R`: 
+
+* `difftimes`: Part of Base `R`, and is the default result of subtracting two dates from each other. These can be hard to work with, so `lubridate` provides the next options for us.
+* `durations`: Total time span in seconds. There are some useful constructor functions that we can us, such as `dseconds()`, `dminutes()`, `dhours()`, etc. 
+* `periods`: Human friendly time spans. For example, if you want to add a year to `"2016-01-01"`, adding a period of `years(1)` would add 366 days since 2016 is a leap year, and the output would be `"2017-01-01"`. The useful constructor functions for this includes `seconds()`, `minutes()`, `hours()`, etc. 
+* `intervals`: These are used because periods are sometimes ambiguous (as noted above, `years(1)` could mean 366 or 365 days, depending on the year).
+Therefore intervals is a duration with a starting point, that allows you to determine exactly how long the interval is. These are created using the following syntax: `start_date %--% end_date`. 
+
+Some advice from our `R` for Data Science textbook: 
+
+> How do you pick between duration, periods, and intervals? As always, pick the simplest data structure that solves your problem. If you only care about physical time, use a duration; if you need to add human times, use a period; if you need to figure out how long a span is in human units, use an interval.
+
+**Exercise**: Add one week to the datetime object below using both a `durations` and a `period`. For this particular case, why would one of these methods be preferred over the other? In what cases might the other function be preferred? 
+
+```{r dates3, exercise=TRUE, exercise.eval=TRUE}
+future_lab_date <- ymd_hms("2016-03-12 08:30:00", tz = "America/Detroit")
+```
+
+```{r dates3-hint-1}
+# Functions to create durations start with the letter "d", e.g.: dminutes()
+# Functions to create periods don't starting with the letter "d", e.g.: minutes()
+```
+
+```{r dates3-hint-2}
+# Check the resulting hour for both approaches to see why one method might be preferred over the other. 
+```
+
+```{r dates3-solution}
+# using durations: 
+future_lab_date + dweeks(1)
+
+# using periods: 
+future_lab_date + weeks(1)
+
+# If you use dweeks, the hour changes! This is because there is a daylight savings time change between these lab dates, so November 6th has 25 hours instead of 24. In this case, this behavior is undesirable because we would expect that the time class start doesn't change. This behavior is more useful in situations where the exact interval of time between observations is important, like taking scientific measurements of something every hour over a long period of time. 
+```
+
+## Plotting Dates in `ggplot`
+
+For this slide we will be using the `weather` data from the `nycflights13` package. 
+
+```{r}
+data(weather)
+head(weather)
+```
+
+Once a column is a stored as a `Date` object in `R`, it's relatively simple to plot the data using `ggplot`.
+
+**Exercise**: Use `mutate` to create a new dataset called `weather_dates` that contains a `datetime` column called `time` that represents the year, month, day and hour of each observation in the weather dataset (note that a similar column called `time_hour` already exists in the dataset, so this is just for practice). 
+
+```{r weatherDates, exercise=TRUE, exercise.blanks = "\\.\\.\\.+"}
+weather_dates <- weather |> ...
+```
+
+```{r weatherDates-hint}
+weather_dates <- weather |> 
+  mutate(time = make_datetime(...))
+```
+
+```{r weatherDates-solution}
+weather_dates <- weather |> 
+  mutate(time = make_datetime(year = year, month = month, day = day, hour = hour))
+```
+
+**Exercise**: Plot the temperature of each location, over time, using `geom_line`
+
+```{r weatherPlot, exercise=TRUE}
+
+```
+
+```{r weatherPlot-hint}
+# Because there are three locations, we need to tell ggplot which group each time series comes from. We can do this by adding a facet, or specifying the group argument of aes for geom_line: 
+weather_dates |>
+  ggplot(...) + 
+  geom_line(aes(..., group = origin)) + 
+  ...
+```
+
+```{r weatherPlot-solution}
+weather_dates |>
+  ggplot(aes(x = time, y = temp)) + 
+  geom_line(aes(group = origin, col = origin)) + 
+  theme_bw() +  # Looks better than default (in my opinion)
+  ylab("Temperature (F)") + 
+  theme(axis.title.x = element_blank(),
+        legend.title = element_blank())  # The name of X-axis is obvious, not needed. Same with the legend title. 
+```
+
+## Modifying the appearance of dates on the x-axis. 
+
+In the previous figure, the text on the x-axis displayed abbreviated months and the year. 
+What if we wanted to change that default behavior? 
+For example, suppose that we only have data from a single year. 
+In this case, we wouldn't need to display the year for each break.
+
+**Exercise**: Suppose that we are only interested in plotting the temperatures in July, 2013. Use `filter` to remove all observations that aren't in 2013.
+Then, recreate the figure from the previous slide, but this time make breaks come every month and don't display the year. 
+Also, add a plot title so that people know what they data are. 
+
+```{r changeDates, exercise=TRUE}
+weather_dates
+```
+
+```{r changeDates-hint-1}
+weather_dates |>
+  filter(...) |> 
+  ggplot(...) + 
+  ... + 
+  scale_x_datetime(date_breaks = ..., date_labels = ...)
+```
+
+```{r changeDates-hint-2}
+scale_x_datetime(date_breaks = ..., date_labels = ...)
+
+# The date_breaks argument above takes a string input like "1 year", that will make major breaks every year. 
+# The date_labels argument uses syntax similar to parsing data, for example, 
+# date_labels = "%m/%d/%y" will display the labels as "10/24/22".
+# See the details in ?strptime for a list of possible inputs. 
+```
+
+```{r changeDates-solution}
+weather_dates |>
+  filter(year(time) == 2013) |> 
+  ggplot(aes(x = time, y = temp)) + 
+  geom_line(aes(group = origin, col = origin)) + 
+  theme_bw() +  # Looks better than default (in my opinion)
+  ylab("Temperature (F)") + 
+  theme(axis.title.x = element_blank(),
+        legend.title = element_blank()) + 
+  scale_x_datetime(date_breaks = "1 month", date_labels = "%b") + 
+  ggtitle("Data from NYC airports starting in 2013")
+```
+
+## Pivoting
+
+We often work with data that are "tidy", meaning that each row corresponds to an observation, each column corresponds to a variable, and each cell has a single value. (See the picture below)
+
+<center>
+
+![Illustration of tidy data, from the R for Data Science book book](images/tidyData.png){width=100%}
+
+</center>
+
+A common problem is a dataset where some of the column names are not names of variables, but *values* of a variable. 
+For example, let's consider the `table4a` dataset, which contains the number of Tuberculosis cases for 3 different countries: 
+
+```{r}
+table4a
+```
+
+Here we notice that there are two columns, `1999` and `2000`, that aren't variables but instead are values of a particular variable. 
+We can fix this using the `pivot_longer` function. 
+
+`pivot_longer`: this function "lengthens" data, increasing the number of rows and decreasing the number of columns.
+For more detailed examples and exercises, I recommend looking at `vignette("pivot")`. For now, here are the most important arguments for this function: 
+
+* `data`: The dataset we want to *pivot* longer.
+* `cols`: The columns that need to be pivoted. This can be given as a vector of strings, or we could use any type of function we would select columns with using the `select` function. 
+* `names_to`: The name of the column that will store the long variable names.  
+* `values_to`: The name of the column that will store the values.
+
+Here's what it would look like for the `table4a` dataset: 
+
+```{r table4a, exercise = TRUE}
+table4a |>
+  pivot_longer(
+    cols = -country, # Get everything except first column,
+    names_to = "year",
+    values_to = "TB_count"
+  ) |> 
+  mutate(year = as.integer(year))
+```
+
+`pivot_longer` is often useful for plotting with `ggplot`, because it allows us to use colors and facets based on the created variables. 
+For example, you could color `TB_count` by `year` now that we have made the data "longer". 
+
+Sometimes we can see the opposite problem: a single observation is scattered across multiple rows. To fix this issue, we would use the `pivot_wider` function. 
+This issue is not as common, so we won't go into much detail on this for now. 
+
+*Pivoting* (both longer and wider) can be a tricky idea, and it can take some practice to fully understand how to use these really powerful functions correctly. 
+For more resources, we strongly recommend looking at `vignette("pivot")`. 
+
+## Missing Data
+
+Missing data is a common issue in data analysis projects. 
+Surprisingly, data can be missing in one of two possible ways: 
+
+* *Explicity*, which means that the missing data has been flagged using `NA`
+* *Implicitly*, which means that the data simply aren't present in the data (this is perhaps most easily noticed in datasets that are collected over regularly intervaled times). 
+
+We will see examples of each type of missing data using the following dataset containing monthly measurements of the average water level (in meters) of lake Huron over time. 
+
+```{r loadHuron, exercise=TRUE}
+huron_level <- read_csv("data/huron_level.csv", comment = "#")
+```
+
+How can we identify missing data in this dataset? The most obvious missing data are the explicit missing values, which are marked with `NA`s.
+
+**Exercise**: Are there other types of missing data in this dataset? How can we identify these observations? 
+
+```{r checkMissing, exercise=TRUE}
+
+```
+
+```{r checkMissing-hint-1}
+# We can find all of the explicit missing values using something like: 
+sum(is.na(huron_level))  # Counts the number of missing values
+which(is.na(huron_level))  # Finds (vector) location of missing values.
+```
+
+```{r checkMissing-hint-2}
+# Implicit missing values are harder. Look at the unique values 
+# of year and see if you can notice missing values. 
+
+huron_level$year
+```
+
+```{r checkMissing-hint-3}
+# Implicit missing values are harder. Look at the unique values 
+# of year and see if you can notice missing values. 
+
+strange_diff <- which(diff(huron_level$year) != 1)
+huron_level$year[strange_diff]
+huron_level$year[strange_diff + 1]
+
+# There are some years skipped: 1897 and 1973. While these aren't 
+# explicitly listed as missing values, they are indeed missing! 
+```
+
+**Exercise**: If you found any missing observations, add them to the dataset as `NA`s so that they will be explicitly missing.
+
+```{r fixMissing, exercise=TRUE}
+
+```
+
+```{r fixMissing-hint-1}
+# The missing data should correspond to entire rows that are missing. 
+# Try adding rows of missing data to the data.frame.
+```
+
+```{r fixMissing-hint-2}
+# POSSIBLE SOLUTION: 
+missing_df <- matrix(nrow = 2, ncol = 13)
+colnames(missing_df) <- c('year', tolower(month.abb))
+missing_df[, 'year'] <- c(1897, 1973)
+huron_level <- bind_rows(huron_level, as.data.frame(missing_df))
+```
+
+**Exercise**: Let's use some of the skills that we learned with *Dates* and *pivoting* to create a *long* version of this dataset, with a column `time` containing a `Date` object for the first day of the specified month, and a `level` column representing the water level in meters. 
+
+```{r cleanHuron, exercise=TRUE, exercise.blanks = "\\.\\.\\.+"}
+cleanHuron <- huron_level |> ...
+```
+
+```{r cleanHuron-hint-1}
+# Pivot first, then mutate:
+cleanHuron <- huron_level |>
+  pivot_longer(
+    cols = ..., 
+    names_to = ..., 
+    values_to = ...
+  ) |> 
+  mutate(...)
+```
+
+```{r cleanHuron-hint-2}
+# To create a date using a numeric year and a string month, there are 
+# at least two good options:
+#   (1) use the built in vector month.abb to convert to numeric month, then use make_date function. 
+#   (2) convert everything to a string (i.e., "1970 jan"), then use parse_date to convert to a date. 
+```
+
+```{r cleanHuron-solution}
+cleanHuron <- huron_level |> 
+  pivot_longer(
+    cols = -year,
+    names_to = "month_name",
+    values_to = "level"
+  ) |>
+  mutate(
+    month_number = match(month_name, tolower(month.abb)),
+    time = make_date(year = year, month = month_number)
+  ) |> 
+  select(time, year, level)
+```
+
+**Exercise**: Finally, let's plot the data over time.
+
+```{r plotHuron, exercise=TRUE}
+
+```
+
+```{r plotHuron-solution}
+cleanHuron |> 
+  ggplot(aes(x = time, y = level)) + 
+  geom_line() + 
+  theme_bw()
+```
+
