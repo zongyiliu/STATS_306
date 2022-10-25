@@ -23,7 +23,7 @@ library(tidyverse)  # For ggplot2, dplyr, readr
 library(lubridate)  # For some functions involving dates
 library(nycflights13)
 
-tutorial_options(exercise.reveal_solution = FALSE)
+tutorial_options(exercise.reveal_solution = TRUE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
@@ -78,7 +78,7 @@ d3 <- "01/24, '11 2:01 PM EST"
 
 ```{r dates1-hint-1}
 # Look at the help page for parse_date and parse_datetime:
-?parse_date  
+?readr::parse_date  
 # In particular, look at the "Format specification" section. 
 ```
 
@@ -163,14 +163,21 @@ future_lab_date + dweeks(1)
 # using periods: 
 future_lab_date + weeks(1)
 
-# If you use dweeks, the hour changes! This is because there is a daylight savings time change between these lab dates, so November 6th has 25 hours instead of 24. In this case, this behavior is undesirable because we would expect that the time class start doesn't change. This behavior is more useful in situations where the exact interval of time between observations is important, like taking scientific measurements of something every hour over a long period of time. 
+# If you use dweeks, the hour changes! 
+# This is because there is a daylight savings time change 
+# between these lab dates, so November 6th has 25 hours instead of 24. 
+# In this case, this behavior is undesirable because we would expect 
+# that the time class start doesn't change. This behavior is more useful in
+# situations where the exact interval of time between observations is important,
+# like taking scientific measurements of something 
+# every hour over a long period of time. 
 ```
 
 ## Plotting Dates in `ggplot`
 
 For this slide we will be using the `weather` data from the `nycflights13` package. 
 
-```{r}
+```{r weatherdata}
 data(weather)
 head(weather)
 ```
@@ -179,7 +186,7 @@ Once a column is a stored as a `Date` object in `R`, it's relatively simple to p
 
 **Exercise**: Use `mutate` to create a new dataset called `weather_dates` that contains a `datetime` column called `time` that represents the year, month, day and hour of each observation in the weather dataset (note that a similar column called `time_hour` already exists in the dataset, so this is just for practice). 
 
-```{r weatherDates, exercise=TRUE, exercise.blanks = "\\.\\.\\.+"}
+```{r weatherDates, exercise=TRUE, exercise.blanks = "\\.\\.\\.+", exercise.setup="weatherdata"}
 weather_dates <- weather |> ...
 ```
 
@@ -195,7 +202,7 @@ weather_dates <- weather |>
 
 **Exercise**: Plot the temperature of each location, over time, using `geom_line`
 
-```{r weatherPlot, exercise=TRUE}
+```{r weatherPlot, exercise=TRUE, exercise.setup="weatherDates-solution"}
 
 ```
 
@@ -228,8 +235,8 @@ In this case, we wouldn't need to display the year for each break.
 Then, recreate the figure from the previous slide, but this time make breaks come every month and don't display the year. 
 Also, add a plot title so that people know what they data are. 
 
-```{r changeDates, exercise=TRUE}
-weather_dates
+```{r changeDates, exercise=TRUE, exercise.setup="weatherDates-solution"}
+weather_dates |>
 ```
 
 ```{r changeDates-hint-1}
@@ -329,7 +336,7 @@ How can we identify missing data in this dataset? The most obvious missing data 
 
 **Exercise**: Are there other types of missing data in this dataset? How can we identify these observations? 
 
-```{r checkMissing, exercise=TRUE}
+```{r checkMissing, exercise=TRUE, exercise.setup="loadHuron"}
 
 ```
 
@@ -360,7 +367,7 @@ huron_level$year[strange_diff + 1]
 
 **Exercise**: If you found any missing observations, add them to the dataset as `NA`s so that they will be explicitly missing.
 
-```{r fixMissing, exercise=TRUE}
+```{r fixMissing, exercise=TRUE, exercise.setup="loadHuron"}
 
 ```
 
@@ -379,7 +386,7 @@ huron_level <- bind_rows(huron_level, as.data.frame(missing_df))
 
 **Exercise**: Let's use some of the skills that we learned with *Dates* and *pivoting* to create a *long* version of this dataset, with a column `time` containing a `Date` object for the first day of the specified month, and a `level` column representing the water level in meters. 
 
-```{r cleanHuron, exercise=TRUE, exercise.blanks = "\\.\\.\\.+"}
+```{r cleanHuron, exercise=TRUE, exercise.blanks = "\\.\\.\\.+",  exercise.setup="loadHuron"}
 cleanHuron <- huron_level |> ...
 ```
 
@@ -418,7 +425,7 @@ cleanHuron <- huron_level |>
 **Exercise**: Finally, let's plot the data over time. Once you've been able to plot the data, experiment with modifying the appearance of the `x-axis` using `scale_x_datetime` to something that you think looks good. 
 You may want to consider looking at the help page `?strptime` for ideas. 
 
-```{r plotHuron, exercise=TRUE}
+```{r plotHuron, exercise=TRUE,  exercise.setup="loadHuron"}
 
 ```
 
