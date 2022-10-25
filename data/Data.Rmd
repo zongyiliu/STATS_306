@@ -1,6 +1,6 @@
 ---
 title: "Data"
-author: "Mark Fredrickson"
+author: "Stats 306 Instructional Team"
 output: html_document
 ---
 
@@ -40,3 +40,12 @@ Paper citation: Saif M. Mohammad and Svetlana Kiritchenko. (2018). WikiArt Emoti
 * URL: https://data.doi.gov/dataset/water-quality-data
 
 > Water quality data for the Refuge collected by volunteers collected once every two weeks: Turbidity, pH, Dissolved oxygen (DO), Salinity & Temperature. Sampling will occur at designated locations in the following water bodies: the Bay, D-Pool (fishing pond), C-Pool, B-Pool and A-Pool.
+
+## Provisional Cancer Death rates by demographic groups, type
+
+* File: `AH_Provisional_Cancer_Death_Counts_by_Month_and_Year__2020-2021.csv.gz`
+* Date retrieved: 2022-10-25
+* URL: https://catalog.data.gov/dataset/ah-provisional-cancer-death-counts-by-month-and-year-2020-2021
+
+> Provisional death counts of malignant neoplasms (cancer) by month and year, and other selected demographics, for 2020-2021. Data are based on death certificates for U.S. residents.
+
