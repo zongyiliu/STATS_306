@@ -14,6 +14,7 @@ runtime: shiny_prerendered
 # not have.
 
 if (!require(nycflights13)) install.packages("nycflights13", repos = "http://cran.us.r-project.org")
+if (!packageVersion("learnr") == "0.11.1") install.packages("learnr", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
@@ -414,7 +415,8 @@ cleanHuron <- huron_level |>
   select(time, year, level)
 ```
 
-**Exercise**: Finally, let's plot the data over time.
+**Exercise**: Finally, let's plot the data over time. Once you've been able to plot the data, experiment with modifying the appearance of the `x-axis` using `scale_x_datetime` to something that you think looks good. 
+You may want to consider looking at the help page `?strptime` for ideas. 
 
 ```{r plotHuron, exercise=TRUE}
 
