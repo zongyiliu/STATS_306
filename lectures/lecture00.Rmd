@@ -3,8 +3,9 @@ title: "Stats 306: Lecture 0"
 subtitle: "Introduction to Stats 306"
 author: "Mark Fredrickson"
 output: 
-  slidy_presentation:
-    incremental: true
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
 runtime: shiny_prerendered
 ---
 

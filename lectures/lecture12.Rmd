@@ -2,9 +2,9 @@
 title: "Stats 306: Lecture 12"
 subtitle: "Loading Data, Dates"
 author: "Mark Fredrickson"
-output: 
-  slidy_presentation:
-    incremental: true
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
 runtime: shiny_prerendered
 ---
 
