@@ -1,0 +1,340 @@
+---
+subtitle: "Stats 306: Lecture 14"
+title: "Relational Data"
+author: "Mark Fredrickson"
+output: 
+  slidy_presentation:
+    incremental: true
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+set.seed(2939394)
+
+table1 <- bind_cols(tidyr::table1, continent = c("Asia", "Asia", "South America", "South America", "Asia", "Asia"))
+
+table2 <- pivot_longer(table1, c("cases", "population"))
+
+table4ab <- pivot_wider(table1, id_cols = c("country", "continent"), names_from = "year", values_from = c("cases", "population"))
+
+if (!require(nycflights13)) install.packages("nyclfights13", repos = "http://cran.us.r-project.org")
+
+```
+
+## Review
+
+* Tidy/wide data: rows are observations, columns are measurements
+* Tall formats: one column holds more than one type of measurement
+* `pivot_longer`: wide to tall
+* `pivot_wider`: tall to wide
+* naming columns, setting types, splitting into multiple columns
+
+
+## Example: Tidy/Wide
+
+```{r, echo = FALSE}
+
+```
+```{r}
+table1
+```
+
+
+What are the units? What are the measurments?
+
+## Example: Tall table
+```{r echo = FALSE}
+```
+```{r}
+table2
+```
+
+## Relational data
+
+Sometimes we have multiple levels of data. For example,
+
+>* Clinics with patients
+>* Countries, measured over years
+>* Pitchers with many pitches thrown
+
+It may be inefficient to duplicate upper level information for every lower level observation.
+
+Solution: **relate** two tidy tables
+
+## Example: Relational
+
+```{r, echo= FALSE}
+table3_countries <- group_by(table1, country) |> summarize(continent = first(continent))
+table3_years <- tidyr::table1
+```
+
+```{r}
+table3_countries 
+table3_years
+```
+
+## `nycflights13` library
+
+```{r}
+library(nycflights13)
+```
+
+Tables:
+
+>* `airlines`: information on the carriers
+>* `airports`: information on airports
+>* `planes`: the planes flying between airports
+>* `weather`: weather conditions
+>* `flights`: flight information and connects the other tables
+
+## `airlines`
+
+```{r}
+airlines
+```
+
+## `airports`
+
+```{r}
+airports
+```
+
+## `planes`
+
+```{r}
+planes
+```
+
+## `weather`
+
+```{r}
+weather
+```
+
+## `flights`
+
+```{r}
+flights
+```
+
+## Diagram
+
+![nycflights13 connection diagram](images/relational-nycflights.png)
+
+## Keys
+
+A **key** is one or more columns that uniquely identify a on observation within the data set.
+
+A **primary key** identifies entries within a table.
+
+Single columns: `airports/faa`, `planes/tailnum`,  `airlines/carrier`
+
+Multiple columns:
+>* `weather`: `year`, `month`, `day`, `hour` (could be a single date-time column), `origin` (location)
+>* `flights`: `year`, `month`, `day`, `hour`, `minute`, `flight`, `origin`, `dest`
+
+## Foreign keys
+
+A **foreign key** relates an observation in one table to observation in a second table.
+
+>* `flights`: `tailnum` uniquely identifies plane used
+>* `weather`: `origin` identifies airport
+
+## Diagram Revisited
+
+![nycflights13 connection diagram](images/relational-nycflights.png)
+
+## Finding primary keys
+
+Without a diagram, how can you figure out a primary key? It should only apply to one observation:
+
+```{r}
+count(airports, faa) |> summarize(any(n > 1))
+```
+
+
+Could the `flight` column uniquely identify the flights?
+```{r}
+count(flights, flight) |> summarize(any(n > 1))
+```
+
+Smallest set of columns I could find:
+```{r}
+count(flights, flight, year, origin, dest, 
+      month, day, hour, minute) |> summarize(any(n > 1))
+```
+
+## Exercise
+
+Find a minimal set of columns that create a primary key for the `mpg` table:
+
+```{r}
+colnames(mpg)
+```
+
+
+```{r mpgkey, exercise = TRUE}
+count(mpg, manufacturer) |> summarize(any(n > 1))
+```
+
+
+
+## Relations
+
+When we connect two tables by keys, we have created a **relation**.  We classify relations by how many rows from the **left table** are connected to how many rows from the **right table**. A relation is a **table** with one row for each pair of connected keys.
+
+* one-to-one: one row from the left is connected to one table from the right (this might be a subset of the rows from one or both tables)
+* one-to-many: one row from left table is connected to one or more rows of the second table. Left table rows appear multiple times in the relation table.
+* many-to-many: both left and right tables contribute multiple rows.
+
+## Creating relations: joins
+
+From our book:
+
+* **Mutating joins**: add new variables to one data frame from matching observations in another.
+* **Filtering joins**: filter observations from one table based on whether or not they match an observation in the other table.
+
+## Types of joins
+
+* **Left (outer) joins**: one or more rows for each row in left table
+* **Right (outer) joins**: one or more rows for each in right table
+* **Full (outer) joins**: at least one row for each row in both tables
+* **Inner joins**: rows for each combination of matching keys in both tables
+
+## Venn Diagram of joins
+
+![Venn diagrm of joins](images/join-venn.png)
+
+## One-to-one join: carrier names
+
+```{r}
+fiveam <- filter(flights, year == 2013, month == 1, day == 1, hour == 5)
+select(fiveam, flight, carrier)
+```
+
+```{r}
+left_join(x = fiveam,
+          y = airlines,
+          by = "carrier") |> 
+  select(flight, carrier, name) 
+```
+
+## Multiple one-to-one
+
+If we need to link more than two tables (or two tables more than one time), we build up several joins
+
+```{r}
+select(fiveam, flight, origin, dest)
+```
+
+```{r}
+tmp <- left_join(fiveam, airports, by = c("origin" = "faa"))
+select(tmp, flight, origin, name)
+```
+
+```{r}
+left_join(tmp, airports, by = c("dest" = "faa")) |>
+  select(flight, origin, dest, name.x, name.y)
+```
+
+>* When the same column appears in both tables, it gets the `.x` (left) and `.y` (right) suffix
+>* Notice that this is a **left** join because BQN doesn't have a `name.y` entry.
+
+## Slightly cleaner example
+
+```{r}
+left_join(fiveam, airports, by = c("origin" = "faa")) |>
+  left_join(airports, by = c("dest" = "faa"), suffix = c("_origin", "_dest")) |>
+  select(flight, name_origin, name_dest)
+```
+
+## Exercise
+
+
+```{r speed, exercise = TRUE}
+
+```
+
+## Exercise
+
+The California has an Eastern-most longitude (approx.) of -115. Using the `flights` and the `airports` table, use a join to plot the distribution of scheduled departure time (`sched_dep_time`) from NYC broken out by West coast flights (destination `lon < -115`) and otherwise.
+
+```{r rockyflights, exercise = TRUE}
+
+```
+
+## Inner joins
+
+Inner joins discard entries where a key does not exist in the table. Recall not all destinations are in the airports table (international flights):
+
+```{r}
+left_join(fiveam, airports, by = c("dest" = "faa")) |>
+  select(flight, dest, name)
+```
+
+Inner join would discard that row:
+```{r}
+inner_join(fiveam, airports, by = c("dest" = "faa")) |>
+  select(flight, dest, name)
+```
+
+## Exercise
+
+Use an inner join to find out how many domestic flights there were during the period covered by the `flights` data set.
+
+```{r innerjoin, exercise = TRUE}
+
+```
+
+## Full joins
+
+Left and right joins keep all rows in the respective table (discarding in the other freely). **Full joins** keep all:
+
+```{r}
+left <- head(flights)
+right <- filter(airports, faa %in% c("DTW", "BOS", "ORD", "LAX", "ATL"))
+left_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+right_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+full_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+inner_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+```
+
+## Keys with multiple columns
+
+Examples thus far have used keys in single columns, but keys can be spread acorss columns (**compound**). 
+
+```{r}
+left_join(fiveam, weather, by = c("year", "month", "day", "hour", "origin")) |>
+  select(flight, temp, wind_dir, wind_speed)
+```
+
+## Natural joins
+
+To avoid lost of redundant typing, if two tables have a set of columns in common, those will automatically be used to join (**natural join**)
+
+```{r}
+left_join(fiveam, weather) |>
+  select(flight, temp, wind_dir, wind_speed)
+```
+
+## Matching multiple keys
+
+What would have happened if the `weather` table used the column name `airport` instead of `origin`? Since `airport` is not a column in `flights`:
+
+```{r}
+left_join(fiveam, weather, by = c("year", "month", "day", "hour")) |>
+  select(flight, origin.x, temp, wind_speed, origin.y)
+```
+
+In a left join, if the same key matches multiple tables in the right, the row gets duplicated for each.
+
+Lesson: Be careful with natural joins and compound keys.
+
+
+## Next time
+
+>* Wrap up relational operations (13.5 - 13.7)
+>* Start to discuss strings and factors (14, 15)
