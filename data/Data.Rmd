@@ -11,15 +11,17 @@ library(tidyverse)
 
 This file describes data used in the course Stats 306. Files are typically in compressed CSV form. To load the files, we recommend `readr::read_csv`.
 
-## `ann_arbor_wether.csv.gz`
+## Ann Arbor Weather Data
+
+* File: `ann_arbor_wether.csv.gz`
 
 TODO
 
-## `RMS_Crime_Incidents.csv.gz`
+## City of Detroit crime event data
 
-[City of Detroit crime event data](https://data.detroitmi.gov/datasets/detroitmi::rms-crime-incidents/explore), retrieved 2022-09-19.
-
-Description from the City of Detroit Open Data Portal:
+* File:`RMS_Crime_Incidents.csv.gz`
+* Retrieved: 2022-09-19.
+* URL: https://data.detroitmi.gov/datasets/detroitmi::rms-crime-incidents/explore
 
 > This data reflects reported criminal offenses that have occurred in the City of Detroit. Offense data was extracted from the Detroit Police Department's records management system.
 >
@@ -27,7 +29,9 @@ Description from the City of Detroit Open Data Portal:
 
 ## WikiArt Emotions Dataset
 
-[WikiArt Emotions Dataset](http://saifmohammad.com/WebPages/wikiartemotions.html), retrieved 2022-10-06.
+* File: `WikiArt-Emotions-All.tsv.gz`
+* URL: http://saifmohammad.com/WebPages/wikiartemotions.html
+* Retrieved: 2022-10-06.
 
 > WikiArt Emotions is a dataset of 4,105 pieces of art (mostly paintings) that has annotations for emotions evoked in the observer. The pieces of art were selected from WikiArt.org's collection for twenty-two categories (impressionism, realism, etc.) from four western styles (Renaissance Art, Post-Renaissance Art, Modern Art, and Contemporary Art). WikiArt.org shows notable art in each category in a Featured page. We selected ~200 items from the featured page of each category. The art is annotated via crowdsourcing for one or more of twenty emotion categories (including neutral). In addition to emotions, the art is also annotated for whether it includes the depiction of a face and how much the observers like the art. We do not redistribute the art (images), we provide only the annotations.
 
