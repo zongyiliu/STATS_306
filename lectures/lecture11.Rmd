@@ -2,6 +2,7 @@
 title: "Stats 306: Lecture 11"
 subtitle: "Wrapping up EDA, Wrangling"
 author: "Mark Fredrickson"
+output:
   learnr::tutorial:
     progressive: true
     css: css/lecture.css

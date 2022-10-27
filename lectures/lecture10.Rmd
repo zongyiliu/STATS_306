@@ -2,6 +2,7 @@
 title: "Stats 306: Lecture 10"
 subtitle: "EDA: Visualizing and Quantifying Variation"
 author: "Mark Fredrickson"
+output:
   learnr::tutorial:
     progressive: true
     css: css/lecture.css

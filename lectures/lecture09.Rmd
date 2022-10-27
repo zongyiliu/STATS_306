@@ -2,6 +2,7 @@
 title: "Stats 306: Lecture 9"
 subtitle: "Exploratory Data Analysis"
 author: "Mark Fredrickson"
+output:
   learnr::tutorial:
     progressive: true
     css: css/lecture.css

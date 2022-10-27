@@ -2,6 +2,7 @@
 subtitle: "Stats 306: Lecture 13"
 title: "Tidy Data"
 author: "Mark Fredrickson"
+output:
   learnr::tutorial:
     progressive: true
     css: css/lecture.css
