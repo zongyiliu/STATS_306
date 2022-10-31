@@ -1,0 +1,220 @@
+---
+subtitle: "Stats 306: Lecture 15"
+title: "Relational Data, Continued"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+set.seed(2939394)
+if (!require(nycflights13)) install.packages("nyclfights13", repos = "http://cran.us.r-project.org")
+
+```
+
+## Review
+
+* `nycflights` data: flights, airlines, airports, planes, weather
+* Keys: **primary keys** identify data within the table, **foreign keys** link to data in other tables.
+* Relations: tables created by **joining** two or more tables. Classify as: mutating or filtering.
+* Types of joins: outer: left, right, and fulll; inner
+* Use of `dplyr` `*_join` functions, `by` argument, `suffix` argument
+
+## Example: What models of planes fly from NYC to Detroit?
+
+```{r}
+filter(flights, dest == "DTW") |>
+  left_join(planes, by = "tailnum") |>
+  count(paste(manufacturer, model)) |> arrange(desc(n))
+```
+
+
+## Inner joins
+
+Inner joins discard entries where a key does not exist in the table. Recall not all destinations are in the airports table (international flights):
+
+```{r}
+fiveam <- filter(flights, year == 2013, month == 1, day == 1, hour == 5)
+left_join(fiveam, airports, by = c("dest" = "faa")) |>
+  select(flight, dest, name)
+```
+
+Inner join would discard that row:
+```{r}
+inner_join(fiveam, airports, by = c("dest" = "faa")) |>
+  select(flight, dest, name)
+```
+
+## Exercise
+
+Use an inner join to find out how many domestic flights there were during the period covered by the `flights` data set.
+
+```{r innerjoin, exercise = TRUE}
+
+```
+
+## Full joins
+
+Left and right joins keep all rows in the respective table (discarding in the other freely). **Full joins** keep all:
+
+```{r}
+left <- head(flights, 10)
+right <- filter(airports, faa %in% c("DTW", "BOS", "ORD", "LAX", "ATL"))
+left_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+right_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+full_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+inner_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+```
+
+## Multiple matches
+
+Recall that we limited ourseleves to 5 airport codes. Notice the number of rows in this join:
+
+```{r}
+right_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
+```
+
+If A's key matches more than one row in B, A gets duplicated that many times. (This is different than `mutate`.)
+
+Note, same behavior with a left join:
+
+```{r}
+# swapping order of table
+left_join(right, left, by = c("faa" = "dest")) |> select(flight, faa, name)
+```
+
+
+## Keys with multiple columns
+
+Examples thus far have used keys in single columns, but keys can be spread across columns (**compound**). 
+
+```{r}
+left_join(fiveam, weather, by = c("year", "month", "day", "hour", "origin")) |>
+  select(flight, temp, wind_dir, wind_speed)
+```
+
+## Natural joins
+
+To avoid lost of redundant typing, if two tables have a set of columns in common, those will automatically be used to join (**natural join**)
+
+```{r}
+left_join(fiveam, weather) |>
+  select(flight, temp, wind_dir, wind_speed)
+```
+
+## Matching multiple keys
+
+What would have happened if the `weather` table used the column name `airport` instead of `origin`? Since `airport` is not a column in `flights`:
+
+```{r}
+left_join(fiveam, weather, by = c("year", "month", "day", "hour")) |>
+  select(flight, origin.x, temp, wind_speed, origin.y)
+```
+
+In a left join, if the same key matches multiple tables in the right, the row gets duplicated for each.
+
+Lesson: Be careful with natural joins and compound keys.
+
+## Filtering joins
+
+A few times we used the fact that **outer joins** will result in tables with missing entries in order to count some feature.
+
+This pattern is common enough to generate two **filtering join** functions:
+
+- `semi_join(x, y)` keeps all observations in x that have a match in y.
+- `anti_join(x, y)` drops all observations in x that have a match in y.
+
+Big difference from mutating joins is that `y`'s columns are not included.
+
+## Example
+
+Suppose we want to find the top 10 destinations by number of flights:
+
+```{r}
+top_dest <- flights %>%
+  count(dest, sort = TRUE) %>%
+  head(10)
+top_dest
+```
+
+If we *join* to the `top_dest` table, we can get flights to those destinations:
+
+```{r}
+left_join(flights, top_dest) |> # natural join on `dest` column
+  select(flight, dest, n) -> flights_to_tops
+flights_to_tops
+```
+Then filtering out the NAs
+```{r}
+filter(flights_to_tops, !is.na(n))
+```
+
+Do it one step with `semi_join`:
+
+```{r}
+semi_join(flights, top_dest) |>
+  select(flight, dest)
+```
+
+## Exercise
+
+Find the set of flights that were delayed by more than one hour (`dep_delay > 60`). Find the weather patterns associated with those flights and plot the distribution of wind speed with length of delay.
+
+```{r semijoin, exercise = TRUE}
+# you can use a natural join for flights and weather
+
+```
+
+## Other set operations functions
+
+Base R has a series of **set operation** functions that operate on collects as mathematical sets (collections where items can appear at most once): `intersect`, `union`, `setdiff`, `setequal`, `is.element`, `%in%`
+
+I frequently use these for doing comparisons of vectors:
+```{r}
+"DTW" %in% top_dest$dest # same as is.element
+intersect(c("BOS", "LAX", "DTW"), top_dest$dest)
+union(c("A", "B", "C"), c("Q", "A", "R"))
+setdiff(c("A", "B", "C"), c("Q", "A", "R"))
+setequal(c("A", "B", "C"), c("B", "C", "A"))
+```
+
+## Set operations with tables
+
+With filtering joins, we can choose which columns link the tables. With the set operations, we must use all columns.
+
+Flights to top destinations that are also delayed:
+```{r}
+flights_to_top <- semi_join(flights, top_dest) 
+flights_delayed <- filter(flights, dep_delay > 0)
+intersect(flights_to_top, flights_delayed)
+```
+
+## Relational data wrap up
+
+* When data are stored in more than one table you need to **join**
+* **Mutating joins** join tables to add columns (and some times rows!)
+* **Filtering joins** use one table to select rows for another
+* Outer left/right/full joins, inner joins
+* Also useful for linking table to itself 
+* Set operations less generally useful, but have some specific uses (e.g., vectors)
+
+## Strings and Factors
+
+R has two data types for representing categorical/nominal data types:
+
+* Strings: character data
+* Factors: integers representing categories with look up table for labels, can be ordered 
+
+```{r}
+example_str <- c("you", "say", "goodbye", "i", "say", "hello", "hello", "hello")
+example_str
+example_fct <- factor(example_str)
+example_fct
+```
+

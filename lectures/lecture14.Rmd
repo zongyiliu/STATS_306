@@ -254,6 +254,7 @@ left_join(fiveam, airports, by = c("origin" = "faa")) |>
 
 ## Exercise
 
+Join the `flights` and `plains` tables using a `left_join` on `tailnum`. Plot the distribution of flight speed `distance / air_time` against `type`.
 
 ```{r speed, exercise = TRUE}
 
@@ -266,74 +267,6 @@ The California has an Eastern-most longitude (approx.) of -115. Using the `fligh
 ```{r rockyflights, exercise = TRUE}
 
 ```
-
-## Inner joins
-
-Inner joins discard entries where a key does not exist in the table. Recall not all destinations are in the airports table (international flights):
-
-```{r}
-left_join(fiveam, airports, by = c("dest" = "faa")) |>
-  select(flight, dest, name)
-```
-
-Inner join would discard that row:
-```{r}
-inner_join(fiveam, airports, by = c("dest" = "faa")) |>
-  select(flight, dest, name)
-```
-
-## Exercise
-
-Use an inner join to find out how many domestic flights there were during the period covered by the `flights` data set.
-
-```{r innerjoin, exercise = TRUE}
-
-```
-
-## Full joins
-
-Left and right joins keep all rows in the respective table (discarding in the other freely). **Full joins** keep all:
-
-```{r}
-left <- head(flights)
-right <- filter(airports, faa %in% c("DTW", "BOS", "ORD", "LAX", "ATL"))
-left_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
-right_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
-full_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
-inner_join(left, right, by = c("dest" = "faa")) |> select(flight, dest, name)
-```
-
-## Keys with multiple columns
-
-Examples thus far have used keys in single columns, but keys can be spread acorss columns (**compound**). 
-
-```{r}
-left_join(fiveam, weather, by = c("year", "month", "day", "hour", "origin")) |>
-  select(flight, temp, wind_dir, wind_speed)
-```
-
-## Natural joins
-
-To avoid lost of redundant typing, if two tables have a set of columns in common, those will automatically be used to join (**natural join**)
-
-```{r}
-left_join(fiveam, weather) |>
-  select(flight, temp, wind_dir, wind_speed)
-```
-
-## Matching multiple keys
-
-What would have happened if the `weather` table used the column name `airport` instead of `origin`? Since `airport` is not a column in `flights`:
-
-```{r}
-left_join(fiveam, weather, by = c("year", "month", "day", "hour")) |>
-  select(flight, origin.x, temp, wind_speed, origin.y)
-```
-
-In a left join, if the same key matches multiple tables in the right, the row gets duplicated for each.
-
-Lesson: Be careful with natural joins and compound keys.
-
 
 ## Next time
 
