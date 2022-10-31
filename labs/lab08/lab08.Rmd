@@ -1,0 +1,407 @@
+---
+title: "Stats 306: Lab 8"
+author: "Your Name"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+## Set up
+
+```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
+# This just checks if students need to install some packages that they might 
+# not have.
+
+if (!require(nycflights13)) install.packages("nycflights13", repos = "http://cran.us.r-project.org")
+if (!packageVersion("learnr") == "0.11.1") install.packages("learnr", repos = "http://cran.us.r-project.org")
+```
+
+```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For ggplot2, dplyr, readr
+library(nycflights13)
+
+tutorial_options(exercise.reveal_solution=TRUE)
+```
+
+```{r fake_setup, echo=TRUE, eval=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For ggplot2, dplyr, readr
+library(nycflights13)
+```
+
+## Logistics
+
+-   HW 4 is due on Nov 6.
+
+-   Exam 2 is on Nov 11, more details to come.
+
+-   Questions?
+
+## Today's Content
+
+-   Review on Exam 1 Questions
+-   Relational Data
+
+## Reveiw on Exam 1 - Multiple Choice
+
+```{r question3, echo=FALSE}
+question("Question 3: Which of the following are reasons we use RStudio in STATS306?",
+answer("a. It is the only way to run R programs."),
+answer("b. It is required by the tidyverse package."),
+answer("c. It combines an R aware editor with tools for the command line, help system, and package management.", correct=T),
+answer("d. It runs on both desktop and on cluster computing environment", correct=T),
+answer("e. It provides Artificial Intelligence tools to write code for us."),
+allow_retry=T,
+incorrect = "Correct Answers: c, d"
+)
+
+```
+
+```{r question4, echo=FALSE}
+question("Question 4: If each of the following is a complete R statement (i.e., run at the Console on a single line), which will result in the variable \"a\" having the value 7?",
+answer("a. a = 7", correct=T),
+answer("b. 7 = a"),
+answer("c. A == 7"),
+answer("d. a <- 7", correct=T),
+answer("e. 7 -> a", correct=T),
+answer("f. my_function(a=7)"),
+answer("g. c(6, 8) |> mean() -> a", correct=T), 
+answer("h. a <- mean() |> c(6,8)"),
+allow_retry=T,
+incorrect = "Correct Answers: a, d, e, g"
+)
+
+```
+
+
+```{r question8, echo=FALSE}
+question("Question 8: In R, which of the following are true about functions? Select all true answers.",
+answer("a. They can be assigned to variables", correct=T),
+answer("b. They can be passed as arguments to functions", correct=T),
+answer("c. They can be returned from functions.", correct=T),
+answer("d. They can be created to take an unlimited number of arguments", correct=T),
+allow_retry=T,
+incorrect = "Correct Answers: a, b, c, d"
+)
+
+```
+
+
+## Question 12
+
+Imagine the instructor of Stats 306 has released homework999.Rmd, but forgets to include a question that depends on the file “data/exciting_data.csv” that is new for this homework. After editing the file “homework/homework999.Rmd”, he uses git status in the terminal of RStudio and sees the following:
+
+```
+$ git status
+
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   homework/homework999.Rmd
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        data/exciting_data.csv
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+Describe the steps necessary to share the changes and the new data with the class (the last step of this process will be git push). After these changes are made public, what will students have to do to get the new changes if they have started answering questions in homework999.Rmd?
+
+
+### Rubric:
+
+A. 3 points for getting all steps, 2 points for missing one, 1 point for at least trying to use git.
+
+* Git add both files (can either be one step or two)
+* Git commit with a commit message
+* Git push
+
+B. 2 points for student steps: They will need to add and commit their own changes, then pull (or merge) the changes.
+
+
+## Question 13.1
+
+How does the ggplot (techncially ggplot2) package embody the ideas of the Semiology of Graphics by Jacques Bertin? What does ggplot call the kinds of functions that place points and shapes on the plot? What does ggplot call the kinds of functions that provide summary information? Be as specific as possible and give examples of functions or techniques in ggplot2 that illustrate the answers to these three questions.
+
+### Rubric
+
+* 1 point: The main point for the first question should be mapping/connecting columns in our data set to visual variables (we can accept visual elements, elements of the plots, how to visually display information, etc). 
+
+* 1 point for both: Second question, it calls them geometries or layers or `geom_*` functions. Third question, it calls them statistics or `stat_*` functions.
+
+* 1 point for giving an example for each of the visual variables question, the geom question, like `geom_boxplot`, and the stat question, like `stat_summary`. 0.5 if you don’t give an example on one of them.
+
+
+## Question 14.2
+
+Consider the following code:
+
+```
+mutate(my_data,
+  (x - mean(x)) / sd(x), 
+  (x - median(x)) / iqr(x) / 2,
+  (x - mean(x)^2)
+```
+
+Identify an opportunity to improve this code with a function. 
+
+* Give a brief explanation of inputs to the function. 
+* Are there any optional arguments?
+* What would the function return? How would the function be used to get an equivalent result? 
+
+You may write some R code if you would prefer to do so, but also provide a quick written description (we will not try to run the code, so as long it is largely correct you may use it as a shorthand notation for your explanation).
+
+### Answer:
+
+```
+myFunc <- function(x, func1, func2, power=1){
+return ((x-func1(x)^power)/func2(x))
+}
+mutate(my_data, myFunc(x, mean, sd), 
+                myFunc(x, median, function(x)iqr(x)/2), 
+                myFunc(x, mean, function(x)1, power=2))
+```
+
+### Rubric:
+
+* 1 point: duplicated structure: subtracting and dividing
+* 2 points: inputs to the function would be a vector (“x”) and a function to compute on “x” as the centering. 
+* 1 point: saying yes or no about the optional arg is enough.
+* 1 point: for describing how the function could replace each of the individual lines with something more concise.
+
+
+## Duplicate Keys
+
+### One table has duplicate keys.
+
+This is useful when you want to add in additional information as there is typically a one-to-many relationship.
+
+![duplicate keys](images/join-one-to-many.png){width=90%}
+```{r one-to-many}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     2, "x3",
+     1, "x4"
+)
+
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2"
+)
+
+left_join(x, y, by="key")
+```
+
+
+### Both tables have duplicate keys.
+
+This represents a many-to-many join and is usually an error since they key does not uniquely identify observations in either table. Joining duplicated keys results in the Cartesian product of all the possible matches.
+
+![duplicate keys](images/join-many-to-many.png){width=90%}
+
+```{r}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     2, "x3",
+     3, "x4"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2",
+     2, "y3",
+     3, "y4"
+)
+
+left_join(x, y, by = "key")
+```
+
+
+## Defining the Key Columns
+
+When we do a join using `left_join`, R takes as the key whatever column names the two tables have in common. 
+
+### Default `by=NULL`
+
+The defaul `by=NULL` uses all variables that appear in both tables, the so-called natural join. For example, the `flights2` and `weather` tables match on their common variables: year, month, day, hour, and origin.
+
+```{r flights2}
+flights2 <- flights %>% 
+  select(year:day, hour, origin, dest, tailnum, carrier)
+```
+
+
+```{r}
+names(flights2)
+names(weather)
+```
+
+The `flights2` and `weather` tables match on their common variables: year, month, day, hour and origin.
+
+```{r}
+flights2 %>% 
+  left_join(weather)
+```
+
+We can check the two tables separately:
+```{r}
+flights2 %>% filter(year==2013, month==1, day==1, hour==5, origin=="EWR")
+weather %>% filter(year==2013, month==1, day==1, hour==5, origin=="EWR")
+```
+
+### `by=c("a"="b")`
+
+A named character vector: by = c("a" = "b"). This will match variable a in table x to variable b in table y. The variables from x will be used in the output. For example, if we want to draw a map we need to combine the flights data with the airports data which contains the location (lat and lon) of each airport. Each flight has an origin and destination airport, so we need to specify which one we want to join to:
+
+```{r}
+flights2 %>% 
+  left_join(airports, c("dest" = "faa")) %>% head
+
+flights2 %>% 
+  left_join(airports, c("origin" = "faa")) %>% head
+```
+
+
+## Exercises
+
+### Question 1
+
+Using the two tables `flights` and `planes` to make a new table `age_delay` that contains the tail number of a plane, the number of flying records of a plane in `flights`, the age of a plane and its average arrival delays.
+
+**Hints:** *in table flights, you can use group_by() and summarise() to get the average arrival delay for each plane, and in table plane, variable year tells you the year manufactured. Data in table flights are in 2013.*
+
+
+```{r join1, exercise=TRUE}
+
+```
+
+
+```{r join1-hint}
+age_delay <- left_join(...)
+```
+
+
+```{r join1-solution}
+delay <- group_by(flights, tailnum) %>% summarise(avg_delay = mean(arr_delay, na.rm=TRUE), n = n()) 
+age <- mutate(planes, age = 2013 - year) %>% select(tailnum, age)
+age_delay <- left_join(age, delay, by="tailnum") 
+```
+
+```{r join1-sol-setup, eval=TRUE, echo=FALSE}
+delay <- group_by(flights, tailnum) %>% summarise(avg_delay = mean(arr_delay, na.rm=TRUE), n = n()) 
+age <- mutate(planes, age = 2013 - year) %>% select(tailnum, age)
+age_delay <- left_join(age, delay, by="tailnum") 
+```
+
+### Question 2
+Consider the planes with less than 50 flying records, and are less than 30 years old. Is there a relationship between the age of a plane and its delays? Draw a scatter plot and a smooth line to answer this question.
+
+```{r join2, exercise=TRUE, exercise.setup="join1-sol-setup"}
+
+```
+
+```{r join2-hint}
+age_delay %>% filter(...)
+```
+
+```{r join2-solution}
+age_delay %>% filter(n > 50, age < 30) %>% 
+  ggplot(aes(x = age, y = avg_delay))+
+  geom_point()+
+  geom_smooth()
+```
+
+
+## Filtering Joins
+
+### Semi-join
+
+`semi_join(x, y)` keeps all the observations in `x` that are also in `y`.
+
+![semi_join](images/join-semi.png){width=90%}
+**Exercise**: Filter flights to only show flights with planes that have flown at least 100 flights.
+
+```{r semijoin, exercise=TRUE}
+
+```
+
+```{r semijoin-hint}
+#You can use function count() to count the unique vlues of one or more variables.
+?count
+```
+
+```{r semijoin-solution}
+planes_many <- flights %>% 
+  count(tailnum, sort=TRUE) %>% 
+  filter(n > 100)
+
+semi_join(flights, planes_many)
+```
+
+### Anti-join
+
+The opposite of a semi-join is an anti-join: keeps all the observations in `x` that are not in `y`.
+
+![anti_join](images/join-anti.png){width=90%}
+
+
+**Exercise**: Check the variable `carrier` in `flights`, what do the tail numbers that don’t have a matching record in planes have in common? Show the number of tailnumbers that don’t have a matching record in planes for each carrier.
+
+```{r antijoin, exercise=TRUE}
+
+```
+
+```{r antijoin-hint}
+flights %>% anti_join(...) 
+# You can use function count()
+```
+
+```{r antijoin-solution}
+flights %>% 
+  anti_join(planes, by="tailnum") %>% 
+  count(carrier, sort = TRUE)
+```
+
+
+## Exercises
+
+Compute the average arrival delay by destination, then join on the airports data frame so you can show the spatial distribution of arrival delays. Visualize the delays on a map of the United States.
+
+**Hints**: *You can use semi-join() to filter the flights that have 
+destinations in the table airports, and then calculate the average arrival delays for 
+each destination*
+
+```{r delaymap, exercise=TRUE}
+
+```
+
+```{r delaymap-hint}
+# An easy way to draw a map of the United States:
+ggplot(..., aes(lon, lat)) +
+  borders("state") +
+  coord_quickmap() + ...
+
+```
+
+```{r delaymap-solution}
+flights %>% 
+  semi_join(airports, c("dest" = "faa")) %>%
+  group_by(dest) %>% 
+  summarise(delay = mean(arr_delay, na.rm=TRUE)) %>% 
+  left_join(airports, by = c("dest"="faa")) %>% 
+  ggplot(aes(lon, lat)) +
+  borders("state") +
+  geom_point(aes(colour = delay)) +
+  coord_quickmap()+
+  scale_color_gradient2(low = "blue", high = "red")
+
+```
