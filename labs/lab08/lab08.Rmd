@@ -41,6 +41,8 @@ library(nycflights13)
 
 ## Today's Content
 
+
+-   Review on Quiz 3 Questions
 -   Review on Exam 1 Questions
 -   Relational Data
 
@@ -328,6 +330,8 @@ age_delay %>% filter(n > 50, age < 30) %>%
 `semi_join(x, y)` keeps all the observations in `x` that are also in `y`.
 
 ![semi_join](images/join-semi.png){width=90%}
+
+
 **Exercise**: Filter flights to only show flights with planes that have flown at least 100 flights.
 
 ```{r semijoin, exercise=TRUE}
