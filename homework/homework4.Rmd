@@ -123,7 +123,7 @@ Using a `inner_join`, find the names of the top 5 players for total double plays
 
 Review the Managers and AwardsManagers table.
 
-Use a `left_join` to determine how many managers won an award in each year. Graph this as a line plot. What do you notice about the proportion of managers winning awards?
+Use a `left_join` to determine what proportion of managers won an award in each year. Graph this as a line plot. What do you notice about the proportion of managers winning awards?
 
 Note: you will need to do some grouping first. What is this code snippet telling you:
 
