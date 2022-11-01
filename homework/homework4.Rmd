@@ -92,11 +92,10 @@ Compute the decade of each player's debut and plot a series of boxplots or violi
 
 # Q 2.4
 
-Filtering out the players with `NA`s for `debut_d` or `finalGame_d`. Which player has had the longest career? (Display the name along with the duration in years.)
+Filtering out the players with `NA`s for `debut_d` or `finalGame_d`. Which player has had the longest career? (Display the name along with the duration in years.) Look up this player on Wikipedia to learn how he had such a long career. Was he playing the entire time? With which other player did he perform comedy routines?
 
 For players continuing to play, we have a "censor" career length as we have not yet observed their total career, but such is the nature of time. Of players that have the maximum `finalGame_d`, which player has had the longest career? (Display the name and duration in years using the `time_length` function)
 
-Look up this player on Wikipedia to learn how he had such a long career. Was he playing the entire time? With which other player did he perform comedy routines?
 
 ## Question 3
 
