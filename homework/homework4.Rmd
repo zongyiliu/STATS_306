@@ -111,9 +111,10 @@ Review the documentation for the `People` table and the `Fielding` table. Answer
 
 ```{r, cache = TRUE}
 group_by(Fielding, playerID, yearID) |> summarize(years = n()) |> ungroup() |> summarize(sum(years > 1))
-group_by(Fielding, playerID, yearID, teamID) |> summarize(teams = n()) |> ungroup() |> summarize(sum(teams > 1))
-group_by(Fielding, playerID, yearID, teamID, POS) |> summarize(positions = n()) |> ungroup() |> summarize(sum(positions > 1))
+group_by(Fielding, playerID, yearID, stint) |> summarize(stints = n()) |> ungroup() |> summarize(sum(stints > 1))
+group_by(Fielding, playerID, yearID, stint, POS) |> summarize(positions = n()) |> ungroup() |> summarize(sum(positions > 1))
 ```
+
 ## Q 3.2
 
 Using a `inner_join`, find the names of the top 5 players for total double plays. (Hint: you will need to do some grouping and summarizing before your join.)
