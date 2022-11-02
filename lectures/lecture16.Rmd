@@ -1,0 +1,237 @@
+---
+subtitle: "Stats 306: Lecture 16"
+title: "Strings: Regular Expressions"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+set.seed(2939394)
+if (!require(nycflights13)) install.packages("nyclfights13", repos = "http://cran.us.r-project.org")
+
+sonnet18 <- "Shall I compare thee to a summer's day?\nThou art more lovely and more temperate:\nRough winds do shake the darling buds of May,\nAnd summer's lease hath all too short a date;\nSometime too hot the eye of heaven shines,\nAnd often is his gold complexion dimm'd;\nAnd every fair from fair sometime declines,\nBy chance or nature's changing course untrimm'd;\nBut thy eternal summer shall not fade,\nNor lose possession of that fair thou ow'st;\nNor shall death brag thou wander'st in his shade,\nWhen in eternal lines to time thou grow'st:\n\tSo long as men can breathe or eyes can see,\n\tSo long lives this, and this gives life to thee."
+
+sonnet18_lines <- str_split(sonnet18, "\n")[[1]]
+```
+
+## Review: Relational Data
+
+* Mutating joins: outer left, right, full and inner
+* Keys spread across multiple columns (use `count(tbl, col1, col2) |> summarize(all(n < 2))` to see if `col1, col` form a primary key)
+* "Natural joins": don't specify `by` argument, let R match column names (be careful!)
+* Filtering joins: Equivalent to joining then `filter(!is.na(foreign_key_columns))`
+* Set operations (items in vectors, rows in tables)
+
+## Review: Strings
+
+* Introduced strings (ordered collections of characters, "character vector") and factors (briefly, indexed collections with labels)
+* Strings: `str_c`, `str_length`, escaping quotes and other characters
+* Subsetting by position
+
+
+## Splitting
+
+Here's the full sonnet as a single string:
+```{r}
+sonnet18 <- "Shall I compare thee to a summer's day?\nThou art more lovely and more temperate:\nRough winds do shake the darling buds of May,\nAnd summer's lease hath all too short a date;\nSometime too hot the eye of heaven shines,\nAnd often is his gold complexion dimm'd;\nAnd every fair from fair sometime declines,\nBy chance or nature's changing course untrimm'd;\nBut thy eternal summer shall not fade,\nNor lose possession of that fair thou ow'st;\nNor shall death brag thou wander'st in his shade,\nWhen in eternal lines to time thou grow'st:\n\tSo long as men can breathe or eyes can see,\n\tSo long lives this, and this gives life to thee."
+```
+
+Let's split that up into individual lines as strings in a vector:
+```{r}
+sonnet18_lines <- str_split(sonnet18, "\n") # notice use of new line
+sonnet18_lines
+```
+
+What is happening? Since `sonnet18` could have had multiple entries (vector), `str_split` returns a **list** with splits for each item in the vector:
+```{r}
+str_split(c("a b c", "d e"), " ")
+```
+
+In this case:
+```{r}
+sonnet18_lines <- sonnet18_lines[[1]] # [[]] for lists
+```
+
+## Exercise
+
+**Tokenization** is the process many computer languages use to turn strings into discrete words. Use `str_split` to turn each line of `sonnet18_lines` into individual words. Use `unlist` on the result and answer the question: how many words are there?
+
+```{r tokenize, exercise = TRUE}
+
+```
+
+
+## Looking for patterns: Regexes
+
+A **REG**ular **EX**pression (**regex**) is a mini-language for writing patterns to match in strings.
+
+They are used in R but also in other languages, the command line, databases, etc.
+
+A regex is just a string, albeit one that looks rather strange.
+
+## Regexes pattern matches
+
+Alphanumeric characters (a-z, A-Z, 0-9) match directly, most other characters with some later exceptions.
+
+```{r}
+str_view_all(sonnet18_lines, "thee")
+```
+
+`.` will match exactly character (not newline)
+
+```{r}
+str_view_all(sonnet18_lines, "th..")
+```
+
+Limited choices with `[]`
+```{r}
+str_view_all(sonnet18_lines, "th[aeiou][aeiou]")
+```
+
+Or classes of characters
+```{r}
+str_view_all(sonnet18_lines, "[A-Z]")
+```
+
+Negation choices with `[^]`
+```{r}
+str_view_all(sonnet18_lines, "th[aeiou][^aeiou ]")
+```
+
+## Other specials
+
+To match periods we need to escape with `\\`
+
+```{r}
+str_view_all(sonnet18_lines[14], "\\.")
+```
+
+Beginning of string is "^", end of string is "$" (can get literals with escapes):
+
+```{r}
+str_view_all(sonnet18_lines, "^.. ")
+```
+
+Any white space (`\\s`) and make it optional `?`
+```{r}
+str_view_all(sonnet18_lines, "^\\s?.. ")
+```
+
+`\\d` matches digits.
+
+## Repetition
+
+* `?`: zero or one occurrence
+* `*`: zero or many
+* `+`: one or more
+
+```{r}
+str_view_all(sonnet18_lines, "m+")
+```
+
+## Groups and Alternation
+
+To select between alternates use a vertical bar `|`. We often combine this with groups based on `()`:
+
+```{r}
+str_view_all(sonnet18_lines, "Thou|thou")
+```
+
+```{r}
+str_view_all(sonnet18_lines, "fa(ir|de)")
+```
+
+Repeat patterns in `( )` using `\\NUMBER` (**backreferences**). Contiguous words with same letter: 
+```{r}
+str_view_all(sonnet18_lines, "(\\s|^)(.)[^ ]* \\2")
+```
+(notice "from fair" does not match because "fair from" already matched)
+
+## Exercise
+
+Find all contractions (words with "'" in them, but not possessive) in `sonnet18_lines` using `str_view_all`.
+
+```{r contractions, exercise=TRUE}
+
+```
+
+## Using regular expressions
+
+* Apply regexes to column names or levels
+* Finding matches in columns
+* Extract information from strings
+* Break up strings (tokenize) on more complicated patterns
+
+## Art and Emotion data set
+
+```{r}
+wikiart <- read_tsv("./data/WikiArt-Emotions-All.tsv.gz")
+colnames(wikiart)
+```
+
+## Columns
+
+With lots of columns, we could write things out direct, but better to use regex to find columns matching a pattern:
+
+```{r}
+select(wikiart, matches("anger"))
+select(wikiart, matches("[tT]itle"))
+select(wikiart, matches("[tT]itle."))
+```
+
+## Making more tidy
+
+This has lots of **ratings**, let's put them into better columns.
+
+```{r}
+pivot_longer(wikiart, 
+             matches(":"), 
+             names_to = c("rating_type", "emotion"),
+             names_sep = ":",
+             values_to = "mean_annotation") -> wa_long
+
+select(wa_long, Title, rating_type, emotion, mean_annotation)
+```
+
+## Find and replace
+
+Hard to see in previous but there are spaces in the emotions:
+
+```{r}
+wa_long$emotion[1:5]
+```
+
+Let's remove all white space
+```{r}
+wa_long <- mutate(wa_long,
+                  mean_annotation = str_replace(emotion, "\\s", ""))
+wa_long$emotion[1:5]
+```
+
+## Improving rating type
+
+```{r}
+count(wa_long, rating_type)
+```
+
+Let's turn that into two columns:
+```{r}
+wa_long <- mutate(wa_long,
+                  presented_image = str_detect(rating_type, "[iI]mage"),
+                  presented_title = str_detect(rating_type, "[tT]itle"))
+
+group_by(wa_long, rating_type) |> 
+  summarize(sum(presented_image), sum(presented_title))
+```
+
+
+
+
+

@@ -1,6 +1,6 @@
 ---
 subtitle: "Stats 306: Lecture 15"
-title: "Relational Data, Continued; Strings and Regexes"
+title: "Relational Data, Continued; Introduction to Strings"
 author: "Mark Fredrickson"
 output: 
   learnr::tutorial:
