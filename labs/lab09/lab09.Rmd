@@ -162,3 +162,131 @@ starwars %>%
   table() %>%
   sort(decreasing = TRUE)
 ```
+
+## Regular Expressions
+
+## Exercises
+
+Use `stringr::words` to do the exercises.
+
+### Question
+
+Which words start with `"y"`?
+
+**Hint:** *Use `str_subset()`.*
+
+```{r regex1, exercise=TRUE}
+
+```
+
+```{r regex1-solution}
+str_subset(words, "^y")
+```
+
+### Question
+
+Which words end with `"x"`?
+
+```{r regex2, exercise=TRUE}
+
+```
+
+```{r regex2-solution}
+str_subset(words, "x$")
+```
+
+### Question
+
+Without using `str_length()`, find the words that are exactly two letters long.
+
+```{r regex3, exercise=TRUE}
+
+```
+
+```{r regex3-solution}
+str_subset(words, "^\\w{2}$")
+```
+
+### Question
+
+Without using `str_length()`, find the words that have ten or more letters.
+
+```{r regex4, exercise=TRUE}
+
+```
+
+```{r regex4-solution}
+str_subset(words, "^\\w{10,}$")
+```
+
+### Question
+
+Which words end with `"ed"`, but not with `"eed"`?
+
+```{r regex5, exercise=TRUE}
+
+```
+
+```{r regex5-solution}
+str_subset(words, "[^e]ed$")
+```
+
+### Question
+
+Which words end with `"ing"` or `"ise"`?
+
+```{r regex6, exercise=TRUE}
+
+```
+
+```{r regex6-solution}
+str_subset(words, "(ing|ise)$")
+```
+
+### Question
+
+Which words end with the same two-letter sequence that they start with? An example of such a word would be `"church"`.
+
+```{r regex7, exercise=TRUE}
+
+```
+
+```{r regex7-solution}
+# Match two word characters: \\w{2}
+# Since we're interested in the two word characters at the start, use the start anchor: ^\\w{2}
+# Since we want the same two word characters to be at the end, we should insert parentheses so we can use a backreference: ^(\\w{2})
+# Zero or more word characters can exist in the middle: ^(\\w{2})\\w*
+# We want the two word characters at the start to be at the end as well. We use a backreference and the end anchor:
+str_subset(words, "^(\\w{2})\\w*\\1$")
+```
+
+### Question
+
+Try to match the valid `dates` below (first row) without matching the invalid dates (the latter six rows).
+
+**Hint:** *Start by writing a pattern that matches all the entries. Then try to refine your pattern to omit the invalid dates.*
+
+```{r regex8, exercise=TRUE}
+dates <- c(
+  "2012-05-13", "2014-12-31", "1991-06-14", "1991/06/14", # valid
+  "200a-05-13", # invalid year
+  "2014-15-20", # invalid month
+  "2014-00-20", # invalid month
+  "2016-04-35", # invalid day
+  "2014-12-00", # invalid day
+  "2013/03-25" # non-matching separators
+)
+```
+
+```{r regex8-solution}
+dates <- c(
+  "2012-05-13", "2014-12-31", "1991-06-14", "1991/06/14", # valid
+  "200a-05-13", # invalid year
+  "2014-15-20", # invalid month
+  "2014-00-20", # invalid month
+  "2016-04-35", # invalid day
+  "2014-12-00", # invalid day
+  "2013/03-25" # non-matching separators
+)
+str_subset(dates, "\\d{4}(-|/)(0[1-9]|1[0-2])\\1(0[1-9]|[12][0-9]|3[0-1])")
+```
