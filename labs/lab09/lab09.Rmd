@@ -18,6 +18,7 @@ if (!packageVersion("learnr") == "0.11.1") install.packages("learnr", repos = "h
 
 ```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
 library(learnr)     # For interactive exercises
+library(lubridate)
 library(tidyverse)  # For ggplot2, dplyr, readr
 library(nycflights13)
 
@@ -26,6 +27,7 @@ tutorial_options(exercise.reveal_solution=FALSE)
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
 library(learnr)     # For interactive exercises
+library(lubridate)
 library(tidyverse)  # For ggplot2, dplyr, readr
 library(nycflights13)
 ```
@@ -136,6 +138,68 @@ ggplot(bbwater, aes(x = `AirTemp (C)`)) + geom_histogram(bins = 100) # selected 
 ```
 
 The `bins =` argument should have been set.
+
+## Question 2
+
+## Q 2.1
+
+Create a histogram for `Water Temp (?C)`. Try several numbers of bins to get a useful plot. Would you say that there is one clear typical value for this plot or would you say it contains more than one cluster of values?
+
+### Solution
+
+There appear to be two clusters in the data, one centered around 10 and one centered around 28. However, it could also be argued that there are no clusters. Any such claim needs to be justified based on the plot.
+
+```{r}
+ggplot(bbwater, aes(x = `Water Temp (?C)`)) + geom_histogram(bins = 60)
+```
+
+The `bins =` argument should have been set.
+
+## Q 2.2
+
+Create a facet plot for `Water Temp (?C)` that breaks out a histogram by `Site_Id`.
+
+Do you think the multiple clusters could be explained by different locations having different temperatures?
+
+### Solution
+
+All the sites, seem to have the same basic pattern, so this does not seem like a candidate for finding a mixture distribution in the water temperature.
+
+```{r}
+ggplot(bbwater, aes(x = `Water Temp (?C)`)) + geom_histogram(bins = 60) + facet_wrap(~ Site_Id)
+```
+
+## Q 2.3
+
+Look at the `Read_Date` column. Which `lubridate` function could parse this format to a date object? Use it to update the `bbwater` table with `real_date` column. Demonstrate with an ECDF plot of the dates.
+
+```{r}
+head(bbwater$Read_Date)
+```
+
+### Solution
+
+We the data are in month/day/year formats, so the `mdy` function will be most helpful:
+
+```{r}
+bbwater <- mutate(bbwater, real_date = mdy(Read_Date))
+ggplot(bbwater, aes(x = real_date)) + stat_ecdf()
+```
+
+Since we now have the exact date, we see a much smoother version of the Year ECDF plot.
+
+## Q 2.4
+
+Now use the `month` function to extra the month from each date. Create a facet plot of histograms of the water temp broken out by month. Does this help explain the multiple clusters we saw in the water temp?
+
+### Solution
+
+```{r}
+bbwater |> mutate(m = month(real_date)) |>
+  ggplot(aes(x = `Water Temp (?C)`)) + geom_histogram(bins = 60) + facet_wrap(~ m)
+```
+
+Now we are starting to see some possible clusters that could explain the clusters we saw in the mixture distribution. Unsurprisingly, the summer months have much higher temperatures than the winter months.
 
 ## Strings
 
