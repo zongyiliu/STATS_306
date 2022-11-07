@@ -42,7 +42,6 @@ library(nycflights13)
 
 
 - HW3 Review
-- HW4 Review
 - Strings
 - EDA and Data Imports
 - Tidy Data and Dates
