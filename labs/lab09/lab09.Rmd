@@ -47,12 +47,12 @@ library(nycflights13)
 - Table and Relational Data
 
 
-# HW Review
+## HW Review
 
 
-# Strings
+## Strings
 
-## Question
+### Question
 
 Recall that `stringr::str_c()` is used to concatenate strings.
 
@@ -76,11 +76,11 @@ LETTERS[-1]
 str_c(LETTERS[-26], "precedes", LETTERS[-1], sep = " ")
 ```
 
-# EDA and Data Imports
+## EDA and Data Imports
 
 
-# Tidy Data and Dates
+## Tidy Data and Dates
 
 
-# Table and Relational Data
+## Table and Relational Data
 
