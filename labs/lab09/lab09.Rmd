@@ -52,6 +52,29 @@ library(nycflights13)
 
 # Strings
 
+## Question
+
+Recall that `stringr::str_c()` is used to concatenate strings.
+
+```{r}
+str_c(c("apple", "cucumber"), c("fruit", "vegetable"), sep = ": ")
+```
+
+
+Using the vector `base::LETTERS`, make a vector with 25 strings in which the first string is `"A precedes B"`, the second string is `"B precedes C"`, etc.
+
+```{r str_c, exercise=TRUE}
+
+```
+
+```{r str_c-hint}
+# Note that LETTERS[-1] contains B through Z
+LETTERS[-1]
+```
+
+```{r str_c-solution}
+str_c(LETTERS[-26], "precedes", LETTERS[-1], sep = " ")
+```
 
 # EDA and Data Imports
 
