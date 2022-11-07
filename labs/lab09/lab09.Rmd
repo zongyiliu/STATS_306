@@ -256,6 +256,99 @@ An example of a joint distribution plot would be a faceted histogram as that wou
 
 We might notice that B has the highest variance and D is clustered above 0 (so consistently more depth than 1m).
 
+## Question 4
+
+## Q 4.1
+
+Suppose instead of using `tidyverse`’s `read_csv` function we had instead used R’s built in `read.csv` function to load our data.
+
+Use this function to load the same water quality data set. What are three differences in how the type of data loaded by `read.csv` can be used compared to the data from `read_csv`.
+
+### Solution
+
+```{r}
+bbw_df <- read.csv("../data/BKB_WaterQualityData_2020084.csv")
+class(bbw_df)
+```
+
+```{r}
+colnames(bbw_df)
+```
+
+The result is a `data.frame` instead of tibble. We can see the column names are little less easy to read. The output of head is a little less easy to read.
+
+```{r}
+head(bbwater)
+```
+
+```{r}
+head(bbw_df)
+```
+
+## Q 4.2
+
+Convert the result of 4.1 to a tibble. Demonstrate by printing out the result.
+
+### Solution
+
+```{r}
+as_tibble(bbw_df)
+```
+
+We notice that the names are maintained in the tibble version.
+
+## Q 4.3
+
+Create two tibbles to recreate the first 4 rows of the table of lectures and topics on our Syllabus page. In the first, use tibble. For the second, use tribble.
+
+### Solution
+
+The first 4 rows of the table:
+
+```
+Number  Title   Reference   File
+00  Introduction to Stats 306   BGG 1, 3; RDS 1.4   lecture00.html
+01  Basic R and RMarkdown   RDS 3.4, 6, 20 (selections) lecture01.html
+02  Vectors, Tables, and ggplot RDS 29 (selections), 3.0 - 3.3, 3.10    lecture02.html
+03  More ggplot RDS 3.6 - 3.8   lecture03.html
+```
+
+Tibble solution
+
+```{r}
+tibble(Number = paste0("0", 3), # also ok to use numbers 
+       Title = c("Introduction to Stats 306",
+                 "Basic R and RMarkdown",
+                 "Vectors, Tables, and ggplot",
+                 "More ggplot"),
+       Referece = c("BGG 1, 3; RDS 1.4",
+                    "RDS 3.4, 6, 20 (selections)",
+                    "RDS 29 (selections), 3.0 - 3.3, 3.10",
+                    "RDS 3.6 - 3.8"),
+       File = paste0("lecture0", 0:3, ".html"))
+```
+
+Tribble solution:
+
+```{r}
+tribble(
+ ~ Number, ~ Title, ~ Reference, ~ File,
+00, "Introduction to Stats 306",    "BGG 1, 3; RDS 1.4",    "lecture00.html",
+01, "Basic R and RMarkdown",    "RDS 3.4, 6, 20 (selections)", "lecture01.html",
+02, "Vectors, Tables, and ggplot",  "RDS 29 (selections), 3.0 - 3.3, 3.10", "lecture02.html",
+03, "More ggplot",  "RDS 3.6 - 3.8",    "lecture03.html")
+```
+
+## Q 4.4
+
+Open up the file ‘homework3.txt’. Use a `read_` function to load this data. You will probably need to read the documentation to deal with a few problems in the file.
+
+### Solution
+
+```{r}
+read_delim("../../homework/homework3.txt", skip = 3, delim = "|", quote = "\'", na = "NONE")
+```
+
 ## Strings
 
 ### Question
