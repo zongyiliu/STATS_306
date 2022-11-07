@@ -1,0 +1,39 @@
+---
+title: "Stats 306: Lab 9"
+author: "Your Name"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+## Set up
+
+```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
+# This just checks if students need to install some packages that they might 
+# not have.
+
+if (!packageVersion("learnr") == "0.11.1") install.packages("learnr", repos = "http://cran.us.r-project.org")
+```
+
+```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For dplyr, stringr
+
+tutorial_options(exercise.reveal_solution=TRUE)
+```
+
+```{r fake_setup, echo=TRUE, eval=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For dplyr, stringr
+```
+
+## Logistics
+
+- Exam 2 is due by 11:59 PM on Nov 11.
+- Quiz 4 is due by 11:59 PM on Nov 20.
+- Questions?
+
+## Today's Content
+
+- Strings and Regular Expressions
