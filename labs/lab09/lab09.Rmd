@@ -1,0 +1,64 @@
+---
+title: "Stats 306: Lab 9"
+author: "Your Name"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+## Set up
+
+```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
+# This just checks if students need to install some packages that they might 
+# not have.
+if (!require(nycflights13)) install.packages("nycflights13", repos = "http://cran.us.r-project.org")
+if (!packageVersion("learnr") == "0.11.1") install.packages("learnr", repos = "http://cran.us.r-project.org")
+```
+
+```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For ggplot2, dplyr, readr
+library(nycflights13)
+
+tutorial_options(exercise.reveal_solution=FALSE)
+```
+
+```{r fake_setup, echo=TRUE, eval=FALSE}
+library(learnr)     # For interactive exercises
+library(tidyverse)  # For ggplot2, dplyr, readr
+library(nycflights13)
+```
+
+## Logistics
+
+-   Exam 2 is on Nov 11, more details to come.
+
+-   Questions?
+
+## Today's Content
+
+
+- HW3 Review
+- HW4 Review
+- Strings
+- EDA and Data Imports
+- Tidy Data and Dates
+- Table and Relational Data
+
+
+# HW Review
+
+
+# Strings
+
+
+# EDA and Data Imports
+
+
+# Tidy Data and Dates
+
+
+# Table and Relational Data
+
+
