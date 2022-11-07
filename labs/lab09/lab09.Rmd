@@ -201,6 +201,61 @@ bbwater |> mutate(m = month(real_date)) |>
 
 Now we are starting to see some possible clusters that could explain the clusters we saw in the mixture distribution. Unsurprisingly, the summer months have much higher temperatures than the winter months.
 
+## Question 3
+
+## Q 3.1
+
+Create plots of the distributions of `Site_Id` and `Water Depth (m)` (separately). What kinds of data (quantitative, ordinal, nominal) are these two measurements?
+
+### Solution
+
+`Site_id` is nominal, so a bar plot is probably the only option:
+
+```{r}
+ggplot(bbwater, aes(x = `Site_Id`)) + geom_bar()
+```
+
+The water depth is quantitative, so we could do a box plot, a histogram, or a
+
+```{r}
+ggplot(bbwater, aes(x = `Water Depth (m)`)) + geom_density()
+```
+
+## Q 3.2
+
+Do you think either of these measurements would benefit from a logarithmic transformation? Implement this transformation and update the plot(s).
+
+Did you get any warnings? What happened?
+
+### Solution
+
+```{r}
+bbwater <- mutate(bbwater, logwater = log(`Water Depth (m)`))
+ggplot(bbwater, aes(x = logwater)) + geom_density()
+```
+
+We did get some warnings, this are the result of having some missing values:
+
+```{r}
+count(bbwater, is.na(`Water Depth (m)`))
+```
+
+## Q 3.3
+
+Create a plot to show the two variables from 3.1 on one plot. Clearly state if this plot shows the joint distribution or a set of conditional distributions. Describe the plot and if you see any sites with particularly unusual water levels.
+
+### Solution
+
+```{r}
+ggplot(bbwater, aes(x = Site_Id, y = logwater)) + geom_violin()
+```
+
+This example is a conditional distribution. Other alternatives would be density plots with colors or boxplots.
+
+An example of a joint distribution plot would be a faceted histogram as that would show the frequency of each category as well as the conditional distribution of the within site measurements.
+
+We might notice that B has the highest variance and D is clustered above 0 (so consistently more depth than 1m).
+
 ## Strings
 
 ### Question
