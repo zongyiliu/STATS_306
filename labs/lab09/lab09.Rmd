@@ -37,3 +37,128 @@ library(tidyverse)  # For dplyr, stringr
 ## Today's Content
 
 - Strings and Regular Expressions
+
+## Strings
+
+Recall that a string is character data enclosed in double `"` or single `'` quotes. In R, strings exist in character vectors.
+```{r}
+words[1:5]
+```
+
+The `stringr` package contains many useful functions for working with strings. In lecture, we went over some commonly used `stringr` functions.
+
+`str_c()` is used to concatenate strings. These strings can be given in separate vectors, in which case the `sep` argument should be used to control what goes between consecutive strings.
+```{r}
+str_c("lions", "tigers", "bears", "oh my!", sep = ", ")
+```
+
+`str_c()` can also be given a single vector of strings. In this case, the `collapse` argument should be used to control what goes between consecutive strings.
+```{r}
+parts <- c("lions", "tigers", "bears", "oh my!")
+str_c(parts, collapse = ", ")
+```
+
+`str_length()` essentially returns the number of characters in a string.
+```{r}
+str_length("My favorite colors are maize and blue.")
+```
+
+`str_sub()` extracts a substring of a string. `start` and `end` are the indices of the starting and ending characters of the substring.
+```{r}
+str_sub("November", start = 3, end = 6)
+```
+
+`str_split()` splits a string into substrings given a separator. Note that it returns a list.
+```{r}
+str_split("lions, tigers, bears, oh my!", pattern = ", ")
+```
+
+## Exercises
+
+### Question
+
+Using the `letters` vector that's in base R, make one big 26-character string that contains every letter of the alphabet.
+
+```{r str_c1, exercise=TRUE}
+
+```
+
+```{r str_c1-solution}
+str_c(letters, collapse = "")
+```
+
+### Question
+
+Using the `LETTERS` vector, make a vector with 25 strings in which the first string is `"A precedes B"`, the second string is `"B precedes C"`, etc.
+
+```{r str_c2, exercise=TRUE}
+
+```
+
+```{r str_c2-hint}
+# A start
+str_c(LETTERS[-26], "precedes", sep = " ")
+```
+
+```{r str_c2-solution}
+str_c(LETTERS[-26], "precedes", LETTERS[-1], sep = " ")
+```
+
+### Question
+
+Finish writing the function `extract_substrs()` below. The function takes a string `s` and a length `l` and should return a vector containing the length `l` substrings of `s` that consist of consecutive characters. For example, `extract_substrs("cat", 2)` should evaluate to `c("ca", "at")`.
+
+**Hint:** *Try using `:` or `seq_len()`*
+
+```{r str_sub_str_length, exercise=TRUE}
+extract_substrs <- function(s, l) {
+  
+}
+extract_substrs("cat", 2)
+```
+
+```{r str_sub_str_length-hint}
+extract_substrs <- function(s, l) {
+  starts <- 
+  ends <- 
+  str_sub(s, starts, ends)
+}
+extract_substrs("cat", 2)
+```
+
+```{r str_sub_str_length-solution}
+extract_substrs <- function(s, l) {
+  starts <- seq_len(str_length(s) - (l - 1))
+  ends <- starts + l - 1
+  str_sub(s, starts, ends)
+}
+extract_substrs("cat", 2)
+# A more complicated example use
+substrs <- extract_substrs("The University of Michigan", 8)
+prefixes <- strrep(" ", seq_along(substrs) - 1)
+writeLines(str_c(prefixes, substrs))
+```
+
+### Question
+
+Recall that the `starwars` tibble contains information on various Star Wars characters.
+```{r}
+head(starwars)
+```
+
+For each character, `skin_color` gives their skin colors in a single string. Make a table with the number of characters for each skin color.
+
+**Hint:** *Try using `unlist()` and `table()`*
+
+```{r str_split, exercise=TRUE}
+
+```
+
+```{r str_split-solution}
+starwars %>%
+  pull(skin_color) %>%
+  str_split(", ") %>%
+  unlist() %>%
+  table() %>%
+  sort(decreasing = TRUE)
+```
