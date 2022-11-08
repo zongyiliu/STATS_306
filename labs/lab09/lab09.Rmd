@@ -348,7 +348,9 @@ Open up the file ‘homework3.txt’. Use a `read_` function to load this data. 
 read_delim("../../homework/homework3.txt", skip = 3, delim = "|", quote = "\'", na = "NONE")
 ```
 
-## Strings
+## Strings and Regular Expressions
+
+### Strings
 
 Recall that a string is character data enclosed in double `"` or single `'` quotes. In R, strings exist in character vectors.
 ```{r}
@@ -396,6 +398,53 @@ LETTERS[-1]
 
 ```{r str_c-solution}
 str_c(LETTERS[-26], "precedes", LETTERS[-1], sep = " ")
+```
+
+### Regular Expressions
+
+A *regular expression* is a string specifying a pattern that other strings may or may not match. Regular expressions can be used to
+
+  - find strings matching a pattern
+  - modify substrings matching a pattern
+  - delete substrings matching a pattern
+
+**Exercise:** Write a regex that matches `"this"` and `"the"` but not `"third"`. Use it to extract all instances of the two words from the paragraph below, which is stored in `baseball`.
+
+```
+According to Baseball Reference’s wins above average, The Red Sox had the best 
+outfield in baseball— one-tenth of a win ahead of the Milwaukee Brewers, 11.5 to 11.4. And 
+that’s despite, I’d argue, the two best position players in the NL this year (Christian 
+Yelich and Lorenzo Cain) being Brewers outfielders. More importantly, the distance from 
+Boston and Milwaukee to the third-place Yankees is about five wins. Two-thirds of the Los 
+Angeles Angels’ outfield is Mike Trout (the best player in baseball) and Justin Upton (a 
+four-time All-Star who hit 30 home runs and posted a 122 OPS+ and .348 wOba this year), 
+and in order to get to 11.5 WAA, the Angels’ outfield would have had to replace right 
+fielder Kole Calhoun with one of the three best outfielders in baseball this year by WAA.
+```
+
+```{r regex-setup, include=TRUE}
+baseball <- "According to Baseball Reference’s wins above average, The Red Sox had the best 
+outfield in baseball— one-tenth of a win ahead of the Milwaukee Brewers, 11.5 to 11.4. And 
+that’s despite, I’d argue, the two best position players in the NL this year (Christian 
+Yelich and Lorenzo Cain) being Brewers outfielders. More importantly, the distance from 
+Boston and Milwaukee to the third-place Yankees is about five wins. Two-thirds of the Los 
+Angeles Angels’ outfield is Mike Trout (the best player in baseball) and Justin Upton (a 
+four-time All-Star who hit 30 home runs and posted a 122 OPS+ and .348 wOba this year), 
+and in order to get to 11.5 WAA, the Angels’ outfield would have had to replace right 
+fielder Kole Calhoun with one of the three best outfielders in baseball this year by WAA."
+```
+
+```{r regex, exercise=TRUE, exercise.setup="regex-setup"}
+
+```
+
+```{r regex-hint}
+str_extract_all(...)
+```
+
+```{r regex-solution}
+str_extract_all(baseball, "th(e|is)")
+str_extract_all(baseball, "(t|T)h(e|is)") # including capitalized T
 ```
 
 ## EDA and Data Imports
