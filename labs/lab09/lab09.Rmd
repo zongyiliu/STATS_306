@@ -34,12 +34,11 @@ library(nycflights13)
 
 ## Logistics
 
--   Exam 2 is on Nov 11, more details to come.
+-   Exam 2 is on Nov 11. Similar as Exam 1, you will have 10 multiple choice questions, and 5 short answer questions.
 
 -   Questions?
 
 ## Today's Content
-
 
 - HW3 Review
 - Strings
@@ -51,7 +50,6 @@ library(nycflights13)
 ## HW 3 Review
 
 ## Question 1
-
 
 
 Let’s look at some water quality data from the Backbay National Wildlife Refuge:
@@ -408,9 +406,108 @@ str_c(LETTERS[-26], "precedes", LETTERS[-1], sep = " ")
 ```
 
 
-<!--  EDA and Data Imports -->
+## EDA
+
+## Data Imports
+- We have previously discussed that data may be available to us for analysis in two major forms: creating them ourselves and importing them from other sources.   
+- The major sources of data for importation are summarized in the figure below.
+
+<center>
+
+![Types of Data Imports](images/data_imports.png){width=100%}
+
+</center>
+
+- For the purpose of this class, we narrowed our focus on flat files from the `readr` package.
+- Specifically, we have explored using some functions as:
+  + `read_csv` - for comma separated values
+  + `read_tsv` - for tab separated values
+  + `read_delim` - for general delimiters (could be comma, semi-colon, tab, pipe or any delimiter)
+  
+- Let us answer the following questions based on what we have learned about these functions.
+
+### Question 1 {.tabset}
+
+#### Question 
+What function would you use to read a file where fields were separated with
+"|"?
+
+#### Answer
+
+Use the `read_delim()` function with the argument `delim="|"`
+```
+Use the read_delim() function with the argument delim="|"
+```
 
 
+
+### Question 2 {.tabset}
+
+#### Question 
+Apart from `file`, `skip`, and `comment`, what other arguments do `read_csv()` and `read_tsv()` have in common?
+
+#### Answer
+They have the following arguments in common:
+```{r, eval=FALSE}
+intersect(names(formals(read_csv)), names(formals(read_tsv)))
+```
+
+
+
+### Question 3 {.tabset}
+
+#### Question 
+Sometimes strings in a CSV file contain commas. To prevent them from causing problems they need to be surrounded by a quoting character, like `"` or `'`. By default, `read_csv()` assumes that the quoting character will be `"`. What argument to `read_csv()` do you need to specify to read the following text into a data frame using `read_delim()`?
+
+```
+"x,y\n1,'a,b'"
+```
+
+
+#### Answer
+For `read_delim()`, we will will need to specify a delimiter, in this case `","`, and a `quote` argument.
+
+```{r, eval=FALSE}
+x <- "x,y\n1,'a,b'"
+read_delim(x, ",", quote = "'")
+```
+
+
+
+### Question 4 {.tabset}
+
+#### Question 
+Identify what is wrong with each of the following inline CSV files. What happens when you run the code?
+
+```
+read_csv("a,b\n1,2,3\n4,5,6")
+read_csv("a,b,c\n1,2\n1,2,3,4")
+read_csv("a,b\n1,2\na,b")
+read_csv("a;b\n1;3")
+```
+
+#### Answer
+1. Only two columns are specified in the header “a” and “b”, but the rows have three columns, so the last column is dropped.
+```{r, eval=FALSE}
+read_csv("a,b\n1,2,3\n4,5,6")
+```
+
+2. The numbers of columns in the data do not match the number of columns in the header (three). In row one, there are only two values, so column `c` is set to missing. In row two, there is an extra value, and that value is dropped.
+```{r, eval=FALSE}
+read_csv("a,b,c\n1,2\n1,2,3,4")
+```
+
+3. Both “a” and “b” are treated as character vectors since they contain non-numeric strings. This may have been intentional, or the author may have intended the values of the columns to be “1,2” and “a,b”.
+```{r, eval=FALSE}
+read_csv("a,b\n1,2\na,b")
+```
+
+4. The values are separated by “;” rather than “,”. Use read_csv2() instead:
+```{r, eval=FALSE}
+read_csv("a;b\n1;3")
+
+read_csv2("a;b\n1;3")
+```
 
 
 ## Tidy Data
@@ -511,9 +608,8 @@ readr::parse_datetime(d3, "%B %d, '%y, %H:%M %p")
 
 
 
-## Table and Relational Data
 
-## Tables: from lists of vectors to particular classes
+## Tables
 
 We introduced our **model of rectangular data** as **lists of vectors**. 
 
