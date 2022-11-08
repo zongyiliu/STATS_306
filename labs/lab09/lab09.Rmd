@@ -319,7 +319,7 @@ Number  Title   Reference   File
 Tibble solution
 
 ```{r}
-tibble(Number = paste0("0", 3), # also ok to use numbers 
+tibble(Number = paste0("0", 0:3), # also ok to use numbers 
        Title = c("Introduction to Stats 306",
                  "Basic R and RMarkdown",
                  "Vectors, Tables, and ggplot",
@@ -542,7 +542,7 @@ intersect(names(formals(read_csv)), names(formals(read_tsv)))
 ### Question 3 {.tabset}
 
 #### Question 
-Sometimes strings in a CSV file contain commas. To prevent them from causing problems they need to be surrounded by a quoting character, like `"` or `'`. By default, `read_csv()` assumes that the quoting character will be `"`. What argument to `read_csv()` do you need to specify to read the following text into a data frame using `read_delim()`?
+Sometimes strings in a CSV file contain commas. To prevent them from causing problems they need to be surrounded by a quoting character, like `"` or `'`. By default, `read_csv()` assumes that the quoting character will be `"`. What argument do you need to specify to read the following text into a data frame using `read_delim()`?
 
 ```
 "x,y\n1,'a,b'"
@@ -706,53 +706,6 @@ There are several R classes that implement this idea:
 >* `tibble`: vectros of different types, more features
 >* `data.table`: for data too large to fit in memory
 
-
-### `tibbles`, modern `data.frame`s
-
-`tibbles` are lighter weight as they don't try to rename as many things or create row names.
-
-You can list columns with `tibble` or use `as_tibble` to convert a matrix or `data.frame`,
-
-```{r warning = FALSE}
-(m <- matrix(1:9, nrow = 3))
-(d <- data.frame(colname1 =  1:3, c("a", "b", "c")))
-as_tibble(m)
-as_tibble(d)
-```
-
-
-Like our data model (lists of vectors), all of these methods are **column oriented**. 
-
-If we would prefer to specify our data by row, we can 
-```{r}
-
-matrix(c(1, 2, 3, 50, 60, 70), nrow = 2, byrow = TRUE)
-tribble(
-  ~ column_name_1, ~ column_name_2,
-  1, "make sure",
-  2, "that you have the right number",
-  7, "per row")
-```
-
-### Final notes on tibbles and data.frames
-
-Observe:
-
-```{r}
-(d <- data.frame(colname1 =  1:3, c("a", "b", "c")))
-(tb <- tibble(colname1 =  1:3, c("a", "b", "c")))
-
-colnames(d)
-d$co
-tb$co
-
-d$doesnotexist
-```
-
-If for some reason you need to use a `data.frame` but you only have a `tibble`,
-```{r}
-as.data.frame(tb)
-```
 
 ## Relational Data
 
