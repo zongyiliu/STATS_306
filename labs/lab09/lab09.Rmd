@@ -451,10 +451,48 @@ str_extract_all(baseball, "th(e|is)")
 str_extract_all(baseball, "(t|T)h(e|is)") # including capitalized T
 ```
 
-## EDA and Data Imports
-
 ## EDA
+- In the previous labs, we learned about variation (for a single variable) and covariation (for two or more variables)
 
+- We learned how to visualize univariate distributions depending on the type of variable:
+  + Categorical/Discrete Variables - `geom_bar()`, `geom_col()` and pie charts
+  + Continuous - `geom_histogram()`, `geom_density()`, `geom_freqpoly()`
+  
+- For bivariate distributions we looked at a combination of variable types:
+  + Continuous-continuous - `geom_point()`, `geom_contour()`
+  + Continuous-Discrete (also known as conditional distributions) - `geom_boxplot()`, `geom_violin()`
+  + Discrete-discrete - `geom_count()`, `geom_tile()`
+  
+Let us answer the following question   
+
+
+**Exercise** Using the `iris` dataset, use an appropriate plot to explore the relationship between `Sepal.Length` and `Sepal.Width`. What do you learn about this plot for the various `Species`?
+```{r iris, exercise = TRUE}
+## YOUR CODE HERE
+```
+
+```{r iris-hint}
+# (a) What variable types are we exploring?
+# (b) What would be an appropriate plot to visualize the relationship
+# (c) How do you condition on `species`?
+```
+
+```{r iris-solution}
+iris %>%
+  ggplot(aes(x = Sepal.Length, y = Sepal.Width, col = Species)) +
+  geom_point() +
+  theme_bw()
+
+#%%%%%%%%%%%%%% Observations %%%%%%%%%%
+# From the above plot, we can infer that:
+
+# (1) Species Setosa has smaller sepal lengths but larger sepal widths.
+# (2) Versicolor Species lies in the middle of the other two species in terms of sepal length and width
+# (3) Species Virginica has larger sepal lengths but smaller sepal widths.
+```
+
+
+    
 ## Data Imports
 - We have previously discussed that data may be available to us for analysis in two major forms: creating them ourselves and importing them from other sources.   
 - The major sources of data for importation are summarized in the figure below.
