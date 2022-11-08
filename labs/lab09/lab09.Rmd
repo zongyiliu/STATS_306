@@ -350,16 +350,40 @@ read_delim("../../homework/homework3.txt", skip = 3, delim = "|", quote = "\'", 
 
 ## Strings
 
-### Question
-
-Recall that `stringr::str_c()` is used to concatenate strings.
-
+Recall that a string is character data enclosed in double `"` or single `'` quotes. In R, strings exist in character vectors.
 ```{r}
-str_c(c("apple", "cucumber"), c("fruit", "vegetable"), sep = ": ")
+words[1:5]
 ```
 
+The `stringr` package contains many useful functions for working with strings. In lecture, we went over some commonly used `stringr` functions.
 
-Using the vector `base::LETTERS`, make a vector with 25 strings in which the first string is `"A precedes B"`, the second string is `"B precedes C"`, etc.
+`str_c()` is used to concatenate strings. These strings can be given in separate vectors, in which case the `sep` argument should be used to control what goes between consecutive strings.
+```{r}
+str_c("lions", "tigers", "bears", "oh my!", sep = ", ")
+```
+
+`str_c()` can also be given a single vector of strings. In this case, the `collapse` argument should be used to control what goes between consecutive strings.
+```{r}
+parts <- c("lions", "tigers", "bears", "oh my!")
+str_c(parts, collapse = ", ")
+```
+
+`str_length()` essentially returns the number of characters in a string.
+```{r}
+str_length("My favorite colors are maize and blue.")
+```
+
+`str_sub()` extracts a substring of a string. `start` and `end` are the indices of the starting and ending characters of the substring.
+```{r}
+str_sub("November", start = 3, end = 6)
+```
+
+`str_split()` splits a string into substrings given a separator. Note that it returns a list.
+```{r}
+str_split("lions, tigers, bears, oh my!", pattern = ", ")
+```
+
+**Exercise:** Using the vector `base::LETTERS`, make a vector with 25 strings in which the first string is `"A precedes B"`, the second string is `"B precedes C"`, etc.
 
 ```{r str_c, exercise=TRUE}
 
