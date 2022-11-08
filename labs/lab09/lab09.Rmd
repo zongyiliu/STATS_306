@@ -406,7 +406,7 @@ str_c(LETTERS[-26], "precedes", LETTERS[-1], sep = " ")
 
 <center>
 
-![Illustration of tidy data, from the R for Data Science book book](images/data_imports.png){width=100%}
+![Types of Data Imports](images/data_imports.png){width=100%}
 
 </center>
 
