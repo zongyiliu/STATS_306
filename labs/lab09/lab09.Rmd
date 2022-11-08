@@ -21,7 +21,7 @@ library(learnr)     # For interactive exercises
 library(tidyverse)  # For ggplot2, dplyr, readr
 library(nycflights13)
 
-tutorial_options(exercise.reveal_solution=FALSE)
+tutorial_options(exercise.reveal_solution=TRUE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
@@ -47,18 +47,157 @@ library(nycflights13)
 - Table and Relational Data
 
 
-# HW Review
+<!-- HW Review -->
 
 
-# Strings
+<!--  Strings -->
 
 
-# EDA and Data Imports
+<!--  EDA and Data Imports -->
 
 
-# Tidy Data and Dates
+<!--  Tidy Data and Dates -->
 
 
-# Table and Relational Data
+<!--  Table and Relational Data -->
 
+
+## Tables: from lists of vectors to particular classes
+
+We introduced our **model of rectangular data** as **lists of vectors**. 
+
+There are several R classes that implement this idea:
+
+>* `matrix`: all vectors of same type
+>* `data.frame`: vectors of different types, fewer ammenities
+>* `tibble`: vectros of different types, more features
+>* `data.table`: for data too large to fit in memory
+
+
+### `tibbles`, modern `data.frame`s
+
+`tibbles` are lighter weight as they don't try to rename as many things or create row names.
+
+You can list columns with `tibble` or use `as_tibble` to convert a matrix or `data.frame`,
+
+```{r warning = FALSE}
+(m <- matrix(1:9, nrow = 3))
+(d <- data.frame(colname1 =  1:3, c("a", "b", "c")))
+as_tibble(m)
+as_tibble(d)
+```
+
+
+Like our data model (lists of vectors), all of these methods are **column oriented**. 
+
+If we would prefer to specify our data by row, we can 
+```{r}
+
+matrix(c(1, 2, 3, 50, 60, 70), nrow = 2, byrow = TRUE)
+tribble(
+  ~ column_name_1, ~ column_name_2,
+  1, "make sure",
+  2, "that you have the right number",
+  7, "per row")
+```
+
+### Final notes on tibbles and data.frames
+
+Observe:
+
+```{r}
+(d <- data.frame(colname1 =  1:3, c("a", "b", "c")))
+(tb <- tibble(colname1 =  1:3, c("a", "b", "c")))
+
+colnames(d)
+d$co
+tb$co
+
+d$doesnotexist
+```
+
+If for some reason you need to use a `data.frame` but you only have a `tibble`,
+```{r}
+as.data.frame(tb)
+```
+
+## Relational Data
+
+### Inner Join
+
+![](images/join-inner.png){width=90%}
+
+
+The simplest type of join is the inner join. An inner join matches pairs of observations whenever their keys are equal. The output of an inner join is a new data frame that contains the key, the x values, and the y values. 
+
+### Outer Joins
+
+An inner join keeps observations that appear in both tables. An outer join keeps observations that appear in at least one of the tables. There are three types of outer joins:
+
+* A left join keeps all observations in x.
+* A right join keeps all observations in y.
+* A full join keeps all observations in x and y.
+
+These joins work by adding an additional “virtual” observation to each table. This observation has a key that always matches (if no other key matches), and a value filled with NA.
+
+Graphically, that looks like:
+
+![](images/join-outer.png){width=90%}
+
+### Semi-join
+
+`semi_join(x, y)` keeps all the observations in `x` that are also in `y`.
+
+![](images/join-semi.png){width=90%}
+
+
+### Anti-join
+
+The opposite of a semi-join is an anti-join: keeps all the observations in `x` that are not in `y`.
+
+![](images/join-anti.png){width=90%}
+
+## Keys
+
+The variables used to connect each pair of tables are called keys. A key is a variable (or set of variables) that uniquely identifies an observation.
+
+There are two types of keys:
+
+* A primary key uniquely identifies an observation in its own table. For example, planes$tailnum is a primary key because it uniquely identifies each plane in the planes table.
+
+* A foreign key uniquely identifies an observation in another table. For example, flights$tailnum is a foreign key because it appears in the flights table where it matches each flight to a unique plane.
+
+A variable can be both a primary key and a foreign key. For example, origin is part of the weather primary key, and is also a foreign key for the airports table.
+
+If a table lacks a primary key, it’s sometimes useful to add one with mutate() and row_number(). That makes it easier to match observations if you’ve done some filtering and want to check back in with the original data. This is called a surrogate key.
+
+A primary key and the corresponding foreign key in another table form a relation. Relations are typically one-to-many. For example, each flight has one plane, but each plane has many flights. In other data, you’ll occasionally see a 1-to-1 relationship. You can think of this as a special case of 1-to-many. 
+
+### Exercises
+
+What’s the primary key in the flights table? You might think it would be the date plus the flight or tail number. Check the two assumptions by the function `count()`
+
+```{r primaryKey, exercise=TRUE}
+
+```
+
+```{r primaryKey-hint}
+flights %>% 
+  count(...) %>% 
+  filter(n > 1)
+```
+
+```{r primaryKey-solution}
+flights %>% 
+  count(year, month, day, flight) %>% 
+  filter(n > 1)
+
+flights %>% 
+  count(year, month, day, tailnum) %>% 
+  filter(n > 1)
+```
+
+### Solution
+
+Neither of those variable combinations are unique. The table `flights` doesn’t have an explicit primary key: each row is an observation, but no combination of variables reliably identifies it.
 
