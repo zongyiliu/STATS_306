@@ -555,7 +555,7 @@ read_csv("a;b\n1;3")
 
 read_csv2("a;b\n1;3")
 ```
->>>>>>> 0b105ec273bc53db0395cff2a84fd447b6807443
+
 
 
 ## Tidy Data
