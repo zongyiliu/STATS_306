@@ -440,7 +440,7 @@ Apart from `file`, `skip`, and `comment`, what other arguments do `read_csv()` a
 
 #### Answer
 They have the following arguments in common:
-```{r, eval=FALSE}
+```{r DIQ2, exercise = TRUE}
 intersect(names(formals(read_csv)), names(formals(read_tsv)))
 ```
 
@@ -459,7 +459,7 @@ Sometimes strings in a CSV file contain commas. To prevent them from causing pro
 #### Answer
 For `read_delim()`, we will will need to specify a delimiter, in this case `","`, and a `quote` argument.
 
-```{r, eval=FALSE}
+```{r DIQ3, exercise = TRUE}
 x <- "x,y\n1,'a,b'"
 read_delim(x, ",", quote = "'")
 ```
@@ -480,22 +480,22 @@ read_csv("a;b\n1;3")
 
 #### Answer
 1. Only two columns are specified in the header “a” and “b”, but the rows have three columns, so the last column is dropped.
-```{r, eval=FALSE}
+```{r DIQ4a}
 read_csv("a,b\n1,2,3\n4,5,6")
 ```
 
 2. The numbers of columns in the data do not match the number of columns in the header (three). In row one, there are only two values, so column `c` is set to missing. In row two, there is an extra value, and that value is dropped.
-```{r, eval=FALSE}
+```{r DIQ4b}
 read_csv("a,b,c\n1,2\n1,2,3,4")
 ```
 
 3. Both “a” and “b” are treated as character vectors since they contain non-numeric strings. This may have been intentional, or the author may have intended the values of the columns to be “1,2” and “a,b”.
-```{r, eval=FALSE}
+```{r DIQ4c}
 read_csv("a,b\n1,2\na,b")
 ```
 
 4. The values are separated by “;” rather than “,”. Use read_csv2() instead:
-```{r, eval=FALSE}
+```{r DIQ4d}
 read_csv("a;b\n1;3")
 
 read_csv2("a;b\n1;3")
