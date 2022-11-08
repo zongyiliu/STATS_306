@@ -22,7 +22,7 @@ library(lubridate)
 library(tidyverse)  # For ggplot2, dplyr, readr
 library(nycflights13)
 
-tutorial_options(exercise.reveal_solution=FALSE)
+tutorial_options(exercise.reveal_solution=TRUE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
@@ -34,12 +34,11 @@ library(nycflights13)
 
 ## Logistics
 
--   Exam 2 is on Nov 11, more details to come.
+-   Exam 2 is on Nov 11. Similar as Exam 1, you will have 10 multiple choice questions, and 5 short answer questions.
 
 -   Questions?
 
 ## Today's Content
-
 
 - HW3 Review
 - Strings
@@ -52,7 +51,9 @@ library(nycflights13)
 
 ## Question 1
 
+
 Let’s look at some water quality data from the Backbay National Wildlife Refuge:
+
 
 ```{r}
 bbwater <- read_csv("../data/BKB_WaterQualityData_2020084.csv")
@@ -255,11 +256,14 @@ An example of a joint distribution plot would be a faceted histogram as that wou
 
 We might notice that B has the highest variance and D is clustered above 0 (so consistently more depth than 1m).
 
+
+
 ## Question 4
 
 ## Q 4.1
 
 Suppose instead of using `tidyverse`’s `read_csv` function we had instead used R’s built in `read.csv` function to load our data.
+
 
 Use this function to load the same water quality data set. What are three differences in how the type of data loaded by `read.csv` can be used compared to the data from `read_csv`.
 
@@ -449,6 +453,110 @@ str_extract_all(baseball, "(t|T)h(e|is)") # including capitalized T
 
 ## EDA and Data Imports
 
+## EDA
+
+## Data Imports
+- We have previously discussed that data may be available to us for analysis in two major forms: creating them ourselves and importing them from other sources.   
+- The major sources of data for importation are summarized in the figure below.
+
+<center>
+
+![Types of Data Imports](images/data_imports.png){width=100%}
+
+</center>
+
+- For the purpose of this class, we narrowed our focus on flat files from the `readr` package.
+- Specifically, we have explored using some functions as:
+  + `read_csv` - for comma separated values
+  + `read_tsv` - for tab separated values
+  + `read_delim` - for general delimiters (could be comma, semi-colon, tab, pipe or any delimiter)
+  
+- Let us answer the following questions based on what we have learned about these functions.
+
+### Question 1 {.tabset}
+
+#### Question 
+What function would you use to read a file where fields were separated with
+"|"?
+
+#### Answer
+
+Use the `read_delim()` function with the argument `delim="|"`
+```
+Use the read_delim() function with the argument delim="|"
+```
+
+
+
+### Question 2 {.tabset}
+
+#### Question 
+Apart from `file`, `skip`, and `comment`, what other arguments do `read_csv()` and `read_tsv()` have in common?
+
+#### Answer
+They have the following arguments in common:
+```{r, eval=FALSE}
+intersect(names(formals(read_csv)), names(formals(read_tsv)))
+```
+
+
+
+### Question 3 {.tabset}
+
+#### Question 
+Sometimes strings in a CSV file contain commas. To prevent them from causing problems they need to be surrounded by a quoting character, like `"` or `'`. By default, `read_csv()` assumes that the quoting character will be `"`. What argument to `read_csv()` do you need to specify to read the following text into a data frame using `read_delim()`?
+
+```
+"x,y\n1,'a,b'"
+```
+
+
+#### Answer
+For `read_delim()`, we will will need to specify a delimiter, in this case `","`, and a `quote` argument.
+
+```{r, eval=FALSE}
+x <- "x,y\n1,'a,b'"
+read_delim(x, ",", quote = "'")
+```
+
+
+
+### Question 4 {.tabset}
+
+#### Question 
+Identify what is wrong with each of the following inline CSV files. What happens when you run the code?
+
+```
+read_csv("a,b\n1,2,3\n4,5,6")
+read_csv("a,b,c\n1,2\n1,2,3,4")
+read_csv("a,b\n1,2\na,b")
+read_csv("a;b\n1;3")
+```
+
+#### Answer
+1. Only two columns are specified in the header “a” and “b”, but the rows have three columns, so the last column is dropped.
+```{r, eval=FALSE}
+read_csv("a,b\n1,2,3\n4,5,6")
+```
+
+2. The numbers of columns in the data do not match the number of columns in the header (three). In row one, there are only two values, so column `c` is set to missing. In row two, there is an extra value, and that value is dropped.
+```{r, eval=FALSE}
+read_csv("a,b,c\n1,2\n1,2,3,4")
+```
+
+3. Both “a” and “b” are treated as character vectors since they contain non-numeric strings. This may have been intentional, or the author may have intended the values of the columns to be “1,2” and “a,b”.
+```{r, eval=FALSE}
+read_csv("a,b\n1,2\na,b")
+```
+
+4. The values are separated by “;” rather than “,”. Use read_csv2() instead:
+```{r, eval=FALSE}
+read_csv("a;b\n1;3")
+
+read_csv2("a;b\n1;3")
+```
+>>>>>>> 0b105ec273bc53db0395cff2a84fd447b6807443
+
 
 ## Tidy Data
 
@@ -547,5 +655,144 @@ readr::parse_datetime(d3, "%B %d, '%y, %H:%M %p")
 ```
 
 
-## Table and Relational Data
+
+
+## Tables
+
+We introduced our **model of rectangular data** as **lists of vectors**. 
+
+There are several R classes that implement this idea:
+
+>* `matrix`: all vectors of same type
+>* `data.frame`: vectors of different types, fewer ammenities
+>* `tibble`: vectros of different types, more features
+>* `data.table`: for data too large to fit in memory
+
+
+### `tibbles`, modern `data.frame`s
+
+`tibbles` are lighter weight as they don't try to rename as many things or create row names.
+
+You can list columns with `tibble` or use `as_tibble` to convert a matrix or `data.frame`,
+
+```{r warning = FALSE}
+(m <- matrix(1:9, nrow = 3))
+(d <- data.frame(colname1 =  1:3, c("a", "b", "c")))
+as_tibble(m)
+as_tibble(d)
+```
+
+
+Like our data model (lists of vectors), all of these methods are **column oriented**. 
+
+If we would prefer to specify our data by row, we can 
+```{r}
+
+matrix(c(1, 2, 3, 50, 60, 70), nrow = 2, byrow = TRUE)
+tribble(
+  ~ column_name_1, ~ column_name_2,
+  1, "make sure",
+  2, "that you have the right number",
+  7, "per row")
+```
+
+### Final notes on tibbles and data.frames
+
+Observe:
+
+```{r}
+(d <- data.frame(colname1 =  1:3, c("a", "b", "c")))
+(tb <- tibble(colname1 =  1:3, c("a", "b", "c")))
+
+colnames(d)
+d$co
+tb$co
+
+d$doesnotexist
+```
+
+If for some reason you need to use a `data.frame` but you only have a `tibble`,
+```{r}
+as.data.frame(tb)
+```
+
+## Relational Data
+
+### Inner Join
+
+![](images/join-inner.png){width=90%}
+
+
+The simplest type of join is the inner join. An inner join matches pairs of observations whenever their keys are equal. The output of an inner join is a new data frame that contains the key, the x values, and the y values. 
+
+### Outer Joins
+
+An inner join keeps observations that appear in both tables. An outer join keeps observations that appear in at least one of the tables. There are three types of outer joins:
+
+* A left join keeps all observations in x.
+* A right join keeps all observations in y.
+* A full join keeps all observations in x and y.
+
+These joins work by adding an additional “virtual” observation to each table. This observation has a key that always matches (if no other key matches), and a value filled with NA.
+
+Graphically, that looks like:
+
+![](images/join-outer.png){width=90%}
+
+### Semi-join
+
+`semi_join(x, y)` keeps all the observations in `x` that are also in `y`.
+
+![](images/join-semi.png){width=90%}
+
+
+### Anti-join
+
+The opposite of a semi-join is an anti-join: keeps all the observations in `x` that are not in `y`.
+
+![](images/join-anti.png){width=90%}
+
+## Keys
+
+The variables used to connect each pair of tables are called keys. A key is a variable (or set of variables) that uniquely identifies an observation.
+
+There are two types of keys:
+
+* A primary key uniquely identifies an observation in its own table. For example, planes$tailnum is a primary key because it uniquely identifies each plane in the planes table.
+
+* A foreign key uniquely identifies an observation in another table. For example, flights$tailnum is a foreign key because it appears in the flights table where it matches each flight to a unique plane.
+
+A variable can be both a primary key and a foreign key. For example, origin is part of the weather primary key, and is also a foreign key for the airports table.
+
+If a table lacks a primary key, it’s sometimes useful to add one with mutate() and row_number(). That makes it easier to match observations if you’ve done some filtering and want to check back in with the original data. This is called a surrogate key.
+
+A primary key and the corresponding foreign key in another table form a relation. Relations are typically one-to-many. For example, each flight has one plane, but each plane has many flights. In other data, you’ll occasionally see a 1-to-1 relationship. You can think of this as a special case of 1-to-many. 
+
+### Exercises
+
+What’s the primary key in the flights table? You might think it would be the date plus the flight or tail number. Check the two assumptions by the function `count()`
+
+```{r primaryKey, exercise=TRUE}
+
+```
+
+```{r primaryKey-hint}
+flights %>% 
+  count(...) %>% 
+  filter(n > 1)
+```
+
+```{r primaryKey-solution}
+flights %>% 
+  count(year, month, day, flight) %>% 
+  filter(n > 1)
+
+flights %>% 
+  count(year, month, day, tailnum) %>% 
+  filter(n > 1)
+```
+
+### Solution
+
+Neither of those variable combinations are unique. The table `flights` doesn’t have an explicit primary key: each row is an observation, but no combination of variables reliably identifies it.
 
