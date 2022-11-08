@@ -1,0 +1,252 @@
+---
+subtitle: "Stats 306: Lecture 17"
+title: "Regexes, continued; Factors"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+set.seed(2939394)
+```
+
+## Review: Regexes
+
+* Splitting strings on given boundaries (will generate lists)
+* Regular expression (regexes): mini-language for matching patterns
+* Most characters matched exactly, can escape with `\\` (in R, `\` in other systems)
+* Any character `.`
+* Classes of characters with `[]`
+* Complement of classes with `[^]`
+* Start of line `^`, end of line `$`
+* White space `\\s`, digits `\\d` 
+* Repetition: zero or one `?`, zero or more `*`, `+` one or more
+* Alternates `(abc|def)`
+* Backreferences `(pattern)` puts the matched string into `\\NUM` (starting with `\\1`)
+* Use in column selection (`select`, `pivot_longer`) with `matches`
+
+## Using regular expressions
+
+* Apply regexes to column names or levels
+* Finding matches in columns
+* Extract information from strings
+* Break up strings (tokenize) on more complicated patterns
+
+## Art and Emotion data set
+
+```{r}
+wikiart <- read_tsv("./data/WikiArt-Emotions-All.tsv.gz")
+wikiart <- mutate(wikiart, Year = as.numeric(str_sub(Year, 1, 4)))
+colnames(wikiart)
+```
+
+## Columns
+
+With lots of columns, we could write things out direct, but better to use regex to find columns matching a pattern:
+
+```{r}
+select(wikiart, matches("anger"))
+select(wikiart, matches("[tT]itle"))
+select(wikiart, matches("[tT]itle."))
+```
+
+## Making more tidy
+
+This has lots of **ratings**, let's put them into better columns.
+
+```{r}
+pivot_longer(wikiart, 
+             matches(":"), 
+             names_to = c("rating_type", "emotion"),
+             names_sep = ":",
+             values_to = "mean_annotation") -> wa_long
+
+select(wa_long, Title, rating_type, emotion, mean_annotation)
+```
+
+## Find and replace
+
+Hard to see in previous but there are spaces in the emotions:
+
+```{r}
+wa_long$emotion[1:5]
+```
+
+Let's remove all white space
+```{r}
+wa_long <- mutate(wa_long,
+                  emotion = str_replace(emotion, "\\s", ""))
+wa_long$emotion[1:5]
+```
+
+## Using tidy data
+
+```{r}
+ggplot(wa_long, aes(x = rating_type, y = mean_annotation)) + geom_boxplot()
+```
+
+
+```{r}
+group_by(wa_long, rating_type) |> summarize(mean(mean_annotation > 0))
+```
+
+```{r}
+filter(wa_long, mean_annotation > 0) |>
+  ggplot(aes(x = rating_type, y = mean_annotation)) +
+    geom_boxplot()
+```
+
+## Grouping by work of art
+
+With the tidy data, we have art-rating type-emotion measurements. Let's aggregate up to the piece level after restricting to the `Art (image+title)` rating group.
+
+```{r}
+filter(wa_long, str_detect(rating_type, "Art")) |>
+  group_by(ID) |>
+  arrange(desc(mean_annotation)) |>
+  summarize(strongest_emotion = first(emotion),
+            strongest_emotion_value = first(mean_annotation)) ->
+  wa_art_strongest
+```
+
+```{r}
+ggplot(wa_art_strongest, aes(y = strongest_emotion)) + geom_bar()
+```
+
+
+
+## Merging original data back in
+
+The original wiki art data was arranged by work of art. Let's merge that back in to get year information.
+
+```{r}
+wa_art_strong_year <- left_join(wikiart, wa_art_strongest, by = "ID")
+```
+
+Now let's get a break down by year of the percentages of the different categories.
+
+```{r}
+
+group_by(wa_art_strong_year, Year, strongest_emotion) |>
+  summarize(count = n()) |>
+  mutate(percent = count / sum(count)) -> year_emo
+
+ggplot(filter(wa_art_strong_year, Year > 1900), aes(x = Year, fill = strongest_emotion)) + geom_bar(position = 'fill')
+
+```
+
+## The clearing up plot
+
+The previous plot is interesting, but hard to read.
+
+Let's zoom in on the 1960s,
+
+```{r}
+ggplot(filter(wa_art_strong_year, Year >= 1960, Year < 1970), aes(x = Year, fill = strongest_emotion)) + geom_bar(position = 'fill')
+```
+
+## Reordering emotion categories
+
+Recall, we mentioned that strings always sort **lexicographically** while **factors** can be made to sort in **arbitrary** order.
+
+```{r}
+class(wa_art_strong_year$strongest_emotion)
+wa_art_strong_year <- mutate(wa_art_strong_year, se_fac = factor(strongest_emotion))
+class(wa_art_strong_year$strongest_emotion)
+```
+
+This won't immediately change the plot:
+
+```{r}
+ggplot(filter(wa_art_strong_year, Year >= 1960, Year < 1970), aes(x = Year, fill = se_fac)) + geom_bar(position = 'fill')
+```
+
+Because the default order is alphabetical:
+```{r}
+levels(wa_art_strong_year$se_fac)
+```
+
+## Setting levels
+
+Let's order the colors by largest to smallest share total:
+
+```{r}
+the1960s <- filter(wa_art_strong_year, Year >= 1960, Year < 1970)
+emotion_order <- count(the1960s, strongest_emotion) |> arrange(desc(n)) 
+emotion_order
+the1960s <- mutate(the1960s, se_fac = factor(strongest_emotion, levels = emotion_order$strongest_emotion))
+```
+
+```{r}
+ggplot(the1960s, aes(x = Year, fill = se_fac)) + geom_bar(position = 'fill')
+```
+
+
+## Missing levels
+
+Suppose we now tried to use those levels with the entire data set:
+
+```{r}
+wa_art_strong_year2 <- mutate(wa_art_strong_year, se_factor = factor(strongest_emotion, levels = emotion_order$strongest_emotion))
+
+filter(wa_art_strong_year2, is.na(se_factor)) |> count(strongest_emotion)
+```
+
+`parse_factor` (from the `readr` package) will at least give a warning:
+```{r}
+wa_art_strong_year2 <- mutate(wa_art_strong_year, se_factor = parse_factor(strongest_emotion, levels = emotion_order$strongest_emotion))
+```
+
+## Easier reording with `fct_reorder`
+
+```{r}
+ggplot(the1960s, aes(x = Year, fill = fct_infreq(strongest_emotion))) + geom_bar(position = 'fill')
+```
+
+## Formatting
+
+Suppose we wanted "Happiness" instead of "happiness", etc. The `str_to_title` can help:
+```{r}
+str_to_title(c("happiness", "neutral"))
+```
+
+We can change all the factor levels with `fct_recode`
+
+```{r}
+newlbls <- the1960s$strongest_emotion |> factor() |> levels() |> str_to_title()
+oldlbls <- the1960s$strongest_emotion |> factor() |> levels()
+names(oldlbls) <- newlbls
+
+mutate(the1960s,
+       strongest_emotion = fct_infreq(strongest_emotion)) |> 
+  mutate(strongest_emotion = fct_recode(strongest_emotion, !!!oldlbls)) |>
+  ggplot(aes(x = Year, fill = strongest_emotion)) + geom_bar(position = 'fill')
+```
+
+## Grouping
+
+Suppose we consider three groups of emotions
+
+Positive: Surprise, anticipation, happiness, humility, trust, optimism, love, agreeableness
+Negative: fear, disgust, sadness, anger, shame, arrogance, pessimism, disagreeableness 
+
+(Notice "neutral" isn't going to be in here, it can stay "neutral")
+
+Let's collapse into these groups:
+
+```{r}
+egrps <- list("positive" = c("surprise", "anticipation", "happiness", "humility", "trust", "optimism", "love", "agreeableness"),
+              "negative" = c("fear", "disgust", "sadness", "anger", "shame", "arrogance", "pessimism", "disagreeableness"))
+
+mutate(the1960s, emo_groups = fct_collapse(factor(strongest_emotion), !!!egrps)) |>
+  ggplot(aes(x = Year, fill = emo_groups)) + geom_bar(position = 'fill')
+
+```
+
+
