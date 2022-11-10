@@ -1,0 +1,16 @@
+---
+title: "Stats 306, Fall 2022, Homework 5"
+author: "Your Name, Your Uniqname"
+date: "Due December 4, 11:59PM"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+Ideas:
+- Something short about factors
+- A regex question using regular expressions in git and grep
