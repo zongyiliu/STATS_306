@@ -30,8 +30,8 @@ library(tidyverse)  # For dplyr, stringr
 
 ## Logistics
 
-- Exam 2 is due by 11:59 PM on Nov 11.
 - Quiz 4 is due by 11:59 PM on Nov 20.
+- Homework 5 is due by 11:59 PM on Dec 4.
 - Questions?
 
 ## Today's Content
