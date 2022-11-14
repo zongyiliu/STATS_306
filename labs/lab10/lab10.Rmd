@@ -72,7 +72,7 @@ backyard
 writeLines("backyard")
 ```
 
-Certain characters are inserted in strings using **escape sequences**. An escape sequence starts with a backslash `\`. For example, the escape sequence for `tab` is `\t`. The backslash combines with the next character to form an escape sequence. This is how a tab would be inserted in the previous string.
+Certain characters are inserted in strings using **escape sequences**. An escape sequence starts with a backslash `\`. For example, the escape sequence for `tab` is `\t`. The backslash combines with the next character to form an escape sequence. See the help page on `Quotes` for the list of valid escape sequences in R. This is how a tab would be inserted in the previous string.
 ```{r}
 "back\tyard"
 ```
