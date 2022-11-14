@@ -13,14 +13,15 @@ runtime: shiny_prerendered
 # This just checks if students need to install some packages that they might 
 # not have.
 
-if (!packageVersion("learnr") == "0.11.1") install.packages("learnr", repos = "http://cran.us.r-project.org")
+if (!packageVersion("learnr") == "0.11.1") 
+  install.packages("learnr", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
 library(learnr)     # For interactive exercises
 library(tidyverse)  # For dplyr, stringr
 
-tutorial_options(exercise.reveal_solution=TRUE)
+tutorial_options(exercise.reveal_solution=FALSE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
