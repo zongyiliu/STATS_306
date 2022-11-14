@@ -42,37 +42,100 @@ library(tidyverse)  # For dplyr, stringr
 
 ## Strings
 
-Recall that a string is character data enclosed in double `"` or single `'` quotes. In R, strings exist in character vectors.
-```{r}
-words[1:5]
+Recall that a **string** is a sequence of characters.
+
+Below is an example of a string as it would appear on paper.
+```
+backyard
 ```
 
-The `stringr` package contains many useful functions for working with strings. In lecture, we went over some commonly used `stringr` functions.
-
-`str_c()` is used to concatenate strings. These strings can be given in separate vectors, in which case the `sep` argument should be used to control what goes between consecutive strings.
+Strings in R work differently than they do on paper. In R, a string **must either begin and end with a double quote `"` or begin and end with a single quote `'`.**
 ```{r}
-str_c("lions", "tigers", "bears", "oh my!", sep = ", ")
+"backyard"
+'backyard'
 ```
 
-`str_c()` can also be given a single vector of strings. In this case, the `collapse` argument should be used to control what goes between consecutive strings.
-```{r}
-parts <- c("lions", "tigers", "bears", "oh my!")
-str_c(parts, collapse = ", ")
+**Question:** What would happen if you entered `"backyard"` without the quotes and why?
+```{r no_quotes, exercise=TRUE}
+
 ```
 
-`str_length()` essentially returns the number of characters in a string.
-```{r}
-str_length("My favorite colors are maize and blue.")
+```{r no_quotes-solution}
+backyard
+# Without the quotes, the interpreter would assume that backyard is an
+# object that we want to print. It wouldn't be able to find backyard because
+# it doesn't exist and would then throw an error.
 ```
 
-`str_sub()` extracts a substring of a string. `start` and `end` are the indices of the starting and ending characters of the substring.
-```{r}
-str_sub("November", start = 3, end = 6)
+`writeLines()` takes the R version of a string and shows us the paper version.
+```{r, comment=NA}
+writeLines("backyard")
 ```
 
-`str_split()` splits a string into substrings given a separator. Note that it returns a list.
+Certain characters are inserted in strings using **escape sequences**. An escape sequence starts with a backslash `\`. For example, the escape sequence for `tab` is `\t`. The backslash combines with the next character to form an escape sequence. This is how a tab would be inserted in the previous string.
 ```{r}
-str_split("lions, tigers, bears, oh my!", pattern = ", ")
+"back\tyard"
+```
+
+This may be more natural, but it's worse because it's ambiguous.
+```{r}
+"back    yard"
+```
+
+To include a backslash, use the escape sequence `\\`.
+```{r}
+"back\\yard"
+```
+
+Another commonly used escape sequence is the newline escape sequence. A newline represents the start of a new line.
+```{r}
+"back\nyard"
+```
+
+**Question:** What would happen if you tried to insert a tab, or a backslash, or a newline in the middle of `"backyard"` without using an escape sequence and why? 
+```{r escape_seqs, exercise=TRUE}
+
+```
+
+```{r escape_seqs-solution}
+# Inserting a tab by hitting the tab key doesn't work. In the console, it would
+# bring up the autocomplete box.
+# Inserting a backslash with just one backslash causes \y to be interpreted as
+# an escape sequence, which causes an error as \y isn't a valid escape
+# sequence.
+# Inserting a newline by hitting the return key seems to work, but R seems to
+# think that the code has a mistake
+```
+
+Here are the outputs of `writeLines()` for the three modifications of `"backyard"`. They look the way they would on paper.
+```{r, comment=NA}
+writeLines("back\tyard")
+writeLines("back\\yard")
+writeLines("back\nyard")
+```
+
+Since quotes are used to mark the start and end of an R string, an escape sequence must be used to put a quote in the middle of an R string if it's of the same type as the start and end quotes.
+```{r, comment=NA}
+"back\"yard" 
+writeLines("back\"yard")
+```
+
+**Question:** What happens if you don't escape and why?
+```{r no_escaping, exercise=TRUE}
+
+```
+
+```{r no_escaping-solution}
+# The interpreter sees the middle quote and thinks that the string has ended,
+# but then sees another character, which doesn't make any sense, so it throws
+# an error
+"back"yard"
+```
+
+However, if the quote is of the other type, escaping isn't necessary.
+```{r, comment=NA}
+"back'yard"
+writeLines("back'yard")
 ```
 
 ## Exercises
