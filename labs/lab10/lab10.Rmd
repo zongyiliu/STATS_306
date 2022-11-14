@@ -32,11 +32,12 @@ library(tidyverse)  # For dplyr, stringr
 ## Logistics
 
 - Quiz 4 is due by 11:59 PM on Nov 20.
+- **Lab will be held on Nov 22.**
 - Homework 5 is due by 11:59 PM on Dec 4.
-- Questions?
 
 ## Today's Content
 
+- HW4 Review
 - Strings and Regular Expressions
 
 ## Strings
