@@ -15,11 +15,13 @@ runtime: shiny_prerendered
 
 if (!packageVersion("learnr") == "0.11.1") 
   install.packages("learnr", repos = "http://cran.us.r-project.org")
+# For HW4 Q2, Q3
 if (!require(Lahman)) 
   install.packages("Lahman", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
+library(Lahman) # For HW4 Q2, Q3
 library(learnr)     # For interactive exercises
 library(lubridate)
 library(tidyverse)  # For dplyr, stringr
@@ -38,12 +40,19 @@ tutorial_options(exercise.reveal_solution=FALSE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
+library(Lahman) # For HW4 Q2, Q3
 library(learnr)     # For interactive exercises
 library(tidyverse)  # For dplyr, stringr
 
 # For HW4 Q1
 cancer_deaths <- read_csv("../../data/AH_Provisional_Cancer_Death_Counts_by_Month_and_Year__2020-2021.csv.gz")
 cancer_deaths_2 <- select(cancer_deaths, - `Malignant neoplasms (C00-C97)`)
+
+# For HW4 Q2
+People <- mutate(People,
+                 debut_d = ymd(debut),
+                 finalGame_d = ymd(finalGame))
+People <- mutate(People, career_length = finalGame_d - debut_d)
 ```
 
 ## Logistics
