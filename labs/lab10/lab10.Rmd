@@ -598,9 +598,9 @@ Alternative if “singular” is taken to exclude C22.
 select(cancer_deaths, matches("neoplasm[^s]")) |> colnames()
 ```
 
-## Examples
+## Regular Expression Exercises
 
-The examples below use this paragraph.
+The exercises below use this paragraph.
 
 ```{r}
 baseball <- "According to Baseball Reference’s wins above average, The Red Sox had the best 
@@ -614,11 +614,21 @@ and in order to get to 11.5 WAA, the Angels’ outfield would have had to replac
 fielder Kole Calhoun with one of the three best outfielders in baseball this year by WAA."
 ```
 
-#### Example
+The exercises require you to extract matches using `str_extract_all()`
 
-Write a regex that captures all the capitalized words in the paragraph.
+### Exercise 1
 
-```{r}
+Extract all the capitalized words in the paragraph.
+
+```{r baseball1, exercise=TRUE}
+
+```
+
+```{r baseball1-hint}
+# Try using \b
+```
+
+```{r baseball1-solution}
 # `\b` looks for a word boundary (not just the beginning of the text snippet!)
 # `[A-Z]` matches a single capitalized letter
 # `[a-z]` matches a single lowercase letter
@@ -626,97 +636,50 @@ Write a regex that captures all the capitalized words in the paragraph.
 str_extract_all(baseball, "\\b[A-Z][a-z]+")
 ```
 
-#### Example
+### Exercise 2
 
-Write a regex that captures all the numbers.
+Extract all the numbers.
 
-```{r}
+```{r baseball2, exercise=TRUE}
+
+```
+
+```{r baseball2-solution}
 str_extract_all(baseball, "\\.?\\d+\\.?\\d*")
 ```
 
-#### Example
+### Exercise 3
 
-Write a regex that captures all the hyphenated words.
+Extract all the hyphenated words.
 
-```{r}
-str_extract_all(baseball, "\\w+-\\w+") # \w stands for an arbitrary letter
-```
-
-#### Example
-
-Write a regex that captures all words with two consecutive wovels.
-
-```{r}
-str_extract_all(baseball, "\\w*[aeiou]{2}\\w*")
-```
-
-#### Example
-
-Write a regex that captures all words with a repeated letter.
-
-```{r}
-# \\1 is a backreference that matches the () group
-# An alternative: str_extract_all(baseball, "\\w*([\\w])\\1\\w*")
-str_extract_all(baseball, "\\w*([a-zA-Z])\\1\\w*")
-```
-
-#### Example
-
-Write a regex that matches `"this"` and `"the"` but not `"third"`.
-
-```{r}
-str_extract_all(baseball, "th(e|is)")
-str_extract_all(baseball, "(t|T)h(e|is)") # including capitalized T
-```
-
-## Exercises
-
-Use `stringr::words` to do the exercises.
-
-### Question
-
-Which words end with the same two-letter sequence that they start with? An example of such a word would be `"church"`.
-
-```{r regex7, exercise=TRUE}
+```{r baseball3, exercise=TRUE}
 
 ```
 
-```{r regex7-solution}
-# Match two word characters: \\w{2}
-# Since we're interested in the two word characters at the start, use the start anchor: ^\\w{2}
-# Since we want the same two word characters to be at the end, we should insert parentheses so we can use a backreference: ^(\\w{2})
-# Zero or more word characters can exist in the middle: ^(\\w{2})\\w*
-# We want the two word characters at the start to be at the end as well. We use a backreference and the end anchor:
-str_subset(words, "^(\\w{2})\\w*\\1$")
+```{r baseball3-solution}
+str_extract_all(baseball, regex("[a-z]+-[a-z]+", ignore_case = TRUE))
 ```
 
-### Question
+### Exercise 4
 
-Try to match the valid `dates` below (first row) without matching the invalid dates (the latter six rows).
+Extract all words with two consecutive vowels.
 
-**Hint:** *Start by writing a pattern that matches all the entries. Then try to refine your pattern to omit the invalid dates.*
+```{r baseball4, exercise=TRUE}
 
-```{r regex8, exercise=TRUE}
-dates <- c(
-  "2012-05-13", "2014-12-31", "1991-06-14", "1991/06/14", # valid
-  "200a-05-13", # invalid year
-  "2014-15-20", # invalid month
-  "2014-00-20", # invalid month
-  "2016-04-35", # invalid day
-  "2014-12-00", # invalid day
-  "2013/03-25" # non-matching separators
-)
 ```
 
-```{r regex8-solution}
-dates <- c(
-  "2012-05-13", "2014-12-31", "1991-06-14", "1991/06/14", # valid
-  "200a-05-13", # invalid year
-  "2014-15-20", # invalid month
-  "2014-00-20", # invalid month
-  "2016-04-35", # invalid day
-  "2014-12-00", # invalid day
-  "2013/03-25" # non-matching separators
-)
-str_subset(dates, "\\d{4}(-|/)(0[1-9]|1[0-2])\\1(0[1-9]|[12][0-9]|3[0-1])")
+```{r baseball4-solution}
+str_extract_all(baseball, regex("[a-z]*[aeiou]{2}[a-z]*", ignore_case = TRUE))
+```
+
+### Exercise 5
+
+Extract all words with a repeated letter.
+
+```{r baseball5, exercise=TRUE}
+
+```
+
+```{r baseball5-solution}
+str_extract_all(baseball, regex("[a-z]*([a-z])\\1[a-z]*", ignore_case = TRUE))
 ```
