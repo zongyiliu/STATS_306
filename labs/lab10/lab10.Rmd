@@ -15,15 +15,24 @@ runtime: shiny_prerendered
 
 if (!packageVersion("learnr") == "0.11.1") 
   install.packages("learnr", repos = "http://cran.us.r-project.org")
+if (!require(Lahman)) 
+  install.packages("Lahman", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, eval=TRUE, include=FALSE, message=FALSE, echo=FALSE}
 library(learnr)     # For interactive exercises
+library(lubridate)
 library(tidyverse)  # For dplyr, stringr
 
 # For HW4 Q1
 cancer_deaths <- read_csv("../../data/AH_Provisional_Cancer_Death_Counts_by_Month_and_Year__2020-2021.csv.gz")
 cancer_deaths_2 <- select(cancer_deaths, - `Malignant neoplasms (C00-C97)`)
+
+# For HW4 Q2
+People <- mutate(People,
+                 debut_d = ymd(debut),
+                 finalGame_d = ymd(finalGame))
+People <- mutate(People, career_length = finalGame_d - debut_d)
 
 tutorial_options(exercise.reveal_solution=FALSE)
 ```
@@ -97,6 +106,68 @@ group_by(cancer_tidy_sparse, `Age Group`, cancer_type) |>
 ```
 
 We observe variation in the type of cancer per age group. For youth, brain and CNS. For the next 20 years, a mix of other, less common types. Then breast cancer hits women particularly hard. For the older generations, lung cancer and related cancers.
+
+## Q 2.3
+
+Write a function that takes a date and returns the decade. For example, on the input `c("1891-07-10", "1997-10-01")` should return `c(1890, 1990)`. (Hint see the `round` function and its use of negative rounding.)
+
+Compute the decade of each player’s debut and plot a series of boxplots or violin plots of `career_length` by decade of debut. What trends do you notice? How do you explain the decrease in career length in recent years? (hint: what did you see in 2.1?)
+
+**Solution:**
+
+The hint rounded up and down, so not exactly what was asked for in the text. We can do it both ways:
+
+```{r}
+decade_floor <- function(ds) {
+  y <- year(ds)
+  floor(y / 10) * 10
+}
+decade_round <- function(ds) {
+  y <- year(ds)
+  round(y, -1)
+}
+```
+
+```{r}
+ggplot(People, aes(x = factor(decade_round(debut_d)), y = career_length)) +
+  geom_boxplot()
+```
+
+```{r}
+ggplot(People, aes(x = factor(decade_floor(debut_d)), y = career_length)) +
+  geom_boxplot()
+```
+
+It looks like career lengths are decreasing in the most recent decade, but this could be the product of the censoring we observed in the previous part of the problem, i.e., of not yet observing how long current players will play in the future.
+
+## Q 2.4
+
+Filtering out the players with `NAs` for `debut_d` or `finalGame_d`. Which player has had the longest career? (Display the name along with the duration in years.) Look up this player on Wikipedia to learn how he had such a long career. Was he playing the entire time? With which other player did he perform comedy routines?
+
+For players continuing to play, we have a “censored” career length as we have not yet observed their total career, but such is the nature of time. Of players that have the maximum `finalGame_d`, which player has had the longest career? (Display the name and duration in years using the `time_length` function)
+
+**Solution:**
+
+Overall:
+
+```{r}
+filter(People, !is.na(career_length), 
+       career_length == max(career_length, na.rm = TRUE)) |>
+  select(playerID, nameFirst, nameLast, debut_d, finalGame_d, career_length) |>
+  mutate(career_length = time_length(career_length, "years"))
+```
+
+Only pinch hit later in life. Comedy partner, Al Schact.
+
+Currently playing:
+
+```{r}
+filter(People, !is.na(career_length),
+       finalGame_d == max(finalGame_d, na.rm = TRUE)) |>
+  select(playerID, nameFirst, nameLast, debut_d, finalGame_d, career_length) |>
+  mutate(career_length = time_length(career_length, "years")) |>
+  arrange(desc(career_length)) |> head(1)
+```
 
 ## Strings
 
