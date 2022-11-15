@@ -21,12 +21,20 @@ if (!packageVersion("learnr") == "0.11.1")
 library(learnr)     # For interactive exercises
 library(tidyverse)  # For dplyr, stringr
 
+# For HW4 Q1
+cancer_deaths <- read_csv("../../data/AH_Provisional_Cancer_Death_Counts_by_Month_and_Year__2020-2021.csv.gz")
+cancer_deaths_2 <- select(cancer_deaths, - `Malignant neoplasms (C00-C97)`)
+
 tutorial_options(exercise.reveal_solution=FALSE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
 library(learnr)     # For interactive exercises
 library(tidyverse)  # For dplyr, stringr
+
+# For HW4 Q1
+cancer_deaths <- read_csv("../../data/AH_Provisional_Cancer_Death_Counts_by_Month_and_Year__2020-2021.csv.gz")
+cancer_deaths_2 <- select(cancer_deaths, - `Malignant neoplasms (C00-C97)`)
 ```
 
 ## Logistics
@@ -39,6 +47,56 @@ library(tidyverse)  # For dplyr, stringr
 
 - HW4 Review
 - Strings and Regular Expressions
+
+## Q 1.2
+
+```{r}
+knitr::kable(head(cancer_deaths_2, 5))
+```
+
+Is `cancer_deaths2` in a tidy format (one row per observation, one column per measurement)? Use an appropriate `pivot_*` function to make this data more tidy (hint: see the help page for tidy select).
+
+Call your table cancer_tidy. Use informative titles for the column names.
+
+Display five rows of your table.
+
+**Solution:** The clue that we are probably not in tidy form is that we are counting deaths in several different columns. It would be better to measure cancer types-demographic groups per month as the unit so that deaths can be in a common column.
+```{r}
+cancer_tidy <- pivot_longer(cancer_deaths_2, contains("malignant"), values_to = "deaths", names_to = "cancer_type")
+
+knitr::kable(head(cancer_tidy, 5))
+```
+
+## Q 1.4
+
+```{r}
+cancer_tidy_sparse <- filter(cancer_tidy, deaths > 0)
+```
+
+Use the sparse version to answer the question, what were the top 5 forms of cancer by total deaths?
+
+**Solution:**
+```{r}
+group_by(cancer_tidy_sparse, cancer_type) |> 
+  summarize(sum(deaths)) |> 
+  arrange(desc(`sum(deaths)`)) |> head(5) |>
+  knitr::kable()
+```
+
+## Q 1.5
+
+Grouping by “Age Group” and cancer type, find the single most deadly cancer (by total deaths) in each group. Do age groups vary in the most deadly form of cancer or all they all the same?
+
+**Solution:**
+```{r}
+group_by(cancer_tidy_sparse, `Age Group`, cancer_type) |>
+  summarize(d = sum(deaths)) |>
+  arrange(desc(d)) |>
+  summarize(first(cancer_type)) |>
+  knitr::kable()
+```
+
+We observe variation in the type of cancer per age group. For youth, brain and CNS. For the next 20 years, a mix of other, less common types. Then breast cancer hits women particularly hard. For the older generations, lung cancer and related cancers.
 
 ## Strings
 
