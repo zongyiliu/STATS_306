@@ -483,6 +483,12 @@ An example:
 str_view_all(c("$2.50", "2 dollars"), "[a-zA-Z]")
 ```
 
+An alternative way to make the matching case-insensitive:
+```{r}
+str_view_all(c("$2.50", "2 dollars"), regex("[a-z]", ignore_case = TRUE))
+```
+
+
 ### Shorthand
 
 - `\w` matches a "word" character, equivalent to `[0-9A-Za-z_]`, i.e., digits, letters, and the underscore
