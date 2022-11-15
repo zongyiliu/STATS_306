@@ -533,6 +533,71 @@ Which string starts with a dollar sign? Note that `$` is escaped with **two** ba
 str_view_all(c("$2.50", "2 dollars"), "^\\$")
 ```
 
+## Q 4.2
+
+Use the corpus of common words in `stringr::words`, create regular expressions that find all words that:
+
+- Start with `“y”`.
+- End with `“x”`
+- Are exactly three letters long. (Don’t cheat by using `str_length()`!)
+- Have seven letters or more.
+
+For each, provide the size of each set.
+
+**Solution:**
+
+```{r}
+f <- function(regex) { str_detect(stringr::words, regex) |> sum() }
+
+tribble(
+   ~ goal, ~ count,
+   'Start with "y"', f("^y"),
+   'End with "x"', f("x$"),
+   'three letters long', f("^[a-zA-Z]{3}$"),
+   '7+ letters', f("^[a-zA-Z]{7,}"),
+)
+```
+
+## Q 4.3
+
+Continuing with the common words list, create regular expressions to find all words that:
+
+- Start with a vowel.
+- That only contain consonants. (Hint: thinking about matching “not”-vowels.)
+- End with “ed”, but not with “eed”.
+- End with “ing” or “ise”.
+
+**Solutions:**
+
+Two solutions for the ones relating to vowels in case you put “y” in that group
+
+```{r}
+tribble(
+   ~ goal, ~ count,
+   "vowel", f("^[aeiouAEIOU]"),
+   "vowels and y", f("^[aeiouyAEIOUY]"),
+   "consontants", f("^[^aeiouAEIOU]+$"),
+   "consontants not y", f("^[^aeiouyAEIOUY]+$"),
+   "ed not eed", f("[^e]ed$"),
+   "ing or ise", f("(ing|ise)$")
+)
+```
+
+## Q 4.4
+
+Using a regular expression and `select`, find the columns in `cancer_deaths` that only refer to a single type of cancer.
+
+**Solution:**
+
+```{r}
+select(cancer_deaths, matches("\\(C\\d\\d\\)")) |> colnames()
+```
+
+Alternative if “singular” is taken to exclude C22.
+```{r}
+select(cancer_deaths, matches("neoplasm[^s]")) |> colnames()
+```
+
 ## Examples
 
 The examples below use this paragraph.
