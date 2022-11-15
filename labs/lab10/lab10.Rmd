@@ -169,6 +169,89 @@ filter(People, !is.na(career_length),
   arrange(desc(career_length)) |> head(1)
 ```
 
+## Q 3.1
+
+Review the documentation for the `People` table and the `Fielding` table. Answer the following:
+
+What is the unit (row) for the `People` table?
+What is the unit (row) for the `Fielding` table? (Hint: see the code below)
+What columns are common to both both tables?
+
+```{r}
+group_by(Fielding, playerID, yearID) |> summarize(years = n()) |> ungroup() |> summarize(sum(years > 1))
+```
+
+```{r}
+group_by(Fielding, playerID, yearID, stint) |> summarize(stints = n()) |> ungroup() |> summarize(sum(stints > 1))
+```
+
+```{r}
+group_by(Fielding, playerID, yearID, stint, POS) |> summarize(positions = n()) |> ungroup() |> summarize(sum(positions > 1))
+```
+
+**Solution:**
+
+The `People` table is one row per person. This can be obtained either from the documentation or from code like this:
+
+```{r}
+count(People, playerID) |> summarize(all(n < 1))
+```
+
+For the `Fielding` table, we have a record for each combination of player, year, stint (a segment of year) and position.
+
+For common column names, we can use a set operation:
+
+```{r}
+intersect(colnames(People), colnames(Fielding))
+```
+
+## Q 3.2
+
+Using a `inner_join`, find the names of the top 5 players for total double plays. (Hint: you will need to do some grouping and summarizing before your join.)
+
+**Solution:**
+
+```{r}
+group_by(Fielding, playerID) |> summarize(DP = sum(DP)) |>
+  inner_join(People, by = "playerID") |>
+  arrange(desc(DP)) |> head(5) |>
+  select(nameFirst, nameLast, DP)
+```
+
+## Q 3.3
+
+Review the `Managers` and `AwardsManagers` table.
+
+Use a `left_join` to determine what proportion of managers won an award in each year. Graph this as a line plot. What do you notice about the proportion of managers winning awards?
+
+Note: you will need to do some grouping first. What is this code snippet telling you:
+
+```{r}
+group_by(Managers, playerID, yearID, teamID) |> summarize(n()) |> nrow()
+```
+
+```{r}
+nrow(Managers)
+```
+
+**Solution:**
+
+```{r}
+group_by(Managers, playerID, yearID, teamID) |> summarize(teams = n()) |>
+  left_join(AwardsManagers, by = c("playerID", "yearID")) |>
+  group_by(playerID, yearID) |>
+  summarize(a = sum(!is.na(awardID))) |>
+  group_by(yearID) |> summarize(proportion_winning_award = mean(a)) ->
+  year_awards
+```
+
+```{r}
+ggplot(year_awards, aes(x = yearID, y = proportion_winning_award)) +
+  geom_line()
+```
+
+We see a decreasing trend but then a big jump. There must have been a big increase in the number of awards given in the 1990s.
+
 ## Strings
 
 Recall that a **string** is a sequence of characters.
