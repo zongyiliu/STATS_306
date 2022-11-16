@@ -1,0 +1,393 @@
+---
+subtitle: "Stats 306: Lecture 19"
+title: "Iteration Continued"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+
+
+wikiart <- read_tsv("./data/WikiArt-Emotions-All.tsv.gz")
+wikiart <- mutate(wikiart, Year = as.numeric(str_sub(Year, 1, 4)))
+
+pivot_longer(wikiart, 
+             matches(":"), 
+             names_to = c("rating_type", "emotion"),
+             names_sep = ":",
+             values_to = "mean_annotation") -> wa_long
+
+select(wa_long, Title, rating_type, emotion, mean_annotation)
+wa_long <- mutate(wa_long,
+                  emotion = str_replace(emotion, "\\s", ""))
+
+filter(wa_long, str_detect(rating_type, "Art")) |>
+  group_by(ID) |>
+  arrange(desc(mean_annotation)) |>
+  summarize(strongest_emotion = first(emotion),
+            strongest_emotion_value = first(mean_annotation)) ->
+  wa_art_strongest
+
+wa_art_strong_year <- left_join(wikiart, wa_art_strongest, by = "ID")
+```
+
+## Review
+
+* Vectorization: performing same operation on all items in a collection
+* Iteration: one at a time computations over a collection
+* `for` loops
+  * `for (item in collection) { ... }`
+  * often have to set up storage in advance
+  * very flexible
+* `while` loops until condition met
+* `map`: perform and save one value per input collection
+* `map` (list) vs. `map_*` (vectors of given types)
+* `map2` and `map2_*`
+* Use of formulas as functions: `~ ... do things with .x ...`
+
+## Compound Random Variables
+
+Many times we take sample sizes $n$ to be fixed. But what if our sample size itself was random? 
+
+A **compound random variable** is one in which a discrete random variable sets the sample size, and then some other random variable is replicated that many times.
+
+```{r}
+r_pois_norm <- function(n, lambda = 1, mu = 0 , sd = 1) {
+  replicate(n, {
+    n_i <- rpois(1, lambda) + 1
+    rnorm(n_i, mu, sd)
+  })
+}
+
+samples <- r_pois_norm(3, lambda = 8)
+samples
+```
+
+
+## Mapping on two things
+
+Suppose for each sample, we have another outcome:
+
+```{r}
+samples_y <- map(samples, ~ runif(length(.x)))
+samples_y
+```
+
+What is the difference correlation within each sample?
+
+```{r}
+map2(samples, samples_y, cor)
+map2_dbl(samples, samples_y, cor)
+```
+
+
+## Mapping your own function on two things
+
+Suppose we wanted the average ratio of X to Y within each sample. We need to write a custom function with two arguments:
+
+```{r}
+map2_dbl(samples, samples_y, function(x, y) { mean(x / y)})
+map2_dbl(samples, samples_y, ~ mean(.x / .y))
+```
+
+## Exercise
+
+Using `map2`, get the first word of each item in `stringr::fruit` (keep single words). 
+
+Some useful examples:
+```{r}
+str_locate("chili pepper", " ")
+str_sub("chili pepper", end = 6 - 1)
+str_locate("canataloupe", " ")
+```
+
+
+```{r firstword, exercise = TRUE}
+first_space <- str_locate(stringr::fruit, " ")[,1]
+```
+
+
+## Other loop replacing functions
+
+`keep` takes only the entries that match a predicate:
+
+```{r}
+keep(samples, ~ length(.x) > 10)
+```
+
+`discard` drops entries that match.
+
+Many `for` loops have **accumulators**:
+
+```{r}
+max_length <- -Inf
+for (i in seq_along(samples)) {
+  max_length <- max(length(samples[[i]]), max_length)
+}
+max_length
+```
+
+`reduce` avoids the bookkeeping (often convenient to map first):
+```{r}
+map_dbl(samples, length) |> reduce(max)
+```
+
+We can see the intermediate results with `accumulate`:
+```{r}
+accumulate(c(1, 10, 100, 2, 3, 4), `+`)
+```
+
+## Map functions that return tables
+
+The `_dfr` variants use functions that return data frames, and then row bind them together
+```{r}
+map_dfr(samples, ~ tibble(x = .x))
+```
+We probably want to know which sample each value is so we can do operations after. We can use an **indexed map** with the `imap_*` variants:
+```{r}
+imap_dfr(samples, ~ tibble(x = .x, sample_num = .y)) |> 
+  group_by(sample_num) |> 
+  mutate(x_centered = x - mean(x)) # within group, mean centered values
+```
+
+There is also `_dfc` that binds columns together.
+
+
+## Connections to grouping and summary functions
+
+Many of these tasks can also be done by creating tables and running `group_by` and `summarize`. There is also a `group_map`
+
+```{r}
+group_by(wikiart, Category) |> group_map(function(x, grp) { 
+    if (nrow(x) > 10) {
+      return(mean(x$`Ave. art rating`))
+    } else {
+      return(max(x$`Ave. art rating`))
+    }
+  }) |> flatten_dbl()
+```
+
+## Built in R functions
+
+There are several built in functions that are similar to `map_*`:
+
+* `lapply` is similar to `map`, but doesn't allow for the function shorthand notation
+* `sapply` is similar to the `map_*` varieties, but no checking. Will return a list if it can't safely unlist results.
+* `vapply` is even closer to `map_*`, but still no anonymous functions
+* `mapply` is similar to `map2`
+
+R also has some capitalized versions (`Map`, `Reduce`), but generally no checking less convenient to use with pipes.
+
+## Errors in iteration
+
+If we run into a bug in the code being iterated, it can often be difficult to find the source.
+```{r}
+x <- list(1, 10, "3", 7)
+```
+```{r eval = FALSE}
+map(x, log)
+# Error in .Primitive("log")(x, base) : 
+#  non-numeric argument to mathematical function
+```
+
+The `safely` function catches these errors and gives back useful info:
+
+```{r}
+safe_log <- safely(log) # returns a new function
+safe_log(10)
+safe_log("3")
+map(x, safe_log)
+```
+
+
+## `transpose` function
+
+Recall our model of a table:  a list of length n composed of vectors of length k. If we wanted to **transpose** the table we would have a list of length k with vectors of length n.
+
+The `transpose` function does this for data that can be thought of as a table:
+```{r}
+x_log_tp <- transpose(map(x, safe_log))
+x_log_tp$result
+x_log_tp$result |> flatten_dbl()
+x_log_tp$error
+```
+
+## Advanced R
+
+![Advanced R](images/advanced_r_cover.jpg)
+
+## Software Bugs
+
+Quoting Wikipedia:
+
+> The term "bug" was used in an account by computer pioneer Grace Hopper, who publicized the cause of a malfunction in an early electromechanical computer.[13] A typical version of the story is:
+
+>> In 1946, when Hopper was released from active duty, she joined the Harvard Faculty at the Computation Laboratory where she continued her work on the Mark II and Mark III. Operators traced an error in the Mark II to a moth trapped in a relay, coining the term bug. This bug was carefully removed and taped to the log book. Stemming from the first bug, today we call errors or glitches in a program a bug.[14]
+
+(The term may have been in use in other engineering projects before this.)
+
+## How do we know we have bugs?
+
+* We get an error when trying to load the program ("syntax error")
+* We get an error when running the program
+* We get output that does not make sense (perhaps, automated test suites)
+
+## General strategies
+
+* Search for information: look at documentation pages, search the web, ask other people
+* Repeat and find a small example: does it always happen? what kind of input causes the issue? can we write a test?
+* Find the location of the error: the "call stack" is the set of functions that have been called, where in the stack did it happen? Is that actually where the error really is? When was the problem introduced (git useful here)
+* Fix, test, document: try solutions until it works, use a test system to automate testing for the error in the future, write up what you did and why you did it
+
+## Exercise
+
+Lets use a `for` loop to compute the differences between `x[i] - x[i - 1]` for a vector (intentional bug):
+
+```{r errorsearch, exercise = TRUE, eval = FALSE}
+x <- rnorm(10)
+diffs <- length(x) - 1
+for (i in seq_along(x)) {
+  diffs[i] <- x[i] - x[i - 1]
+}
+# Error in diffs[i] <- x[i] - x[i - 1] : replacement has length zero
+```
+
+Exercise: what is this error message telling us? Even if you know, practice using an internet search to find out. Correct the bug.
+
+## Learning more tools
+
+(Run this in the console)
+
+```{r}
+f <- function(a) g(a)
+g <- function(b) h(b)
+h <- function(c) i(as.character(c))
+i <- function(d) {
+  if (!is.numeric(d)) {
+    stop("`d` must be numeric", call. = FALSE)
+  }
+  d + 10
+}
+```
+```{r eval = FALSE}
+f("hello")
+# Error: `d` must be numeric
+```
+
+Tools:
+* `traceback()
+* `library(rlang)` and `with_abort(f("hello"))` and `last_trace()`
+
+## Using RStudio's debugger
+
+```{r, eval = FALSE}
+f(10)
+```
+
+## Using the browser
+
+Add `browser()` in a function to pause execution and input commands:
+
+* Any valid R code gets executed
+* `help`: get available commands
+* `next`, `n`: executes the next step in the function. 
+* `step into`, `s`: step into the next function so you can explore it interactively.
+* `finish`, or `f`: finishes execution of the current loop or function.
+* `continue`, `c`: leaves interactive debugging and continues regular execution of the function.
+* `stop`, `Q`: end debugging
+* `where`: prints stack trace of active calls 
+
+## Other tools
+
+Open up `lecture19_debug.R`
+
+## Debugging RMarkdown
+
+If the problem only occurs when knitting, you will need to knit the document from the console using:
+
+```{r, eval = FALSE}
+rmarkdown::render("path/to/file.Rmd")
+```
+
+## Exercise
+
+Open up `lecture19_debug_markdown.Rmd` and try to knit it.
+
+Use `rmarkdown::render("lectures/lecture19_debug_markdown.Rmd` to find and fix the problem.
+
+## Signals
+
+R has several ways of signaling to the user that something is going on.
+
+Messages:
+```{r}
+message("The value of pi is ", pi)
+```
+
+Warnings:
+```{r}
+warning("pi is not 3")
+```
+
+Errors:
+```{r, eval = FALSE}
+stop("You said pi was 3")
+```
+
+R has a `try`/`catch` mechanism for handling errors, though we won't go into detail.
+
+## Debugging warnings
+
+
+```{r}
+f <- function(x) { 
+  g(x - 1)
+}
+g <- function(x) {
+  log(x) + 1
+}
+
+f(c(1, 2, -1, 10))
+```
+
+Promoting the warning into an error:
+```{r, eval = FALSE}
+options(warn = 2)
+... do debugging ...
+options(warn = 1) # back to normal
+
+```
+
+## Exercise
+
+Where is the warning in this code coming from? Run this in the Console and use `options(warn = 2)` to help you debug it.
+
+```{r}
+pyramid_numbers <- function(x) {
+  rep(x, x)
+}
+
+pyramid_numbers(1:3)
+
+alternate_zeros <- function(x) {
+  x * c(1, 0)
+}
+
+alternate_zeros(1:4)
+
+both <- function(x) {
+  alternate_zeros(pyramid_numbers(x))
+}
+
+both(1:3)
+both(1:4)
+both(1:5)
+```
+
