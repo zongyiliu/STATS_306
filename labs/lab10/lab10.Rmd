@@ -36,7 +36,7 @@ People <- mutate(People,
                  finalGame_d = ymd(finalGame))
 People <- mutate(People, career_length = finalGame_d - debut_d)
 
-tutorial_options(exercise.reveal_solution=FALSE)
+tutorial_options(exercise.reveal_solution=TRUE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}
