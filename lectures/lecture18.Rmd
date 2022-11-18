@@ -426,6 +426,10 @@ R also has some capitalized versions (`Map`, `Reduce`), but generally no checkin
 
 If we run into a bug in the code being iterated, it can often be difficult to find the source.
 
+```{r}
+x <- list(1, 10, "3", 7)
+```
+
 ```{r eval = FALSE}
 x <- list(1, 10, "3", 7)
 map(x, log)
