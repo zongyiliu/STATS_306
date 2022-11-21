@@ -339,6 +339,6 @@ When microbenchmarking, we observe one operation takes 10ns and one takes 100ns.
 
 Only if it is going to be called a lot. 
 
-Remmber to keep things in perspective and use profiling to identify hot spots in actual evaluation and benchmarking to help imporve those areas that need the most improvement.
+Remember to keep things in perspective and use profiling to identify hot spots in actual evaluation and benchmarking to help improve those areas that need the most improvement.
 
 
