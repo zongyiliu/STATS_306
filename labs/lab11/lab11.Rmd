@@ -18,6 +18,8 @@ if (!packageVersion("learnr") == "0.11.1")
 # For HW4 Q2, Q3
 if (!require(Lahman)) 
   install.packages("Lahman", repos = "http://cran.us.r-project.org")
+
+
 ```
 
 ```{r setup, eval=TRUE, include=TRUE, message=FALSE, echo=TRUE}
@@ -25,9 +27,15 @@ library(learnr)     # For interactive exercises
 library(tidyverse)  # For dplyr, purrr
 ```
 
+```{r, include=FALSE, message=FALSE, echo=FALSE}
+tutorial_options(exercise.reveal_solution=FALSE)
+```
+
+
 ## Logistics
 
-- 
+- HW 5 due on Dec, 11
+- Quiz 5 will on Dec, 4
 
 ## Today's Content
 
@@ -538,7 +546,7 @@ pmap_dbl(list(x, y, z), ~..1 + ..2 +..3)
 ```
 
 
-## Exercise 2
+### Exercise 2
 
 ```{r Ex2, exercise=TRUE}
 
