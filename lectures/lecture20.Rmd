@@ -1,6 +1,6 @@
 ---
 subtitle: "Stats 306: Lecture 20"
-title: "Debugging Continued"
+title: "Debugging Continued; Profiling and Benchmarking"
 author: "Mark Fredrickson"
 output: 
   learnr::tutorial:
@@ -13,7 +13,6 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 library(tidyverse)
-
 
 wikiart <- read_tsv("./data/WikiArt-Emotions-All.tsv.gz")
 wikiart <- mutate(wikiart, Year = as.numeric(str_sub(Year, 1, 4)))
@@ -175,4 +174,171 @@ both(1:3)
 both(1:4)
 both(1:5)
 ```
+
+## Performance
+
+The **performance** of a program is who quickly it can execute its answer.
+
+Performance can depend on many things:
+
+* Algorithmic complexity: how good is the algorithm (set of steps to complete computation)
+* Implementation: R's **interpreter** is generally slower than **compiled** languages like C/C++ (but we get other advantages such as interactive development and metaprogramming)
+* Resource usage: do we use lots of memory or disk space? 
+
+Before we can fix it, we need to measure it.
+
+## Profiling and Benchmarking
+
+To measure our program, we will feed it some input and the either
+
+* **Profile**: see how long each step (function) of the program takes.
+* **Benchmark**: accurate measurement of time of particular function.
+
+Big difference: profiling modifies the program slightly and may miss some functions. Benchmarking gives more real world results but limited it what it reports.
+
+## Profiling in R
+
+R includes a **sampling** profiler: it halts execution on a regular interval and takes a snapshot of the current state.
+
+Profiling generally looks like this:
+
+```{r, eval = FALSE}
+Rprof() # turns on profiling
+... run code ...
+Rprof(NULL) # stop profiling
+```
+
+Output is placed (by default) in `Rprof.out`.
+
+Example output from knitting this document:
+```
+sample.interval=20000
+"ls" "FUN" "lapply" ".rs.objectsOnSearchPath" ".rs.getCompletionsSearchPath" "Reduce" ".rs.rpc.get_completions" 
+"gsub" ".rs.fuzzyMatches" ".rs.getCompletionsSearchPath" "Reduce" ".rs.rpc.get_completions" 
+"makeRestartList" "withRestarts" ".signalSimpleWarning" ".rs.normalizePath" "withCallingHandlers" "suppressWarnings" ".rs.rpc.get_completions" 
+```
+
+## Setting the interval
+
+`Rprof` has an `interval` argument (default 0.02) for how often it should sample (in seconds).
+
+Smaller interval means more precise, but runs slower.
+
+## `profvis` library
+
+The output can be hard to read, so we prefer to use the `profviz` library.
+
+```{r, eval = FALSE}
+library(profvis)
+profvis(your_function())
+```
+
+Open up `lecture20_slow_sort.R`.
+
+## Exercise
+
+Open `lecture20_outer_product.R`. Profile using `run_two`. Where are the hot spots in this code?
+
+## R's Memory Management
+
+R has automatic memory management in the form of a **garbage collector**. When memory is no longer needed, it is collected and then reused for future computations.
+
+For example:
+
+```{r}
+gc()[, 1:2]
+m <- matrix(0, ncol = 1000, nrow = 1000)
+gc()[, 1:2]
+m <- 0
+gc()[, 1:2]
+```
+
+The `gc` function runs automatically when R decides it needs to reclaim memory.
+
+## GC in profiling
+
+GC can be one of the more time intensive aspects of any R program. The special `<GC>` function in the profiling indicates that a garbage collection has been triggered.
+
+Trying to eliminate "memory pressure" is one of the more important tasks in improving R performance.
+
+## Example
+
+Open `lecture20_outer_product.R`. Use `run_three` to provide the code. Which functions are requiring garbage collection inside the function.
+
+## (Micro)benchmarking
+
+A **benchmark** is a measurement we want to improve (or be sure not to go below).
+
+A **microbenchmark** is a measurement of time that is very small. We usually make many microbenchmarks and combine them.
+
+The `bench` library includes tools for microbenchmarking.
+
+## The `bench` function
+
+```{r}
+
+v1 <- function(x) {
+  result <- numeric(length(x))
+  for (i in seq_along(x)) {
+    result[i] <- (x[i] - mean(x))^2
+  }
+  sum(result) / length(x)
+}
+
+v2 <- function(x) {
+  ss <- (x - mean(x))^2 |> sum()
+  ss/length(x)
+}
+
+bm <- bench::mark(v1(1:1000), v2(1:1000))
+```
+
+## Results
+
+```{r}
+bm
+```
+
+* `mark` will try to run each function enough times to get to 5s of execution time total. 
+* Times are in seconds, milliseconds (ms), microseconds($\mu s$) and nano-seconds (ns).
+* Many times the `min` and `median` columns will be most instructive -- benchmarks can get contaminated by background processes.
+
+
+## Exercise
+
+Write a microbench mark to compare squaring a value versus multiplying a vector by itself. Which method is faster? What about raising a vector to the 8th power? How would you use this to write `intpow(x, power)`? Write this and benchmark the result.
+
+```{r squares, exercise = TRUE}
+x <- rnorm(1000)
+```
+
+
+## Checking output
+
+`bench::mark` will want to make sure all results are the same. If thing differ slightly, you can set `check = FALSE`:
+
+```{r, eval = FALSE}
+bench::mark(c(1), c(one = 1))
+# Error: Each result must equal the first result:
+# ` c(1)` does not equal `c(one = 1)`
+```
+```{r}
+bench::mark(c(1), c(one = 1), check = FALSE)
+```
+
+## Exercise
+
+Compare the median function to using `quantile(x, q = 0.5)`. Which is faster?
+
+```{r medq, exercise = TRUE}
+```
+
+## Keeping things in perspective
+
+When microbenchmarking, we observe one operation takes 10ns and one takes 100ns. Is the 100ns version immediately preferable?
+
+Only if it is going to be called a lot. 
+
+Remmber to keep things in perspective and use profiling to identify hot spots in actual evaluation and benchmarking to help imporve those areas that need the most improvement.
+
 
