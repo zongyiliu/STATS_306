@@ -22,7 +22,7 @@ library(lubridate)
 library(tidyverse)  # For ggplot2, dplyr, readr
 library(nycflights13)
 
-tutorial_options(exercise.reveal_solution=TRUE)
+tutorial_options(exercise.reveal_solution=FALSE)
 ```
 
 ```{r fake_setup, echo=TRUE, eval=FALSE}

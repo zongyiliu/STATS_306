@@ -1,0 +1,467 @@
+---
+subtitle: "Stats 306: Lecture 18"
+title: "Iteration"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(nycflights13)
+set.seed(2939394)
+
+wikiart <- read_tsv("./data/WikiArt-Emotions-All.tsv.gz")
+wikiart <- mutate(wikiart, Year = as.numeric(str_sub(Year, 1, 4)))
+
+pivot_longer(wikiart, 
+             matches(":"), 
+             names_to = c("rating_type", "emotion"),
+             names_sep = ":",
+             values_to = "mean_annotation") -> wa_long
+
+select(wa_long, Title, rating_type, emotion, mean_annotation)
+wa_long <- mutate(wa_long,
+                  emotion = str_replace(emotion, "\\s", ""))
+
+filter(wa_long, str_detect(rating_type, "Art")) |>
+  group_by(ID) |>
+  arrange(desc(mean_annotation)) |>
+  summarize(strongest_emotion = first(emotion),
+            strongest_emotion_value = first(mean_annotation)) ->
+  wa_art_strongest
+
+wa_art_strong_year <- left_join(wikiart, wa_art_strongest, by = "ID")
+```
+
+## Review
+
+* Wikiart data: made tidier and cleaner using **regular expression** (regexes)
+** `seclect` and `pivot_longer` with `matches`
+** `str_replace`
+* Using tidied data for summaries, plots
+* Grouping data by art to find strongest emotion (high mean annotation)
+* `left_join` to get year and categorization information
+
+## Factors
+
+* Collections of labels, fixed set of possibilities
+* Can set order of labels and change labels easily
+* `factor(vector_of_strings, levels = optional_ordering_of_levels)`
+* reordering existing factors with `fct_reodrer` or `fct_infreq`
+* merge with `fct_collapse`
+
+## Solving Repetition Issues
+
+We used functions to reduce repetition in code since the beginning of class.
+
+```{r}
+x <- c(10, 1, 23)
+xbar <- mean(x)
+sdx <- sd(x)
+
+## bad!
+c((x[1] - xbar)/sdx, (x[2] - xbar)/sdx, (x[3] - xbar)/sdx)
+
+## better
+f <- function(x) { (x - xbar) / sdx }
+c(f(x[1]), f(x[2]), f(x[3]))
+
+## best
+g <- function(x) { (x - mean(x)) / sd(x) }
+g(x)
+```
+
+## Vectorization and Its Limits
+
+The final solution used **vectorization**: repeating the same calculation for every item in a vector.
+
+Most R functions are vectorized, but every now and again, we encounter results that can be easily vectorized.
+
+* Computing the same calculation over each column in a table (ignore `mutate_all` for the moment)
+* Compute values over all possible combinations of two vectors
+* Build up a result by combining the values one at a time other calculations where order is important
+
+## Unvectorizable computation
+
+An **outer product** of two vectors (`x` with $n$ elemnts and `y` with $k$ elements) is the $n\times k$ matrix with entries $M_{ij} = x_i \cdot y_j$.
+
+So if we had
+```{r}
+x <- c(1, 2, 3)
+y <- c(10, 20, 30, 40)
+```
+
+We could create the outer product using:
+```{r}
+matrix(c(x[1] * y, x[2] * y, x[3] * y), ncol = 4, byrow = T)
+```
+
+## `for` loops
+
+```{r, eval = FALSE}
+for (variable_name in collection) {
+  ... code that uses variable_name ...
+}
+```
+
+* The `seq_along` function can be used to get indexes in to a collection (like items in a vector or columns in a table)
+* If we need to save results, we often create the data first using `vector("type", integer_length)`
+* We could also use `results <- c(results, new_value)`, but this is a less efficient method
+
+## Outer product with for-loop
+
+```{r}
+## version 1
+result <- matrix(0, nrow = length(x), ncol = length(y))
+for (i in seq_along(x)) {
+  for (j in seq_along(y)) {
+    result[i, j] <- x[i] * y[j]
+  }
+}
+result
+
+## version 2
+result <- matrix(0, nrow = length(x), ncol = length(y))
+for (j in seq_along(y)) {
+  result[, j] <- x * y[j]
+}
+result
+
+## version 3
+result <- numeric(0)
+for (y_j in y) {
+  result <- c(result, x * y_j)
+}
+result
+matrix(result, ncol = length(y))
+```
+
+## Exercise
+
+Using the function `class`, determine the type of each column in `nycflights13::flights` using a `for` loop. (Recall, tables are lists of vectors, so you can get a column out using `tbl[["colname"]])`)
+
+```{r flightsclass, exercise = TRUE}
+class(nycflights13::flights$tailnum)
+```
+
+## Exercise
+
+Write your own version of the `min` function using a `for` loop.
+
+```{r minfun, exercise = TRUE}
+
+``` 
+
+## `while` loops
+
+In some cases we don't know the length of the loop in advance and we need to check to see if we should stop.
+
+Find the first instance of an odd number in the vector:
+
+```{r}
+x <- c(2 * 1:5, 11, 13, 4)
+x
+pos <- 1
+while (x[pos] %% 2 == 0) {
+  pos <- pos + 1 # pos++ like C/C++
+}
+pos
+x[pos]
+```
+
+## `map` functions
+
+Many loops have the format
+```{r eval=F}
+result <- vector("type", length(x))
+for (.x in x) {
+  result[i] <- ... something with .x ...
+}
+```
+
+We can avoid this repetition by using `map` functions to handle setting up the storage, running the loop, saving the results so we can write
+
+```{r eval=F}
+map(x, ~ ... something with .x ...)
+```
+
+## Compound Random Variables
+
+Many times we take sample sizes $n$ to be fixed. But what if our sample size itself was random? 
+
+A **compound random variable** is one in which a discrete random variable sets the sample size, and then some other random variable is replicated that many times.
+
+```{r}
+r_pois_norm <- function(n, lambda = 1, mu = 0 , sd = 1) {
+  replicate(n, {
+    n_i <- rpois(1, lambda) + 1
+    rnorm(n_i, mu, sd)
+  })
+}
+
+samples <- r_pois_norm(3, lambda = 8)
+samples
+```
+
+
+## Maximum of the samples
+
+What was the largest value of each sample?
+
+```{r}
+map(samples, max)
+```
+
+What was the largest magnitude?
+```{r}
+## version 1
+map(samples, ~ max(abs(.x)))
+```
+Recall: `~ ... operations on .x ...` is equivalent to 
+```{r eval = F}
+function(.x) { ... .x ...}
+```
+
+```{r}
+## version 2
+map(samples, abs) |> map(max)
+```
+
+## Exercise
+
+Use `map` to get the classes of each column of the `nycflights13::flights` table.
+
+```{r mapclass, exercise = TRUE}
+
+```
+
+## Exercise
+
+Write a function that takes a column as input and either
+
+* Returns a short summary in the form of the mean, median, and standard deviation if it is `numeric`.
+* Returns the class of the object otherwise
+
+Use map to apply it to all columns of the `nycflights13::flights` table.
+```{r mapsummary, exercise = TRUE}
+is.numeric((c(0.1, 20)))
+```
+
+## Getting vector outputs
+
+`map` can take either a list or a `vector` as input, but always returns a `list` as output. If you know that all outputs will be the same, you can `unlist` to get the values in the form you want:
+
+```{r}
+map(samples, ~ max(abs(.x))) |> unlist()
+```
+
+## Known types
+
+If you know that all of the entries in the list will be of a particular type, you can `flatten_*` them to that type:
+
+- `dbl`: Numeric data, decimal (can handle integers too)
+- `int`: Numeric data, integers
+- `lgl`: Logical/boolean
+- `chr`: Character/strings 
+
+```{r}
+map(samples, ~ max(abs(.x))) |> flatten_dbl()
+```
+
+You get an error if things don't match:
+```{r, eval = FALSE}
+flatten_dbl(list(c("hello")))
+# Error: Can't coerce element 1 from a character to a double
+```
+
+## `map_*` versions
+
+The pattern `map(input, f) |> flatten_*()` is so common, there are parallel versions for map:
+
+```{r}
+map_dbl(samples, ~ max(abs(.x)))
+```
+
+## Exercise
+
+Use a `map_*` version (`lgl`, `chr`, `dbl`, `int`) to get classes of the columns in `nycflights12::flights`. 
+
+```{r mapunderscoreclass, exercise = TRUE}
+
+```
+
+## Additional arguments
+
+We have seen several times that R functions take `...` and can use that to pass additional arguments along  to other functions.
+
+```{r}
+samples_missing <- samples
+samples_missing[[1]][1] <- NA
+
+map_dbl(samples_missing, mean)
+map_dbl(samples_missing, mean, na.rm = TRUE)
+```
+
+## Mapping on two things
+
+Suppose for each sample, we have another outcome:
+
+```{r}
+samples_y <- map(samples, ~ runif(length(.x)))
+samples_y
+```
+
+What is the difference corrleation within each sample?
+
+```{r}
+map2(samples, samples_y, cor)
+map2_dbl(samples, samples_y, cor)
+```
+
+
+## Mapping your own function on two things
+
+Suppose we wanted the average ratio of X to Y within each sample. We need to write a custom function with two arguments:
+
+```{r}
+map2_dbl(samples, samples_y, function(x, y) { mean(x / y)})
+map2_dbl(samples, samples_y, ~ mean(.x / .y))
+```
+
+## Exercise
+
+Using `map2`, get the first word of each item in `stringr::fruit` (keep single words). 
+
+Some useful examples:
+```{r}
+str_locate("chili pepper", " ")
+str_sub("chili pepper", end = 6 - 1)
+str_locate("canataloupe", " ")
+```
+
+
+```{r firstword, exercise = TRUE}
+first_space <- str_locate(stringr::fruit, " ")[,1]
+```
+
+
+## Other loop replacing functions
+
+`keep` takes only the entries that match a predicate:
+
+```{r}
+keep(samples, ~ length(.x) > 10)
+```
+
+`discard` drops entries that match.
+
+Many `for` loops have **accumulators**:
+
+```{r}
+max_length <- -Inf
+for (i in seq_along(samples)) {
+  max_length <- max(length(samples[[i]]), max_length)
+}
+max_length
+```
+
+`reduce` avoids the bookkeeping (often convenient to map first):
+```{r}
+map_dbl(samples, length) |> reduce(max)
+```
+
+We can see the intermediate results with `accumulate`:
+```{r}
+reduce(c(1, 10, 100, 2, 3, 4), `+`)
+```
+
+## Map functions that return tables
+
+The `_dfr` variants use functions that return data frames, and then row bind them together
+```{r}
+map_dfr(samples, ~ tibble(x = .x))
+```
+We probably want to know which sample each value is so we can do operations after. We can use an **indexed map** with the `imap_*` variants:
+```{r}
+imap_dfr(samples, ~ tibble(x = .x, sample_num = .y)) |> 
+  group_by(sample_num) |> 
+  mutate(x_centered = x - mean(x)) # within group, mean centered values
+```
+
+There is also `_dfc` that binds columns together.
+
+
+## Connections to grouping and summary functions
+
+Many of these tasks can also be done by creating tables and running `group_by` and `summarize`. There is also a `group_map`
+
+```{r}
+group_by(wikiart, Category) |> group_map(function(x, grp) { 
+    if (nrow(x) > 10) {
+      return(mean(x$`Ave. art rating`))
+    } else {
+      return(max(x$`Ave. art rating`))
+    }
+  }) |> flatten_dbl()
+```
+
+## Built in R functions
+
+There are several built in functions that are similar to `map_*`:
+
+* `lapply` is similar to `map`, but doesn't allow for the function shorthand notation
+* `sapply` is similar to the `map_*` varieties, but no checking. Will return a list if it can't safely unlist results.
+* `vapply` is even closer to `map_*`, but still no anonymous functions
+* `mapply` is similar to `map2`
+
+R also has some capitalized versions (`Map`, `Reduce`), but generally no checking less convenient to use with pipes.
+
+## Errors in iteration
+
+If we run into a bug in the code being iterated, it can often be difficult to find the source.
+
+```{r}
+x <- list(1, 10, "3", 7)
+```
+
+```{r eval = FALSE}
+x <- list(1, 10, "3", 7)
+map(x, log)
+# Error in .Primitive("log")(x, base) : 
+#  non-numeric argument to mathematical function
+```
+
+The `safely` function catches these errors and gives back useful info:
+
+```{r}
+safe_log <- safely(log) # returns a new function
+safe_log(10)
+safe_log("3")
+map(x, safe_log)
+```
+
+
+## `transpose` function
+
+Recall our model of a table:  a list of length n composed of vectors of length k. If we wanted to **transpose** the table we would have a list of length k with vectors of length n.
+
+The `transpose` function does this for data that can be thought of as a table:
+```{r}
+x_log_tp <- transpose(map(x, safe_log))
+x_log_tp$result
+x_log_tp$result |> flatten_dbl()
+x_log_tp$error
+```
+
+
+
+
+
+
+
