@@ -19,12 +19,18 @@ if (!packageVersion("learnr") == "0.11.1")
 if (!require(Lahman)) 
   install.packages("Lahman", repos = "http://cran.us.r-project.org")
 
+if (!require(gapminder))
+  install.packages("gapminder", repos = "http://cran.us.r-project.org")
 
 ```
 
 ```{r setup, eval=TRUE, include=TRUE, message=FALSE, echo=TRUE}
 library(learnr)     # For interactive exercises
-library(tidyverse)  # For dplyr, purrr
+#library(tidyverse)  # For dplyr, purrr
+library(purrr)
+library(dplyr)
+library(ggplot2)
+library(gapminder)
 ```
 
 ```{r, include=FALSE, message=FALSE, echo=FALSE}
@@ -352,6 +358,7 @@ map(moons, length)
 - `map_dbl()` creates a double vector.
 - `map_chr()` creates a character vector.
 - `map_lgl()` creates a logical vector.
+- `map_df()` creates a dataframe.
 
 **Example**
 ```{r}
@@ -530,34 +537,100 @@ pmap_dbl(list(x, y, z), ~..1 + ..2 +..3)
 
 
 ## Putting it all together
+**Inspecting our data (gapminder)**        
+
+- Let us warm up for the more interesting exercise on the next slide.   
+- Using the `gapminder` dataset, create a dataframe whose columns are 
+   + `class` - the class of all columns
+   + `n_distinct` - the number of distinct or unique value
+   + `variable` - the variable whose values were computed in the two columns above.***[Hint:] `map_df()` has the `.id` argument which you might want to explore***
+   
+- Use `map_df`.
+- Your output should look this:
+
+|variable|n_distinct|class|
+|:------:|:-------:|:---:|
+|country |	142	| factor|		
+|continent |	5	| factor	|	
+|year   |	12	| integer|		
+|lifeExp |	1626 |	numeric|		
+|pop	| 1704	| integer|		
+|gdpPercap|	1704 |	numeric|		
+
+
 
 ### Exercise 1
 ```{r Ex1, exercise=TRUE}
-
+## Your code here
 ```
 
-```{r Ex1-hint}
-# Try using strrep() and writeLines() in a for loop
-```
 
 ```{r Ex1-solution}
+gapminder %>% map_df(~(data.frame(n_distinct = n_distinct(.x),
+                                  class = class(.x))),
+                     .id = "variable")
 
-
+## Equivalently:
+map_df(gapminder, ~(data.frame(n_distinct = n_distinct(.x),
+                                  class = class(.x))),
+                     .id = "variable")
 ```
 
 
 ### Exercise 2
+**Creating a list of plots that compare life expectancy and GDP per capita for each continent/year combination**       
+
+- Create a variable `continent_year` which stores all the distinct `continent` `year` pairs. Thus, this object has two columns: `continent` and `year`     
+- From `continent_year`, create two objects `continents` and `years`. Be sure to convert `continents` to a `character` object.       
+- Using `map2()` make a list of scatterplots for each continent/year combination from the `gapminder` data. Call this list object `plot_list`. Be sure to dynamically give each plot it's corresponding continent/year pair.    
+- How many different plots are stored in `plot_list`? Verify this using `length(plot_list)`
+- What continent/year plot is stored in list index 16? What about 31? Verify using `plot_list[[16]]`,
+`plot_list[[31]]` ...
 
 ```{r Ex2, exercise=TRUE}
-
+## Your code here
 ```
 
 ```{r Ex2-hint}
-
+plot_list  <- map2(.x = object1, # the first object to iterate over
+                   .y = object2, # the second object to iterate over
+                   .f = plotFunction(.x, .y))
 ```
 
 ```{r Ex2-solution}
+# 1.
+continent_year <- gapminder %>% distinct(continent, year)
+
+# 2.
+continents <- continent_year %>%
+               pull(continent) %>% 
+               as.character
+years     <- continent_year %>%
+               pull(year)
+# 3.
+plot_list <- map2(.x = continents, 
+                  .y = years, 
+                  .f = ~{
+                    gapminder %>% 
+                      filter(continent == .x,
+                             year == .y) %>%
+                      ggplot() +
+                      geom_point(aes(x = gdpPercap, y = lifeExp)) +
+                      ggtitle(paste0(.x, " ", .y)) + 
+                      theme_bw()
+                  })
+
+## length of list
+length(plot_list)
+
+## 
+plot_list[[16]]
+plot_list[[31]]
+```
 
 
+```{r}
+
+#
 ```
 
