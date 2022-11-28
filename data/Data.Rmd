@@ -53,3 +53,12 @@ Paper citation: Saif M. Mohammad and Svetlana Kiritchenko. (2018). WikiArt Emoti
 
 > Provisional death counts of malignant neoplasms (cancer) by month and year, and other selected demographics, for 2020-2021. Data are based on death certificates for U.S. residents.
 
+
+## Congressional Retweets
+
+* File: `retweets_congress_115th.csv.gz`
+* Date retrieved: 2022-11-26
+* URL: https://www.openicpsr.org/openicpsr/project/108303/version/V2/view
+
+> This dataset includes the retweets posted on Twitter by accounts associated with members of the US Congress during the 115th Congress (2017-2018).
+
