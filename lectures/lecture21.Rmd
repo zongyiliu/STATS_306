@@ -1,0 +1,437 @@
+---
+subtitle: "Stats 306: Lecture 21"
+title: "Benchmarking and Improving Performance"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+
+```
+
+## Review
+
+* Continued discussion of R's **debugger** and the `browser()` function
+* Messages and warnings
+* Profiling to see where time is spent
+* Garbage collection in R
+* Glimpse of micro benchmarking
+
+## (Micro)benchmarking
+
+A **benchmark** is a measurement we want to improve (or be sure not to go below).
+
+A **microbenchmark** is a measurement of time that is very small. We usually make many microbenchmarks and combine them.
+
+The `bench` library includes tools for microbenchmarking.
+
+## The `bench` function
+
+```{r}
+
+v1 <- function(x) {
+  result <- numeric(length(x))
+  for (i in seq_along(x)) {
+    result[i] <- (x[i] - mean(x))^2
+  }
+  sum(result) / length(x)
+}
+
+v2 <- function(x) {
+  ss <- (x - mean(x))^2 |> sum()
+  ss/length(x)
+}
+
+bm <- bench::mark(v1(1:1000), v2(1:1000))
+```
+
+## Results
+
+```{r}
+bm
+```
+
+* `mark` will try to run each function enough times to get to 0.5s of execution time total. 
+* Times are in seconds, milliseconds (ms), microseconds($\mu s$) and nano-seconds (ns).
+* Many times the `min` and `median` columns will be most instructive -- benchmarks can get contaminated by background processes.
+
+
+## Exercise
+
+Write a microbench mark to compare squaring a value versus multiplying a vector by itself. Which method is faster? What about raising a vector to the 8th power? How would you use this to write `intpow(x, power)`? Write this and benchmark the result.
+
+```{r squares, exercise = TRUE}
+x <- rnorm(1000)
+```
+
+
+## Checking output
+
+`bench::mark` will want to make sure all results are the same. If thing differ slightly, you can set `check = FALSE`:
+
+```{r, eval = FALSE}
+bench::mark(c(1), c(one = 1))
+# Error: Each result must equal the first result:
+# ` c(1)` does not equal `c(one = 1)`
+```
+```{r}
+bench::mark(c(1), c(one = 1), check = FALSE)
+```
+
+## Exercise
+
+Compare the median function to using `quantile(x, q = 0.5)`. Which is faster?
+
+```{r medq, exercise = TRUE}
+```
+
+## Keeping things in perspective
+
+When microbenchmarking, we observe one operation takes 10ns and one takes 100ns. Is the 100ns version immediately preferable?
+
+Only if it is going to be called a lot. 
+
+Remember to keep things in perspective and use profiling to identify hot spots in actual evaluation and benchmarking to help improve those areas that need the most improvement.
+
+## Putting profiling and benchmarking to use
+
+Now that we can identify areas of the program that are running more slowly, how can we address it:
+
+* Code organization
+* Check for existing solutions
+* Do as little as possible/make code less general
+* Vectorize
+* Avoid copies
+
+## Example: Linear regression: finding models with three predictors
+
+```{r}
+n <- 100000
+d <- tibble(x1 = c(rep(0, 1000), rep(1, n - 1000)),
+            x2 = rnorm(n),
+            x3 = runif(n, -1, 1)) |>
+  mutate(x4 = x3^2, 
+         x5 = x1 * x2 * 0.5,
+         y = 2 + 0.1 * x1 + x3 + x5 + rnorm(n, sd = 2))
+
+lm(y ~ x1 + x3 + x5, data = d)
+
+all_mods <- combn(paste("x", 1:5, sep = ""), 3) |> as_tibble()
+all_mods
+
+evaluate_model <- function(vars) {
+  lm(as.formula(paste0("y ~ ", paste(vars,  collapse = "+"))), data = d) |> coef()
+}
+
+coefs <- map(all_mods, evaluate_model) 
+
+coefs[1:3]
+```
+
+Let's profile!
+
+## Code organization
+
+We decide that we want to improve `evaluate_model`.
+
+First, we want records of what we try. So **organize** our attempts:
+
+```{r}
+evaluate_model_1 <- evaluate_model # not strictly necessary
+```
+
+Our subsequent versions will be `evaluate_model_2` and so forth.
+
+## Finding existing solutions
+
+Are there faster versions on CRAN? Stack overflow questions?
+
+Let's find out...
+
+## Excerise
+
+Use the following to look for faster `lm` functions for large data or trying multiple models:
+
+* [CRAN](cran.r-project.org)
+* [RSeek.org](rseek.org)
+* [StackOverflow](https://stackoverflow.com/) (put `[R]` in the search box)
+
+## Investigating existing `lm` function
+
+Go to console and type in `lm`
+
+## Doing as little as possible
+
+Maybe we can avoid all those calls to `model.frame` and `model.matrix` if we do that once.
+
+```{r}
+dmf <- model.frame(y ~ ., data = d)
+dmf
+dmm <- model.matrix(terms(dmf), dmf)
+
+evaluate_model_2 <- function(vars) {
+  lm.fit(x = dmm[, c("(Intercept)", vars)], y = d$y)$coefficients
+}
+evaluate_model_2(c("x1", "x2", "x3"))
+
+bench::mark(evaluate_model_1(c("x1", "x2", "x3")),
+            evaluate_model_2(c("x1", "x2", "x3")),
+            check = FALSE)
+
+bench::mark(map(all_mods, evaluate_model_1),
+            map(all_mods, evaluate_model_2),
+            check = FALSE)
+```
+
+
+
+## Exercise
+
+Suppose that each column of the table below represents all of the values of stocks in our portfolio on one day of the year for 10 years, and we want to **sum** those values to get our daily total portfolio value.
+
+Investigate `summarize_all`, `colSums` and `.colSums` and see how they differ in performance.
+
+```{r portfolioex, exercise = TRUE}
+stocks_matrix <- replicate(365 * 10, runif(100, -90, 90))
+stocks_table <- data.frame(stocks)
+```
+
+## Vectorize
+
+We seen **vectorized** computations from early in the course:
+```{r}
+a <- 1:10
+b <- 11:20
+
+bench::mark(a * b, map2_dbl(a, b, `*`))
+```
+Recall `map` functions are just `for` loops under the hood.
+
+There may be surprising opportunities to find vectorized computations.
+
+```{r}
+map_lgl(starwars, ~ any(is.na(.x)))
+colSums(is.na(starwars)) > 1
+
+bench::mark(
+  map(starwars, ~ any(is.na(.x))),
+  colSums(is.na(starwars)) > 1,
+  check = FALSE
+)
+```
+
+## Matrix algebra and `lm`
+
+R has access to very fast matrix algebra systems, which are effectively vectorized.
+
+When you take a course on linear regression, you'll likely encounter the **normal equations**:
+$$(X'X) \beta = X'y$$
+Where $X'X$ is the matrix product of "$X$ transpose" and $X$.
+
+In words, this is saying the $\beta$ is the solution to a system of equations.
+
+Sometimes, this leads to the next step of writing $\beta$ as the product of a matrix inverse and $X'y$:
+$$\beta = (X'X)^{-1} X'y$$
+
+```{r}
+# inverse method:
+solve(t(dmm) %*% dmm) %*% t(dmm) %*% d$y
+
+# solving beta as system of equations
+solve(t(dmm) %*% dmm,  t(dmm) %*% d$y)
+
+# verifying with lm
+lm(y ~ ., data = d)$coef
+```
+
+## Exercise
+Use `bench::mark` to see which of these methods is faster.
+
+```{r mmex, exercise = TRUE}
+solve(t(dmm) %*% dmm) %*% t(dmm) %*% d$y
+solve(t(dmm) %*% dmm,  t(dmm) %*% d$y)
+```
+
+## Avoiding copies
+
+We've seen the issues with performance when **garbage collection** needs to run frequently.
+
+One of the most common ways is creating unnecessary copies. Beware of functions like `c()`, `append()`, `cbind()/bind_cols()`, and `rbind()/bind_rows()`. Also functions that convert types like `as.XYZ` or `paste`.
+
+## Using `tracemem`
+
+It can be a little hard to read the output, but the `tracemem` function can at least flag us when copies are being made of things:
+
+```{r}
+a <- 1:10
+tracemem(a)
+## b and a share memory
+b <- a
+b[1] <- 1
+untracemem(a)
+```
+
+## Putting it all together
+
+```{r}
+evaluate_model_3 <- function(vars) {
+  xx <- dmm[,vars]
+  solve(t(xx) %*% xx, t(xx) %*% d$y) |> as.vector()
+}
+
+evaluate_model_3(c("x1", "x2", "x3"))
+
+bench::mark(evaluate_model_1(c("x1", "x2", "x3")),
+            evaluate_model_2(c("x1", "x2", "x2")),
+            evaluate_model_3(c("x1", "x2", "x3")), check = FALSE)
+```
+
+## Why doesn't R do this by default?
+
+* Can't know that we are going to do many models in advance
+* Generally less safe for real world input
+
+```{r}
+
+d$y[1] <- NA
+evaluate_model_1(c("x1", "x2", "x3"))
+```
+```{r}
+evaluate_model_3(c("x1", "x2", "x3"))
+```
+Be very careful about optimizing too early. It can make code difficult to read and create bugs to solve later.
+
+## Parallel programming
+
+For all three approaches, we were computing each combination of variables one at a time. What if we could split up the work and have more than one CPU take the load?
+
+R's `parallel` library makes this very easy to do.
+
+Strategy: break up overall work into non-interacting components, send the work to different compute units, reassemble at the end.
+
+## `parallel` library
+
+How much work can we split up on this computer?
+```{r}
+library(parallel)
+detectCores()
+```
+
+Two ways to use these cores:
+
+* Start **workers** and send them tasks directly
+* Use a higher level iteration technique
+
+## Starting a cluster
+
+```{r}
+cl <- makeCluster(2) # two workers on the local machine
+clusterCall(cl, print, "hello")
+clusterEvalQ(cl, Sys.getpid())
+water <- read_csv("data/BKB_WaterQualityData_2020084.csv")
+```
+```{r eval = FALSE}
+# this would cause an error: clusterEvalQ(cl, dim(water))
+clusterEvalQ(cl, library(tidyverse))
+clusterExport(cl, "water")
+clusterEvalQ(cl, dim(water))
+```
+```{r echo = FALSE}
+## This is just for the Rmarkdown which otherwise can't find "water"
+clusterEvalQ(cl, library(tidyverse))
+clusterExport(cl, "water", envir = environment())
+clusterEvalQ(cl, dim(water))
+```
+
+## Doing something more interesting
+
+Summarize columns in the two workers:
+
+```{r}
+clusterSplit(cl, colnames(water)) 
+clusterSplit(cl, colnames(water)) |>
+  clusterMap(cl = cl, fun = function(name) { summary(water[, name]) })
+```
+
+## Easier interface
+
+We noted with iteration, R has built in versions of `map` and `map_*` called `lapply` and `sapply`. There are parallel versions that very easy to use:
+
+```{r}
+parLapply(cl, water, summary)
+parSapply(cl, water, function(col) { sum(!is.na(col)) })
+```
+
+## Putting the cluster to bed
+
+When you are done you can stop the cluster with:
+
+```{r}
+stopCluster(cl)
+```
+
+## Default cluster
+
+If you only ever have one cluster you can run
+
+```{r, eval = FALSE}
+makeCluster() |> setDefaultCluster()
+```
+
+Then all of the `cl` arguments will be set automatically.
+
+To end the cluster:
+```{r, eval = FALSE}
+getDefaultCluster() |> stopCluster()
+```
+
+## Shared memory (Mac/Linux)
+
+In the previous examples all of the workers were separate from the main process.
+
+* Pro: could even have workers on other machines
+* Con: need to spend time sending data around
+
+On Mac and Linux, you also can used "shared memory" parallelism with the `mclapply` function.
+
+```{r}
+getOption("mc.cores") # default is 2 otherwise
+mclapply(water, summary) # didn't need to set up a cluster
+```
+
+## Trying out better model evaluation
+
+```{r}
+bench::mark(lapply(all_mods, evaluate_model_1),
+            mclapply(all_mods, evaluate_model_1),
+            check = FALSE,
+            memory = FALSE) # turn off when using parallel tools
+```
+
+## Is parallelization always faster?
+
+```{r}
+bench::mark(lapply(1:10000, function(i) { log(i^2) }),
+            mclapply(1:10000, function(i) { log(i^2) }),
+            memory = FALSE)
+```
+
+In this case, the cost of setting up the workers dominates compared to the actual computations.
+
+## Exercise
+
+Using either `parLapply` (any, including Windows) or `mclapply` (Mac, Linux only), iterate over all the **rows** in the `starwars` data base and compute the ratio of `mass` and `height`.
+
+```{r parex, exercise = TRUE}
+
+```
+
+
+
