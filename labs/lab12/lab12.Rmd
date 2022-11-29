@@ -388,6 +388,5 @@ normal_sqrt(10)
 par_sqrt(10)
 ```
 
-
-
-
+If you were to time the two functions above, you'd likely see that the parallel version is actually slower. This is because there is some overhead when using `%dopar%` with `foreach`, and each operation is relatively quick. 
+This fact highlights when parallelization is most effective: each iteration in a calculation is computationally intensive when compared to the parallelization overhead. 
