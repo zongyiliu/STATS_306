@@ -125,7 +125,7 @@ for (i in 1:length(x)) {
 hist(log_x)
 ```
 
-```{r setSeed-solution}
+```{r setSeed-solution, error=TRUE}
 # There are many possible solutions, but here is one of them: 
 set.seed(8)
 x <- rnorm(100, mean = 3, sd = 1)
@@ -371,9 +371,9 @@ Another great tool is the `foreach` and `doParallel` packages. These allow us to
 registerDoParallel(numCores)  # setting up system for parallelization
 
 normal_sqrt <- function(n) {
-  res <- numeric(n)
+  res <- c() 
   for (i in 1:n) {
-    res[i] <- sqrt(i)
+    res <- c(res, sqrt(i))
   }
   res
 }
