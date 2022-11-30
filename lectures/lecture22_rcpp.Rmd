@@ -1,0 +1,138 @@
+---
+subtitle: "Stats 306: Lecture 22 (Rcpp)"
+title: "Rcpp"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate)
+library(Rcpp)
+```
+
+## Rcpp: easy R interface
+
+R has always had a C/C++ interface, but it is tricky to use. 
+
+* You need to package up your data into specific forms
+* You need to unpack results back into R native formats
+* Does not interact well with calling R functions from C/C++
+* You need to manage all compilation and packaging of code
+
+`Rcpp` is a library of convenience functions and C++ templates that greatly eases these burdens. It also has facilities to make writing C++ seem more like writing R.
+
+(Note: you need to install C/C++ tool chain. [See 25.1 in Advanced R](https://adv-r.hadley.nz/rcpp.html#prerequisites-17))
+
+## Example Rcpp usage
+
+The `cppFunction` takes a string that is valid C and turns it into a function:
+
+```{r}
+cppFunction('int add(int x, int y, int z) {
+  int sum = x + y + z;
+  return sum; // notice no parens
+}')
+
+# now `add` defined:
+add(1, 2, 3)
+```
+
+Some differences with C/C++
+
+* All lines must end with `;`
+* Functions must explicitly `return` (but you don't need parens)
+* Variables must be declared and typed
+* All variables are **scalar** by default, but Rcpp includes some convenient **collections**
+* Comments given by `//` or `/* ... multiple lines...  */` blocks
+
+## Collections and Loops
+
+```{r}
+cppFunction('double sumC(NumericVector x) {
+  int n = x.size(); // 
+  double total = 0;
+  for(int i = 0; i < n; ++i) {
+    total += x[i];
+  }
+  return total;
+}')
+
+sumC(1:10) 
+```
+
+* Notice `x` is marked as `NumericVector` object
+* `x.size()` is **method** call. Methods are like functions `f(obj, arg2)` but `obj.method(arg2)`.
+* Loops have a different syntax `(create var; until condition; increment var)`
+* C/C++ counts start at 0 instead of 1 (e.g. `x[0]` is first item in collection)
+
+## Comparing performance
+
+```{r}
+sumR <- function(x) { reduce(x, `+`) }
+bench::mark(sumR(1:100), sumC(1:100), sum(1:100))
+```
+## Better iteration
+
+```{r}
+cppFunction('double sumC2(NumericVector x) {
+  double total = 0;
+  NumericVector::iterator it;
+  for(it = x.begin(); it != x.end(); ++it) {
+    total += *it; // "dereference" the point `it`
+  }
+  return total;
+}')
+
+sumC2(1:100)
+```
+
+## Outer products
+
+Recall that for vectors $x$ and $y$, the outer product $M$ is a matrix with $M_{ij} = x_i y_j$.
+
+```{r}
+outerR <- function(x, y) {
+  m <- matrix(0, nrow = length(x), ncol = length(y))
+  for (j in 1:length(y)) {
+    m[, j] <- y[j] * x
+  }
+  return(m)
+}
+a <- 1:10
+b <- c(20, 30, 50)
+outerR(a, b)
+v1 <- rnorm(1000)
+v2 <- rnorm(1000)
+bench::mark(outer(v1, v2), outerR(v1, v2))
+```
+
+## Implementing in Rcpp
+
+Go to RStudio...
+
+## Using `.cpp` files
+
+When writing code in `.cpp` files we can either compile it directly or have it included in a package definition (see `vignette("Rcpp-package")`) or use `sourceCpp`:
+
+```{r}
+sourceCpp("lecture22_outerC.cpp")
+outerC(a,b)
+
+bench::mark(outerR(v1, v2), outer(v1, v2), outerC(v1, v2))
+```
+
+## Rcpp other notes
+
+* Usually write in R first, then translate to C++
+* Great candidate for functions that call themselves (recursive functions) or otherwise have deep call stacks
+* Opportunities to use linear algebra systems in C++ (RcppAmarmadillo)
+* Wide variety of interesting data types in the Standard Template Library, Boost, other packages
+* Parallelization is more difficult; better to keep parallel techniques at the R level
+

@@ -192,5 +192,5 @@ R has always had a C/C++ interface, but it is tricky to use.
 
 (Note: you need to install C/C++ tool chain. [See 25.1 in Advanced R](https://adv-r.hadley.nz/rcpp.html#prerequisites-17))
 
-
+See `lectures/lecture22_Rcpp.Rmd` if you have Rcpp installed.
 
