@@ -1,0 +1,196 @@
+---
+subtitle: "Stats 306: Lecture 22"
+title: "Parallel Programming and Rcpp"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate)
+```
+
+## Review
+
+* More on microbenchmarking
+* Strategies for optimizing performance
+  * Code organization
+  * Finding existing solutions
+  * Doing as little as possible
+  * Vectorization
+  * Avoiding copies
+* Take care not to optimize too early, can make code brittle
+
+
+## Parallel programming
+
+For all three approaches, we were computing each combination of variables one at a time. What if we could split up the work and have more than one CPU take the load?
+
+R's `parallel` library makes this very easy to do.
+
+Strategy: break up overall work into non-interacting components, send the work to different compute units, reassemble at the end.
+
+## `parallel` library
+
+How much work can we split up on this computer?
+```{r}
+library(parallel)
+detectCores()
+```
+
+Two ways to use these cores:
+
+* Start **workers** and send them tasks directly
+* Use a higher level iteration technique
+
+## Starting a cluster
+
+```{r}
+cl <- makeCluster(2) # two workers on the local machine
+clusterCall(cl, print, "hello")
+clusterEvalQ(cl, Sys.getpid())
+water <- read_csv("data/BKB_WaterQualityData_2020084.csv")
+```
+```{r eval = FALSE}
+# this would cause an error: clusterEvalQ(cl, dim(water))
+clusterEvalQ(cl, library(tidyverse))
+clusterExport(cl, "water")
+clusterEvalQ(cl, dim(water))
+```
+```{r echo = FALSE}
+## This is just for the Rmarkdown which otherwise can't find "water"
+clusterEvalQ(cl, library(tidyverse))
+clusterExport(cl, "water", envir = environment())
+clusterEvalQ(cl, dim(water))
+```
+
+## Doing something more interesting
+
+Summarize columns in the two workers:
+
+```{r}
+clusterSplit(cl, colnames(water)) 
+clusterSplit(cl, colnames(water)) |>
+  clusterMap(cl = cl, fun = function(name) { summary(water[, name]) })
+```
+
+## Easier interface
+
+We noted with iteration, R has built in versions of `map` and `map_*` called `lapply` and `sapply`. There are parallel versions that very easy to use:
+
+```{r}
+parLapply(cl, water, summary)
+parSapply(cl, water, function(col) { sum(!is.na(col)) })
+```
+
+## Putting the cluster to bed
+
+When you are done you can stop the cluster with:
+
+```{r}
+stopCluster(cl)
+```
+
+## Default cluster
+
+If you only ever have one cluster you can run
+
+```{r, eval = FALSE}
+makeCluster() |> setDefaultCluster()
+```
+
+Then all of the `cl` arguments will be set automatically.
+
+To end the cluster:
+```{r, eval = FALSE}
+getDefaultCluster() |> stopCluster()
+```
+
+## Shared memory (Mac/Linux)
+
+In the previous examples all of the workers were separate from the main process.
+
+* Pro: could even have workers on other machines
+* Con: need to spend time sending data around
+
+On Mac and Linux, you also can used "shared memory" parallelism with the `mclapply` function.
+
+```{r}
+getOption("mc.cores") # default is 2 otherwise
+mclapply(water, summary) # didn't need to set up a cluster
+```
+
+## Example
+
+Here is a contrived example that "sleeps" (does nothing) to make it slow:
+
+```{r}
+slow_function <- function(x) {
+  Sys.sleep(0.5) # does nothing for `1/2 second
+  x^2
+}
+
+a <- now()
+slow_function(999)
+now() - a
+```
+
+## Trying speeding up with parallelization
+
+```{r}
+bench::mark(lapply(1:6, slow_function),
+            mclapply(1:6, slow_function, mc.cores = 2),
+            memory = FALSE) # turn off when using parallel tools
+```
+
+## Is parallelization always faster?
+
+```{r}
+bench::mark(lapply(1:10000, function(i) { log(i^2) }),
+            mclapply(1:10000, function(i) { log(i^2) }),
+            memory = FALSE)
+```
+
+In this case, the cost of setting up the workers dominates compared to the actual computations.
+
+## Exercise
+
+Using either `parLapply` (any, including Windows) or `mclapply` (Mac, Linux only), iterate over all the **rows** in the `starwars` data base and compute the ratio of `mass` and `height`.
+
+```{r parex, exercise = TRUE}
+
+```
+
+## Why use other languages?
+
+In many ways R is a **scripting language** for C/C++ (and also FORTRAN). A scripting language is interactive and handles more burdens for the programmer, but is typically slower.
+
+When we identify key areas of improvement, it is useful to rewrite those functions in a faster language.
+
+* Loops where loop overhead dominates
+* Recursive functions (functions that call themselves) -- C++ has lower overhead for function calls and can do "tail recursion" which rewrites some recursion into iteration automatically
+* Algorithms that depend on data structures not easily implemented as vectors or data.frame like tables (heaps, hash tables, graphs)
+
+Goal: get the benefits of C++ without having to give up too much of the convenience of R
+
+## Rcpp: easy R interface
+
+R has always had a C/C++ interface, but it is tricky to use. 
+
+* You need to package up your data into specific forms
+* You need to unpack results back into R native formats
+* Does not interact well with calling R functions from C/C++
+* You need to manage all compilation and packaging of code
+
+`Rcpp` is a library of convenience functions and C++ templates that greatly eases these burdens. It also has facilities to make writing C++ seem more like writing R.
+
+(Note: you need to install C/C++ tool chain. [See 25.1 in Advanced R](https://adv-r.hadley.nz/rcpp.html#prerequisites-17))
+
+
+

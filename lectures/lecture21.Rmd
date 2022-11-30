@@ -269,13 +269,28 @@ One of the most common ways is creating unnecessary copies. Beware of functions 
 
 It can be a little hard to read the output, but the `tracemem` function can at least flag us when copies are being made of things:
 
-```{r}
+```{r eval = FALSE}
+# (cannot be run on Great Lakes, so this chunk is disabled)
 a <- 1:10
 tracemem(a)
 ## b and a share memory
 b <- a
 b[1] <- 1
 untracemem(a)
+```
+
+Output from running interactively:
+
+```
+> a <- 1:10
+> tracemem(a)
+[1] "<0x7fb714acaa60>"
+> ## b and a share memory
+> b <- a
+> b[1] <- 1
+tracemem[0x7fb714acaa60 -> 0x7fb723e75188]: 
+tracemem[0x7fb723e75188 -> 0x7fb7162018e8]: 
+> untracemem(a)
 ```
 
 ## Putting it all together
@@ -307,131 +322,4 @@ evaluate_model_1(c("x1", "x2", "x3"))
 evaluate_model_3(c("x1", "x2", "x3"))
 ```
 Be very careful about optimizing too early. It can make code difficult to read and create bugs to solve later.
-
-## Parallel programming
-
-For all three approaches, we were computing each combination of variables one at a time. What if we could split up the work and have more than one CPU take the load?
-
-R's `parallel` library makes this very easy to do.
-
-Strategy: break up overall work into non-interacting components, send the work to different compute units, reassemble at the end.
-
-## `parallel` library
-
-How much work can we split up on this computer?
-```{r}
-library(parallel)
-detectCores()
-```
-
-Two ways to use these cores:
-
-* Start **workers** and send them tasks directly
-* Use a higher level iteration technique
-
-## Starting a cluster
-
-```{r}
-cl <- makeCluster(2) # two workers on the local machine
-clusterCall(cl, print, "hello")
-clusterEvalQ(cl, Sys.getpid())
-water <- read_csv("data/BKB_WaterQualityData_2020084.csv")
-```
-```{r eval = FALSE}
-# this would cause an error: clusterEvalQ(cl, dim(water))
-clusterEvalQ(cl, library(tidyverse))
-clusterExport(cl, "water")
-clusterEvalQ(cl, dim(water))
-```
-```{r echo = FALSE}
-## This is just for the Rmarkdown which otherwise can't find "water"
-clusterEvalQ(cl, library(tidyverse))
-clusterExport(cl, "water", envir = environment())
-clusterEvalQ(cl, dim(water))
-```
-
-## Doing something more interesting
-
-Summarize columns in the two workers:
-
-```{r}
-clusterSplit(cl, colnames(water)) 
-clusterSplit(cl, colnames(water)) |>
-  clusterMap(cl = cl, fun = function(name) { summary(water[, name]) })
-```
-
-## Easier interface
-
-We noted with iteration, R has built in versions of `map` and `map_*` called `lapply` and `sapply`. There are parallel versions that very easy to use:
-
-```{r}
-parLapply(cl, water, summary)
-parSapply(cl, water, function(col) { sum(!is.na(col)) })
-```
-
-## Putting the cluster to bed
-
-When you are done you can stop the cluster with:
-
-```{r}
-stopCluster(cl)
-```
-
-## Default cluster
-
-If you only ever have one cluster you can run
-
-```{r, eval = FALSE}
-makeCluster() |> setDefaultCluster()
-```
-
-Then all of the `cl` arguments will be set automatically.
-
-To end the cluster:
-```{r, eval = FALSE}
-getDefaultCluster() |> stopCluster()
-```
-
-## Shared memory (Mac/Linux)
-
-In the previous examples all of the workers were separate from the main process.
-
-* Pro: could even have workers on other machines
-* Con: need to spend time sending data around
-
-On Mac and Linux, you also can used "shared memory" parallelism with the `mclapply` function.
-
-```{r}
-getOption("mc.cores") # default is 2 otherwise
-mclapply(water, summary) # didn't need to set up a cluster
-```
-
-## Trying out better model evaluation
-
-```{r}
-bench::mark(lapply(all_mods, evaluate_model_1),
-            mclapply(all_mods, evaluate_model_1),
-            check = FALSE,
-            memory = FALSE) # turn off when using parallel tools
-```
-
-## Is parallelization always faster?
-
-```{r}
-bench::mark(lapply(1:10000, function(i) { log(i^2) }),
-            mclapply(1:10000, function(i) { log(i^2) }),
-            memory = FALSE)
-```
-
-In this case, the cost of setting up the workers dominates compared to the actual computations.
-
-## Exercise
-
-Using either `parLapply` (any, including Windows) or `mclapply` (Mac, Linux only), iterate over all the **rows** in the `starwars` data base and compute the ratio of `mass` and `height`.
-
-```{r parex, exercise = TRUE}
-
-```
-
-
 
