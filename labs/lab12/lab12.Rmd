@@ -1,0 +1,392 @@
+---
+title: "Stats 306: Lab 12"
+author: "Your Name"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+## Set up
+
+```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
+# This just checks if students need to install some packages that they might 
+# not have.
+
+if (!require(bench))
+  install.packages("bench", repos = "http://cran.us.r-project.org")
+
+if (!require(parallel))
+  install.packages("parallel", repos = "http://cran.us.r-project.org")
+
+if (!require(doParallel))
+  install.packages("doParallel", repos = "http://cran.us.r-project.org")
+
+if (!require(foreach))
+  install.packages("foreach", repos = "http://cran.us.r-project.org")
+```
+
+```{r setup, eval=TRUE, include=TRUE, message=FALSE, echo=TRUE}
+library(learnr)     # For interactive exercises
+library(purrr)
+library(dplyr)
+library(ggplot2)
+library(bench)
+library(parallel)
+library(foreach)
+library(doParallel)
+```
+
+```{r, include=FALSE, message=FALSE, echo=FALSE}
+tutorial_options(exercise.reveal_solution=FALSE)
+```
+
+## Logistics
+
+- HW 5
+- End of the semester logistics:
+    - After the lab today, one more lab next week. 
+    - There will be a review session, probably Friday Dec 9, around 5:30 pm. To be scheduled. 
+- Last quiz this weekend (debugging & performance)
+- Final Exam
+
+## Today's Content
+
+- Debugging Review
+- Performance Evaluation in `R` 
+- Brief intro to parallelization in `R` 
+
+## Debugging Review 
+
+As you've likely seen many times this semester, incorrect `R` code can sometimes result in an *Error* message. 
+When this happens, we say that `R` *throws* an error. 
+
+**Example:**
+
+```{r varianceFun, error=TRUE}
+variance(rnorm(100))
+```
+
+Often the error message will help us find what is wrong with our code. This is the case above, where the error message tells us that the function `variance` could not be found. 
+Sometimes, however, the error message is not as informative. 
+
+**Example:**
+
+```{r lmMean, error=TRUE}
+lm(mean)
+```
+
+As outlined in the [Advanced R](https://adv-r.hadley.nz/debugging.html) textbook, a good strategy to help identifying and fixing errors is the following: 
+
+> (1) **Google!**: 
+> (2) **Make it Repeatable**
+> (3) **Figure out where it is**
+> (4) **Fix it and test it** 
+
+**Example: Make it Repeatable.** Let's say that we want to create a random variable in the following 
+way: 
+
+- Sample $X_i \sim N(3, 1)$ distribution, for $i \in 1:100$
+- Set $Y_i = log(X_i)$ for each $i$, 
+- If $Y_i < 0$, set $Y_i = 0$.
+
+We implement this strategy for sampling $Y$ below. 
+
+```{r}
+x <- rnorm(100, mean = 3, sd = 1)
+log_x <- log(x)
+for (i in 1:length(x)) {
+  if (log_x[i] < 0) {
+    log_x[i] <- 0
+  }
+}
+
+hist(log_x)
+```
+
+Note that sometimes this results in an error, but usually it doesn't! This makes 
+it really difficult to debug! 
+For this particular problem, it might be easy to find the bug, but this example illustrates how getting a reproducible error (step 2) can help us find the bug. 
+
+### Exercise:
+
+Set the reproducible seed number so that the code below results in an error. 
+
+```{r setSeed, exercise=TRUE}
+set.seed(1)  # Change 1 to any other number until the code has an error. 
+x <- rnorm(100, mean = 3, sd = 1)
+log_x <- log(x)
+for (i in 1:length(x)) {
+  if (log_x[i] < 0) {
+    log_x[i] <- 0
+  }
+}
+
+hist(log_x)
+```
+
+```{r setSeed-solution, error=TRUE}
+# There are many possible solutions, but here is one of them: 
+set.seed(8)
+x <- rnorm(100, mean = 3, sd = 1)
+log_x <- log(x)
+for (i in 1:length(x)) {
+  if (log_x[i] < 0) {
+    log_x[i] <- 0
+  }
+}
+
+# One clever way to do this is by setting the seed in a for loop, and when it 
+# results in an error, you'll have the seed number saved that broke the code.
+
+hist(log_x)
+```
+
+Now that the error is reproducible, it should be easier to debug. 
+
+### Exercise: 
+
+Using `set.seed(8)`, find the first value of $i$ in the for-loop that causes an error. What's special about this value of $i$? 
+
+```{r whichI, exercise=TRUE}
+set.seed(8)  
+x <- rnorm(100, mean = 3, sd = 1)
+log_x <- log(x)
+for (i in 1:length(x)) {
+  if (log_x[i] < 0) {
+    log_x[i] <- 0
+  }
+}
+```
+
+```{r whichI-solution}
+# Because the code throws an error, the for loop stops. Thus, the value of i 
+# that causes the error is available after the for-loop finishes. 
+# 
+# Another solution could be to print each value of i in the for-loop. 
+set.seed(8)  
+x <- rnorm(100, mean = 3, sd = 1)
+log_x <- log(x)
+for (i in 1:length(x)) {
+  if (log_x[i] < 0) {
+    log_x[i] <- 0
+  }
+}
+
+cat("x[i] = ", x[i])  
+# x[i] is negative, so taking the log results in NaN, which causes an error in 
+# the if statement, because we can't compare missing values to a number. 
+```
+
+### Optional Exercise
+
+Save this exercise for the end, if there is time. 
+
+Open the file `lab12/plotMin_bug.R`, and use any debugging tool to identify potetential bug(s) in the file and fix them. 
+This script will plot a function and it's minimum value.
+
+## Performance Evaluation in `R`
+
+`R` is a really good programming language for Statistics and Data Science, but it does have some flaws. In the introduction to [Advanced R](https://adv-r.hadley.nz/introduction.html), Hadley Wickham (a big advocate of the `R` programming language) notes some potential issues with `R`, including the following: 
+
+> Much of the `R` code you’ll see in the wild is written in haste to solve a pressing problem. As a result, code is not very elegant, fast, or easy to understand.
+> `R` is not a particularly fast programming language, and poorly written `R` code can be terribly slow. `R` is also a profligate user of memory.
+
+Performance evaluation tools can help us improve our `R` code and avoid these issues. 
+Specifically, in lecture we discussed *profiling* and *(micro)benchmarking* as useful tools to help evaluate the performance of our code. 
+
+**Exercise:** 
+
+```{r profileVSbench}
+question(
+  "What is the difference between profiling and benchmarking?",
+  answer("There is no significant difference, both functions do the same thing."),
+  answer("Profiling is used to get an accurate estimate of how long a function will take, whereas benchmarking is used to determine how long each step of a function (or program) takes."),
+  answer("Profiling is used to determine how long each step of a function (or program) takes, whereas benchmarking is used to get an accurate estimate of how long a function will take.", correct = TRUE),
+  answer("Profiling compares the speed of a function to other functions, and benchmarking does not.")
+)
+```
+
+
+### **Exercise: calculating the mean of a vector** 
+
+Use the function `bench::mark` to determine which is the fastest way to compute the mean of a vector. 
+
+```{r timeMean, exercise = TRUE}
+set.seed(234532)
+x <- rnorm(n = 100000, mean = 1.5, sd = 2)
+
+mean1 <- function(x) {
+  mean(x)
+}
+
+mean2 <- function(x) {
+  sum(x) / length(x)
+}
+
+mean3 <- function(x) {
+  tmp <- 0
+  for (i in 1:length(x)) {
+    tmp <- tmp + x[i]
+  }
+  tmp / length(x)
+}
+
+```
+
+
+```{r timeMean-solution}
+set.seed(234532)
+x <- rnorm(n = 100000, mean = 1.5, sd = 2)
+
+mean1 <- function(x) {
+  mean(x)
+}
+
+mean2 <- function(x) {
+  sum(x) / length(x)
+}
+
+mean3 <- function(x) {
+  tmp <- 0
+  for (i in 1:length(x)) {
+    tmp <- tmp + x[i]
+  }
+  tmp / length(x)
+}
+
+mark(mean1(x), mean2(x), mean3(x))
+```
+
+### Exercise: speeding up a for loop. 
+
+One common approach to speeding up `R` code is by replacing for-loops with vectorized operations. See if you can write a vectorized version of the function below that is faster than the for loop, and demonstrate that you get the same result but faster using `bench::mark`. 
+
+```{r slowFor, exercise = TRUE}
+set.seed(623)
+x <- rbeta(5000, 0.5, 1.4)
+
+f1 <- function(x) {
+  n <- length(x)
+  num_gt_05 <- 0
+  
+  for (i in 1:n) {
+    if (x[i] > 0.5) {
+      num_gt_05 <- num_gt_05 + 1
+    }
+  }
+  num_gt_05 / n
+}
+
+f2 <- function(x) {
+  # TODO: Edit this function
+}
+```
+
+```{r slowFor-hint-1}
+# By default, the function bench::mark checks if the two functions give the same results. 
+```
+
+```{r slowFor-hint-2}
+# What does sum(c(TRUE, TRUE, FALSE, FALSE, TRUE)) return? How might we take 
+# advantage of this? 
+```
+
+```{r slowFor-solution}
+set.seed(623)
+x <- rbeta(5000, 0.5, 1.4)
+
+f1 <- function(x) {
+  n <- length(x)
+  num_gt_05 <- 0
+  
+  for (i in 1:n) {
+    if (x[i] > 0.5) {
+      num_gt_05 <- num_gt_05 + 1
+    }
+  }
+  num_gt_05 / n
+}
+
+f2 <- function(x) {
+  # One possible solution: 
+  sum(x > 0.5) / length(x)
+}
+
+bench::mark(f1(x), f2(x))
+```
+
+
+## Parallelization 
+
+One way to speed up your code is by parallization. 
+Most modern computers have processors with multiple *cores*. Each *core* is basically a "brain" of the computer, as it receives instructions and then performs the desired calculations that satisfy those instructions. 
+When we normally run `R`, we are only running our commands on a single core. 
+Some operations, however, can be computed in parallel, meaning that one operation can be performed independently of another operation. 
+When this is the case, we can *parallelize* our code so that it runs on more cores than one; if done correctly, this speeds up the computation time of our code. 
+For example, if we run a porperly parallized command on 4 cores instead of 1, this should run approximately 4 times faster! 
+
+There are many tools to do parallization in `R`, but here we focus on only a few: 
+
+- `parallel` package: `parLapply`
+- `foreach` and `doParallel`
+
+### `parallel` package
+
+For more resources, see [this Umich Website](https://dept.stat.lsa.umich.edu/~jerrick/courses/stat701/notes/parallel.html).
+As mentioned in the linked website, parallelization in `R` is easiest if you're using a Macbook or Linux computer. In section, we'll just demonstrate the parallelization techniques that work for all systems (including Windows). 
+
+First, we can check how many cores our computer has with the command: 
+
+```{r}
+numCores <- detectCores()
+numCores
+```
+
+Now, we create a *Socket Cluster*. When we make a Socket Cluster, we are starting new `R` processes on our computer, so this means that packages and variables that were created outside of the cluster will not be available to us. 
+
+```{r}
+cl <- makeCluster(numCores)
+```
+
+Now let's take the mean of each column of the `iris` dataset using all of our computer cores: 
+
+```{r}
+parSapply(cl, iris, mean, na.rm = TRUE)
+```
+
+Note that the code above is simply running an `sapply` in a parallelized fashion: each column of the dataset is an input for the function `mean`, and each calculation is being calculated on a different computer core at the same time! 
+
+When we are done, we need to close the cluster so that we aren't wasting our computer's resources: 
+
+```{r}
+stopCluster(cl)
+```
+
+## `foreach` and `doParallel` package
+
+Another great tool is the `foreach` and `doParallel` packages. These allow us to write for-loops that are computed in parallel: 
+
+```{r}
+registerDoParallel(numCores)  # setting up system for parallelization
+
+normal_sqrt <- function(n) {
+  res <- c() 
+  for (i in 1:n) {
+    res <- c(res, sqrt(i))
+  }
+  res
+}
+
+par_sqrt <- function(n) {
+  foreach(i=1:n, .combine = c) %dopar% {
+    sqrt(i)
+  }
+}
+
+normal_sqrt(10)
+par_sqrt(10)
+```
+
+If you were to time the two functions above, you'd likely see that the parallel version is actually slower. This is because there is some overhead when using `%dopar%` with `foreach`, and each operation is relatively quick. 
+This fact highlights when parallelization is most effective: each iteration in a calculation is computationally intensive when compared to the parallelization overhead. 
