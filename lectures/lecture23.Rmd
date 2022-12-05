@@ -1,0 +1,237 @@
+---
+subtitle: "Stats 306: Lecture 22"
+title: "Shiny: Data dashboards in R"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate)
+library(shiny)
+```
+
+## Review
+
+* Parallel programming: split up work for multiple cores/CPUs/nodes
+* `makeCluster`, `clusterExport`,  `clusterEvalQ`
+* `parLapply`, `parSapply` (works on Windows, clusters of multiple computers)
+* `mclapply` (Mac/Linux shared memory)
+* Rcpp: Simplified C/C++ interface for R
+* Great for loops, recursive functions, costly R execution
+
+## Shiny
+
+We've used RMarkdown to create **static** displays of data. To make **interactive** displays, we'll use the **Shiny** package.
+
+We break up Shiny apps into three pieces:
+
+* User Interface (UI): handles the visual presentation and control interface
+* Server: Processes input and creates data for display
+* Reactive programming: how things change when users modify app
+
+NB: We've been using Shiny for our interactive exercises in slides.
+
+## Web app basics
+
+The web is based on some basic technologies that make interoperation possible:
+
+* Web server to handle **requests** (server side)
+* Web browser to display web pages (user side)
+* Web pages written in HTML (hypertext markup language), e.g., `<p>This is a paragraph with <b>bold</b> text and a <a href="URL">link</a>.</p>`
+* Cascading style sheets (CSS) to add layout and display directives
+* User side vs. server side code
+  * User side: JavaScript executes within the browser
+  * Server side: Many possible languages (PHP, Python, JavaScript/node.js, .NET, many others )
+* Databases, images, etc.
+
+## Creating an app
+
+RStudio: `File -> New Project`
+
+## Running Apps
+
+* Starts a local web server (typically private with most PC firewalls)
+* Can view in R or a web browser by going to `127.0.0.1:XYZS`
+* Can deploy to public web servers
+
+## User Inteface
+
+The heart of the Shiny app is the `shinyApp(ui, server)` function. Let's start with the `ui` argument.
+
+
+Goal: define the set of pieces the user will interact with and observe.
+
+Shiny generally tries to give reasonable default layouts that will resize with different user screens/environments.
+
+## Pages
+
+Shiny can work with **single page** applications or **multipage** applications. A **page** is the canvas of the app.
+
+* `fluidPage`: Usually the best option for setting up a page, allows for components to fill the screen horizontally
+* `fixedPage`: If you want to limit the maximum (horizontal) size of the page.
+* `fillPage`: fills the screen vertically
+
+The `fluidPage` page takes a `...` argument which will constitute the set of **panels** from top to bottom of the page.
+
+## Sidebar layout
+
+A common layout for Shiny apps has a title at the top, a side panel on the left, and a main panel on the right.
+
+```{r eval = FALSE}
+fluidPage(
+  titlePanel(
+    # app title/description
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      # inputs
+    ),
+    mainPanel(
+      # outputs
+    )
+  )
+)
+```
+
+See `clt_app.R` for a simple example.
+
+## Creating your own layouts
+
+`sidebarLayout` is a convenient wrapper around the `fluidRow` function. Each **row** is composed of 12 **columns**. 
+
+For example
+```{r eval = FALSE}
+fluidPage(
+  fluidRow(
+    column(6, ...)
+    column(6, ...)
+  ),
+  fluidRow(
+    column(10, ...)
+    column(2, ...)
+  )
+)
+```
+
+See `clt_lln.R`
+
+## Interactive Graphics
+
+Shiny tracks clicks across the page and can provide information on where within a graphic the user clicked.
+
+```{r eval = FALSE}
+plotOutput("plot", click = "plot_click") # populates input$plot_click
+```
+
+## `req` function
+
+A useful function to have for only including server logic when input is present is `req`. 
+
+If the data does not exist, `req` terminates execution of the rest of the code in that `render` function.
+
+See `click_graph.R`
+
+
+## Brushes and `tableOutput`
+
+We can draw rectangles on the graphic using the `brush = ` option to `plotOutput`.
+
+The `brushedPoints` function takes a brush and a table returns the points inside of the rectangle.
+
+See `brush_graph.R`
+
+## Exercise
+
+Cut the mean mean and variance of the points included in a brush.
+
+See `brush_example.R`.
+
+## User input
+
+Basic HTML includes a few basic building blocks for user input:
+
+* Text boxes (single line, multiline)
+* Check boxes
+* Radio buttons (a set where (at most) one can be selected)
+* Drop down menus
+* File uploads
+* Clickable buttons ("Submit" or "Cancel")
+* Hidden fields
+
+Shiny adds some other useful features
+
+* Sliders
+* Date/time input
+* Parsing numbers
+
+Lets go look at the [Shiny Widget Gallery](https://shiny.rstudio.com/gallery/widget-gallery.html)
+
+## Basic inputs
+
+Boxes for inputs allow users to type in values.
+
+Both `textInput` and `numericInput` take three arguments:
+
+* `inputId`: the entry in the `input` list used by `server`
+* `label`: The text that the user will see prompting input.
+* `value`: A default value.
+
+`textInput` can also have `placeholder` text inside. `numericInput` can have some basic limits (min, max, step size)
+
+See input_song.R
+
+## Exercise
+
+Open `example_zoom.R`. Add four inputs for numeric values to get the bounds of the plot. Then update the ploting code to use those bounds. 
+
+## Including HTML in output
+
+If you know some basic HTML, you can include it the output.
+
+The `ul` tag starts and ends bulleted lists. `li` tags delimit individual items in the list.
+
+See input_song_html.R
+
+## Inputs for ranged data
+
+With data that has a given minimum and maximum, we can replace the `numericInput` with a slider: `inputSlider`.
+
+See `slider_zoom.R`.
+
+## Inputs for categorical data
+
+When we have a set of categories we want for input, we have two options:
+
+* Radio buttons: only one can be selected
+* Check boxes: many can be selected
+
+In both cases, we'll give a set of choices of the form: `c("Nice display name 1" = "option1", "Nice display name 2" = "option2", ...)`
+
+See `checkbox_mpg.R`.
+
+## Exercise
+
+Use `radioButtons` (same basic interface as `inputCheckboxGroup`) to select two numeric variables from the `mpg` table to graph against each other.
+
+Bonus: if the selected variables are the same, graph as a density instead of a jitter.
+
+See `example_radio.R`.
+
+## Shiny in RMarkdown documents
+
+Go to RStudio...
+
+## Getting more help with Shiny, next time
+
+* [Shiny Homepage](https://shiny.rstudio.com/) (the gallery is a neat set of examples)
+* [Mastering Shiny](https://mastering-shiny.org/index.html)
+
+Next time: more on the server side of shiny and **reactive programming**
+
