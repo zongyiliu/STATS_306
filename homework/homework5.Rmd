@@ -43,14 +43,14 @@ Using `group_by` and `summarize` create a table that has one row for each member
 
 Plot the distributions of maximum number of followers broken out by chamber. Use tools for factors to give the chambers better names ("House of Representatives" and "Senate"). 
 
-When plotting, use a log scale for the number of retweet followers (`ggplot(...) + ... + scale_y_continuous(trans='log10')`)
+When plotting, use a log scale for the number of retweet followers (`ggplot(...) + ... + scale_x_continuous(trans='log10')`)
 
 
 ### Part (c)
 
 How often do members of Congress retweet each other?
 
-Use a left join to join the retweets table to the `retweets_moc` on the `rt_user_name` from from the `retweets` table and the `user_screen_name` from the `retweets_moc` table. Save the result as `retweets_within`.
+Use a left join to join the retweets table (using the `rt_screen_name` column) to the `retweets_moc` table (using the `user_screen_name` column) Save the result as `retweets_within`.
 
 What proportion of retweets are from other members of Congress?
 
@@ -208,7 +208,7 @@ Answer the following questions:
 
 ### Part (b)
 
-Using the `bench::mark`, evaluate the speed of your solution in 2(b) and 2(e). Which was faster?
+Using the `bench::mark`, evaluate the speed of your solution in 2(c) and 2(e). Which was faster?
 
 ### Part (c)
 
