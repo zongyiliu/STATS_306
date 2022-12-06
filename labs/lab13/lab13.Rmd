@@ -12,9 +12,8 @@ runtime: shiny_prerendered
 ```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
 # This just checks if students need to install some packages that they might 
 # not have.
-
 if (!require(shiny))
-  install.packages("bench", repos = "http://cran.us.r-project.org")
+  install.packages("shiny", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, eval=TRUE, include=TRUE, message=FALSE, echo=TRUE}
@@ -25,7 +24,7 @@ library(shiny)
 
 
 ```{r, include=FALSE, message=FALSE, echo=FALSE}
-tutorial_options(exercise.reveal_solution=TRUE)
+tutorial_options(exercise.reveal_solution=FALSE)
 ```
 
 ## Logistics
