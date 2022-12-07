@@ -1,5 +1,5 @@
 ---
-subtitle: "Stats 306: Lecture 22"
+subtitle: "Stats 306: Lecture 23"
 title: "Shiny: Data dashboards in R"
 author: "Mark Fredrickson"
 output: 
@@ -190,48 +190,4 @@ See input_song.R
 ## Exercise
 
 Open `example_zoom.R`. Add four inputs for numeric values to get the bounds of the plot. Then update the ploting code to use those bounds. 
-
-## Including HTML in output
-
-If you know some basic HTML, you can include it the output.
-
-The `ul` tag starts and ends bulleted lists. `li` tags delimit individual items in the list.
-
-See input_song_html.R
-
-## Inputs for ranged data
-
-With data that has a given minimum and maximum, we can replace the `numericInput` with a slider: `inputSlider`.
-
-See `slider_zoom.R`.
-
-## Inputs for categorical data
-
-When we have a set of categories we want for input, we have two options:
-
-* Radio buttons: only one can be selected
-* Check boxes: many can be selected
-
-In both cases, we'll give a set of choices of the form: `c("Nice display name 1" = "option1", "Nice display name 2" = "option2", ...)`
-
-See `checkbox_mpg.R`.
-
-## Exercise
-
-Use `radioButtons` (same basic interface as `inputCheckboxGroup`) to select two numeric variables from the `mpg` table to graph against each other.
-
-Bonus: if the selected variables are the same, graph as a density instead of a jitter.
-
-See `example_radio.R`.
-
-## Shiny in RMarkdown documents
-
-Go to RStudio...
-
-## Getting more help with Shiny, next time
-
-* [Shiny Homepage](https://shiny.rstudio.com/) (the gallery is a neat set of examples)
-* [Mastering Shiny](https://mastering-shiny.org/index.html)
-
-Next time: more on the server side of shiny and **reactive programming**
 

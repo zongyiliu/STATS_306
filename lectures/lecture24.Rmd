@@ -1,0 +1,213 @@
+---
+subtitle: "Stats 306: Lecture 24"
+title: "Shiny Server Programming"
+author: "Mark Fredrickson"
+output: 
+  learnr::tutorial:
+    progressive: true
+    css: css/lecture.css
+runtime: shiny_prerendered
+---
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(lubridate)
+library(shiny)
+```
+
+## Review
+
+* Shiny: Dynamic display of data
+* Three parts: UI, Server, Reactive Programming
+* UI
+  * consistent layout of app (usually composed using `fluidPage` and `fluidRow`)
+  * place `input*` and `output*` with ids that map to the `input$ID` and `output$ID` in `server`
+  * interactive graphics
+  * basic text and number input
+  * sliders for ranged values
+* Widget gallery is a nice view of the different basic tools
+* [Shiny Homepage](https://shiny.rstudio.com/) (the gallery is a neat set of examples)
+* [Mastering Shiny](https://mastering-shiny.org/index.html)
+
+## Inputs for categorical data
+
+When we have a set of categories we want for input, we have two options:
+
+* Radio buttons: only one can be selected
+* Check boxes: many can be selected
+
+In both cases, we'll give a set of choices of the form: `c("Nice display name 1" = "option1", "Nice display name 2" = "option2", ...)`
+
+See `checkbox_mpg.R`.
+
+## Exercise
+
+Use `radioButtons` (same basic interface as `inputCheckboxGroup`) to select two numeric variables from the `mpg` table to graph against each other.
+
+Bonus: if the selected variables are the same, graph as a density instead of a jitter.
+
+See `example_radio.R`.
+
+## `outputXYZ` and `renderXYZ` functions
+
+Once we get the input we need, it's time to get it back to the user. Within the UI, we place the output using various `outputXYZ` functions:
+
+* `htmlOutput()/uiOutput()`
+* `imageOutput()` (static image from a file)
+* `plotOutput()` (R plots)
+* `textOutput()` HTML text
+* `verbatimTextOutput()` non-rendered text
+* `tableOuput()/dataTableOutuput()` tables (`dataTable` version has interactive elements)
+* several others for download links, dialog boxes, etc
+
+We need to create these outputs using corresponding `renderXYZ` functions
+
+* `renderUI`
+* `renderImage`
+* `renderPlot`
+* `renderPrint/renderText` (print verison captures output, text version takes a string vector as the return value)
+* `renderTable/renderDataTable`
+
+## Including HTML in output
+
+If you know some basic HTML, you can include it the output.
+
+The `ul` tag starts and ends bulleted lists. `li` tags delimit individual items in the list.
+
+See `input_song_html.R`
+
+## Including Markdown
+
+See `input_song_markdown.R`
+
+## Shiny in RMarkdown documents
+
+Go to RStudio...
+
+## Exercise
+
+Open `exercise_markdown.R` and follow the comments.
+
+## Manipulating user inputs
+
+When users update values on inputs this generates **events**. We get notifications of events using `observeEvent(input$element, { code })`. Then we can use `update*` functions.
+
+See `slider_update_update.R`
+
+## Making web apps that feel like real apps
+
+Web App Goal: make a series of web pages feel like an interactive application
+
+Why is this difficult?
+
+* Client/server architecture
+* Keeping state persistent
+* Avoid having to transfer lots of data
+* Avoid re-running lots of computations on server
+* Keep manageable for the programmer
+
+## Reactive programming
+
+We already saw **event driven programming** where we could respond to changes to UI.
+
+In **reactive programming** we also allow variables to react to changes in other variables.
+
+Downside: we have to use a few more tools than just regular R variables.
+
+## Reactive variables: function like objects
+
+Variables (boxes to hold data) in Shiny's reactive framework look and behave much like functions.
+
+```{r}
+reactiveConsole(TRUE) # use this for interactive testing
+
+rv <- reactiveVal(999) # initial value
+rv() # get the value
+rv(1) # set the value
+rv()
+```
+
+## Reactive contexts
+
+You may recall that when we use `render*` functions or `update*` functions we executed code inside of `{...}`. This formed a **reactive context**. A wrapper around code that connects reactive variables.
+
+```{r}
+rv2 <- reactive({
+  message("updating rv2")
+  rv() - 10
+})
+
+# get inital value
+rv2()
+
+# now value is stored
+rv2() + 1
+
+# does not immediately update rv2
+rv(123)
+
+# only runs code when needed
+rv2()
+```
+
+## Multiple comparisons/multiple testing
+
+![XKCD 882](images/significant.png)
+
+## Hypothesis Testing
+
+In the previous comic, the scientists were reporting that they (mostly) failed to reject the null hypothesis of zero correlation at the **$\alpha = 0.05$ significance level** by noting that the $p$-value of the test was greater than 0.05.
+
+This works for a single test because when the null hypothesis is true, the $p$-value has a 5% probability of being less than 0.05, which makes sure we don't commit a Type I error (reject true null hypothesis) in more than 5% of samples.
+
+More generally, this holds for any signficance level $\alpha$.
+
+## Bonferroni Corrections
+
+But when we perform multiple tests, this logic no longer holds.
+
+If we perform $k$ (independent tests), the probability that we make at least one Type I error becomes $1 - (1 - \alpha)^k$.
+
+```{r}
+1 - (1 - 0.05)^5
+```
+ 
+With a Bonferroni correction, we simply divide $\alpha$ by $k$ (which can be slightly conservative):
+```{r}
+1 - (1 - 0.05/5)^5
+```
+
+Now it is harder to reject each individual hypothesis, but overall our **family-wise error rate** is (strongly) protected.
+
+## Example
+
+```{r}
+set.seed(39422200)
+
+n <- 100
+k <- 1000
+y <- rnorm(n)
+x <- matrix(rnorm(n * k), ncol = k) |> as.data.frame()
+
+pvs <- map_dbl(x, ~ cor.test(y, .x)$p.value)
+mean(pvs < 0.05)
+
+```
+
+## `reactiveEvent`
+
+In order to get access to user actions, we can use the `reactiveEvent` function.
+
+See `bonferroni.R`
+
+## Shiny Next Steps
+
+Lots more to learn!
+
+- More reactive programming tools
+- Tabs/multipage apps
+- Add on packages
+- Deployment to the web
+
