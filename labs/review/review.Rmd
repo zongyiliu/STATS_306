@@ -164,6 +164,93 @@ In a Polar Coordinates plot of the same monthly temperature data, January and De
 
 ## Lab 6 (Victor)
 
+### Exploratory Data Analysis
+
+**Exploratory data analysis (EDA)** can be thought of as a cycle:
+
+- Generate questions about your data.
+- Search for answers by visualizing, transforming, and modelling your data.
+- Use what you learn to refine your questions and/or generate new questions.
+
+### Variation
+
+**Variation** refers to a variable's tendency to change in value from measurement to measurement.
+
+How variation is visualized depends on the type of the variable
+
+- Continuous variables
+  - Can take any value in an infinite set of ordered values
+  - Typically visualized using histograms and boxplots
+- Categorical variables
+  - Can take any value in a finite set of categories/levels
+  - Typically visualized using barplots
+- Aspects of variation frequently focused on:
+  - Typical/atypical values
+  - Unusual values
+  - Missing values
+
+`storms` has data on tropical storms. Each row has measurements on a particular storm made at a particular time.
+
+```{r}
+head(storms)
+```
+
+The most common category is 0; the next most common is -1. From weather reports, you might expect 1-5 to be the only categories. The documentation on `storms` says that -1 represents a tropical depression and 0 represents a tropical storm. Also, going from 0 to 5, the count declines, which makes sense, since the higher the category, the higher the severity.
+
+```{r}
+storms %>% ggplot() + geom_bar(aes(category))
+```
+
+### Covariation
+
+**Covariation** refers to how the value of one variable changes as the value of another variable changes. How to visualize covariation depends on the types of the two variables.
+
+- One Categorical Variable, One Continuous Variable
+- Two Categorical Variables
+- Two Continuous Variables
+
+#### One Categorical Variable, One Continuous Variable
+
+- `geom_freqpoly()` plots one line for each level of a categorical variable
+- The height of a line over a value of the continuous variable reflects the frequency of that value
+- Not that useful when there are many levels - the plot gets too cluttered
+
+The plot below shows the `price` frequency for each quality (`cut`) level for the `diamonds` dataset. The frequencies are quite different for different quality levels, making it hard to see the pattern for the quality level at the bottom.
+```{r}
+ggplot(data = diamonds, mapping = aes(x = price)) + 
+  geom_freqpoly(mapping = aes(colour = cut), binwidth = 500) +
+  theme_bw()
+```
+
+Plotting densities instead of frequencies can help in a situation like this:
+```{r}
+ggplot(data = diamonds, mapping = aes(x = price, y = after_stat(density))) + 
+  geom_freqpoly(mapping = aes(colour = cut), binwidth = 500) +
+  theme_bw()
+```
+
+#### Two Continuous Variables
+
+- `geom_point()` can make it easy to see relationships.
+- However, the more data you have, the harder it can be to see the trend. There are several ways to address this problem:
+  - Changing the point transparency (`alpha`)
+  - Binning
+  - Discretizing
+
+The plot below shows the relationship between carat and price. Since there are tens of thousands of points, overplotting may be a problem.
+```{r}
+ggplot(data = diamonds) +
+  geom_point(mapping = aes(x = carat, y = price)) +
+  theme_bw()
+```
+
+If we reduce the transparency (`alpha`), overplotting becomes less of a problem since we can see more clearly which pairs of carat and price are more common than others. We see that many pairs are concentrated along vertical lines, where carat is constant.
+```{r}
+ggplot(data = diamonds) + 
+  geom_point(mapping = aes(x = carat, y = price), alpha = 1 / 100) +
+  theme_bw()
+```
+
 ## Lab 7 (Jesse)
 
 ### `Dates` in `R`
