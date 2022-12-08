@@ -348,6 +348,182 @@ For more resources, we strongly recommend looking at `vignette("pivot")`.
 
 ## Lab 10 (Victor)
 
+### Strings and String Functions
+
+Recall that a **string** is a sequence of characters.
+
+Below is an example of a string as it would appear on paper.
+```
+backyard
+```
+
+Strings in R work differently than they do on paper. In R, a string **must either begin and end with a double quote `"` or begin and end with a single quote `'`.**
+```{r}
+"backyard"
+'backyard'
+```
+
+Certain characters are inserted in strings using **escape sequences**. An escape sequence starts with a backslash `\`. For example, the escape sequence for `tab` is `\t`. The backslash combines with the next character to form an escape sequence. See the help page on `Quotes` for the list of valid escape sequences in R. This is how a tab would be inserted in the previous string.
+```{r}
+"back\tyard"
+```
+
+```{r, echo = TRUE}
+line1 <- "Nor shall death brag thou wander'st in his shade,"
+line2 <- "When in eternal lines to time thou grow'st:"
+line3 <- "So long as men can breathe or eyes can see,"
+line4 <- "So long lives this, and this gives life to thee."
+sonnet18_end <- c(line1, line2, line3, line4)
+```
+
+#### `str_length()`
+
+To find the length of the strings in terms of characters:
+```{r}
+str_length(sonnet18_end) # base::nchar also works
+```
+
+#### `str_sub()`
+
+The `str_sub` function can retrieve or change **substrings**.
+
+```{r}
+str_sub(line1, 11, 20)
+str_sub(line2, 36)
+str_sub(line2, -8)
+line4b <- line4
+str_sub(line4b, 1, 10) <- "REMOVED"
+line4b
+```
+
+#### `str_c()`
+
+If we need to make strings out of other strings, we have two (more or less identical) functions:
+
+* Old school: `paste` (joins with " ") and `paste0` (joins with "")
+* New school: `str_c` (joins with ""); used in our book
+
+```{r}
+str_c("Section", c("100", "200", "300"), 
+      "meets on", 
+      c("Monday", "Tuesday", "Wednesday"),
+      sep = " ")
+```
+Notice: this is a vector of length 3, use `collapse = "SEP"` to make a single string from a vector.
+```{r}
+str_c("Section", c("100", "200", "300"), 
+      "meets on", 
+      c("Monday", "Tuesday", "Wednesday"),
+      sep = " ",
+      collapse = ", ")
+```
+
+#### `str_split()`
+
+Here's the full sonnet as a single string:
+```{r}
+sonnet18 <- "Shall I compare thee to a summer's day?\nThou art more lovely and more temperate:\nRough winds do shake the darling buds of May,\nAnd summer's lease hath all too short a date;\nSometime too hot the eye of heaven shines,\nAnd often is his gold complexion dimm'd;\nAnd every fair from fair sometime declines,\nBy chance or nature's changing course untrimm'd;\nBut thy eternal summer shall not fade,\nNor lose possession of that fair thou ow'st;\nNor shall death brag thou wander'st in his shade,\nWhen in eternal lines to time thou grow'st:\n\tSo long as men can breathe or eyes can see,\n\tSo long lives this, and this gives life to thee."
+```
+
+Let's split that up into individual lines as strings in a vector:
+```{r}
+sonnet18_lines <- str_split(sonnet18, "\n") # notice use of new line
+sonnet18_lines
+```
+
+What is happening? Since `sonnet18` could have had multiple entries (vector), `str_split` returns a **list** with splits for each item in the vector:
+```{r}
+str_split(c("a b c", "d e"), " ")
+```
+
+In this case:
+```{r}
+sonnet18_lines <- sonnet18_lines[[1]] # [[]] for lists
+```
+
+### Regular Expressions
+
+A **regular expression** is a string specifying a pattern that other strings may or may not match. Regular expressions can be used to
+
+  - find strings matching a pattern
+  - modify substrings matching a pattern
+  - delete substrings matching a pattern
+
+#### Metacharacters
+
+Several characters have special meanings inside regular expressions. They are called **metacharacters**. These are the metacharacters:
+
+`. \ | ( ) [ ] ^ $ { } * + ?`
+
+For example, `.` matches any character.
+
+If you do not want a metacharacter to have its special meaning, you need to prepend it with **two** backslashes.
+```{r}
+str_view_all(c("$2.50", "2 dollars"), "\\.")
+```
+
+#### Character Classes
+
+- `.` matches any character
+- `[abcd]` matches any one of the characters between the brackets
+- `[^abcd]` matches any character *not* between the brackets (excluding `^`)
+- `[a-d]` matches any character in the specified range; it's the same as `[abcd]`
+
+An example:
+```{r}
+str_view_all(c("$2.50", "2 dollars"), "[a-zA-Z]")
+```
+
+#### Shorthand
+
+- `\w` matches a "word" character, equivalent to `[0-9A-Za-z_]`, i.e., digits, letters, and the underscore
+- `\s` matches any whitespace character, including tabs and newlines
+- `\d` matches digits, equivalent to `[0-9]`
+- `\W`, `\S`, and `\D` match the opposite of the lower-case versions
+
+In the example below, we check which string contains whitespace. Note that **two** backslashes need to be used.
+```{r}
+str_view_all(c("$2.50", "2 dollars"), "\\s")
+```
+
+#### Grouping
+
+- `()` are used to group patterns together. This can be used to extract matches individually.
+- `\1` refers to the match to the first group, `\2` refers to the match to the second group, etc.
+
+In this example, we check which string contains a repeated letter.
+```{r}
+str_view_all(c("$2.50", "2 dollars"), "([a-z])\\1")
+```
+
+#### Operators
+
+- `|` is the OR operator and allows matches of either side
+- `{}` describes how many times the preceeding character or group must occur:
+  - `{m}` must occur exactly `m` times
+  - `{m,n}` must occur between `m` and `n` times, inclusive
+  - `{m,}` Must occur at least `m` times
+- `*` means the preceeding character can appear zero or more times, equivalent to `{0,}`
+- `+` means the preceeding character must appear one or more times, equivalent to `{1,}`
+- `?` means the preceeding character can appear zero or one time, equivalent to `{0,1}`
+
+Which string has two digits in a row?
+```{r}
+str_view_all(c("$2.50", "2 dollars"), "[0-9]{2}")
+```
+
+#### Anchors
+
+- `^` matches the start of a string (or line)
+- `$` matches the end of a string (or line)
+- `\b` matches a word boundary
+- `\B` matches not word boundary
+
+Which string starts with a dollar sign? Note that `$` is escaped with **two** backslashes.
+```{r}
+str_view_all(c("$2.50", "2 dollars"), "^\\$")
+```
+
 ## Lab 11 (Benjamin)
 
 ## Lab 12 (Jesse)
