@@ -1,0 +1,56 @@
+---
+title: "Stats 306: Final Review Session"
+author: "Stats 306 GSIs"
+output: 
+  learnr::tutorial:
+    progressive: true
+runtime: shiny_prerendered
+---
+
+## Set up
+
+```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
+# This just checks if students need to install some packages that they might 
+# not have.
+
+```
+
+```{r setup, eval=TRUE, include=TRUE, message=FALSE, echo=TRUE}
+library(learnr)     # For interactive exercises
+library(tidyverse)
+```
+
+```{r, include=FALSE, message=FALSE, echo=FALSE}
+tutorial_options(exercise.reveal_solution=FALSE)
+```
+
+## Logistics
+
+- Exam details: TODO.
+- Today's outline: One hour of review, followed by one hour of time for questions.
+
+## Lab 1 (Jesse / Yilei)
+
+## Lab 2 (Victor)
+
+## Lab 3 (Jesse)
+
+## Lab 4 (Yilei)
+
+## Lab 5 (Benjamin)
+
+## Lab 6 (Victor)
+
+## Lab 7 (Jesse)
+
+## Lab 8 (Yilei)
+
+## Lab 9 (Benjamin)
+
+## Lab 10 (Victor)
+
+## Lab 11 (Benjamin)
+
+## Lab 12 (Jesse)
+
+## Lab 13 (Yilei)
