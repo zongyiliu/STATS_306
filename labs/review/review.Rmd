@@ -4,6 +4,7 @@ author: "Stats 306 GSIs"
 output: 
   learnr::tutorial:
     progressive: true
+    allow_skip: true
 runtime: shiny_prerendered
 ---
 
@@ -12,15 +13,18 @@ runtime: shiny_prerendered
 ```{r installPackages, echo=FALSE, include=FALSE, message=FALSE}
 # This just checks if students need to install some packages that they might 
 # not have.
-
+if (!require(ggbeeswarm))
+  install.packages("ggbeeswarm", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, eval=TRUE, include=TRUE, message=FALSE, echo=TRUE}
 library(learnr)     # For interactive exercises
 library(tidyverse)
+library(parallel)
+library(bench)
 ```
 
-```{r, include=FALSE, message=FALSE, echo=FALSE}
+```{r tutorialOptions, include=FALSE, message=FALSE, echo=FALSE}
 tutorial_options(exercise.reveal_solution=FALSE)
 ```
 
@@ -31,9 +35,67 @@ tutorial_options(exercise.reveal_solution=FALSE)
 
 ## Lab 1 (Jesse / Yilei)
 
+### Basic `git` Concepts
+
+* **repository**: A representation of the current state of a collection of files, along with its entire history of modifications. 
+* **commit** (noun): A recorded change made to the repository. 
+* **branch**: While we won't do a lot with branches in this course, they are a very useful way of collaborating. Branches are essentially additional versions of the repository that you can create, name, delete, and merge into the main (or master) branch of the repository. 
+
 ## Lab 2 (Victor)
 
 ## Lab 3 (Jesse)
+
+### `ggplot2` facets
+
+One way to plot categorical variables is using *facets*. 
+Facets allow us to create separate figures based on some categorical variable, and each resulting figure shares many of the same properties (this is sometimes called the *small multiples* rule in visualization). 
+
+Example: 
+
+```{r ggplot2Facet}
+ggplot(data = mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth() + 
+  facet_wrap(~drv)
+```
+
+Every `ggplot` object has a facet, and there are three types: 
+
+* `facet_wrap`: Creates a one-dimensional set of plots, that are often shown in a 2d grid.
+* `facet_grid`: Creates a two-dimensional grid of panels, defined by two different columns. 
+* `facet_null`: This is the default facet, which is just a single plot
+
+### `ggplot2` coordinate systems
+
+Like facets, every `ggplot2` object has a coordinate system. 
+There are many different types of coordinate systems in `ggplot2`. 
+
+There are *linear* coordinate systems that don't change the shape of `geoms`: 
+
+- `coord_cartesian()`: Default coordinate system
+- `coord_flip()`: Default coordinate system, but flipping `x` and `y` axis. 
+- `coord_fixed()`: Default coordinate system, but fixing the ratio between `x` and `y` axis. 
+
+There are also *non-linear* coordinate systems, that can change the shape of `geoms`: 
+
+- `coord_polar()`: Polar coordinates.
+- `coord_map()`: Map projections (spherical earth to 2D plane).
+- `coord_trans()`: Custom transformations to `x` and `y` positions. 
+
+Polar coordinate example: 
+
+```{r mtcarsPolar}
+my_cars <- mtcars
+my_cars$model <- rownames(mtcars)
+ggplot(my_cars) + 
+  geom_bar(aes(y = mpg, x = model), stat = 'identity') + 
+  coord_polar() + 
+  theme_bw()
+```
+
+We may be interested in Polar Coordinates if we are visualizing data that might have seasonal/cyclical effects.
+For example, if we plot temperatures by month in a standard coordinate system, January and December are on opposite sides of the figure, despite having similar values and are actually close in time. 
+In a Polar Coordinates plot of the same monthly temperature data, January and December will be right next to eachother. 
 
 ## Lab 4 (Yilei)
 
@@ -42,6 +104,95 @@ tutorial_options(exercise.reveal_solution=FALSE)
 ## Lab 6 (Victor)
 
 ## Lab 7 (Jesse)
+
+### `Dates` in `R`
+
+Dates and times are common types of data that are often tricky to deal with. 
+Consider, for example, the number of days in a year, number of hours in a day, and the number of seconds in a minute.
+
+* On leap years the number of days in a year changes.
+* While normally 24, the number of hours in a day changes due to daylight savings. 
+* The number of seconds in a minute even sometimes changes (leap seconds, which are rare events used to adjust for the slowing of earth's rotation)!
+
+### Creating `Dates`
+
+To create a date object in `R`, we could use a function to get improtant dates/times (e.g. `lubridate::today()`), we can try to build a `Date` from individual components (e.g. `lubridate::make_date(year = 2022, month = 2, day = 8)`), or we could *parse* a string into a date object. 
+
+Here are some examples: 
+
+```{r parseDates}
+d1 <- "January 1, 2021"
+d2 <- "11-21-1986"
+d3 <- "01/24, '11 2:01 PM EST"
+
+parse_date(d1, format = "%B %d, %Y")
+parse_date(d2, format = "%m-%d-%Y")  
+lubridate::mdy(d2)
+parse_datetime(d3, format = "%m/%d, '%y %H:%M %p %Z")
+```
+
+
+### Working with `Dates`
+
+When we have `Date` objects, we might want to perform some kind of arithmetic with these objects. 
+This can be quite tricky, because the length of time between human friendly `Dates` isn't always consitent. 
+For example, should the difference between Jan 1 2017 and Jan 1 2016 be one year (usually 365 days), or should it be 366 days (since 2016 was a leap year)? 
+What if we want to time span in seconds? 
+
+`lubridate` provides three classes to help deal with this issue: 
+
+* `durations`: Total time span in seconds. There are some useful constructor functions that we can us, such as `dseconds()`, `dminutes()`, `dhours()`, etc. 
+* `periods`: Human friendly time spans. For example, if you want to add a year to `"2016-01-01"`, adding a period of `years(1)` would add 366 days since 2016 is a leap year, and the output would be `"2017-01-01"`. The useful constructor functions for this includes `seconds()`, `minutes()`, `hours()`, etc. 
+* `intervals`: These are used because periods are sometimes ambiguous (as noted above, `years(1)` could mean 366 or 365 days, depending on the year).
+
+### Pivoting
+
+We often work with data that are "tidy", meaning that each row corresponds to an observation, each column corresponds to a variable, and each cell has a single value. (See the picture below)
+
+<center>
+
+![Illustration of tidy data, from the R for Data Science book book](images/tidyData.png){width=100%}
+
+</center>
+
+A common problem is a dataset where some of the column names are not names of variables, but *values* of a variable. 
+For example, let's consider the `table4a` dataset, which contains the number of Tuberculosis cases for 3 different countries: 
+
+```{r table4aRaw}
+table4a
+```
+
+Here we notice that there are two columns, `1999` and `2000`, that aren't variables but instead are values of a particular variable. 
+We can fix this using the `pivot_longer` function. 
+
+`pivot_longer`: this function "lengthens" data, increasing the number of rows and decreasing the number of columns.
+For more detailed examples and exercises, I recommend looking at `vignette("pivot")`. For now, here are the most important arguments for this function: 
+
+* `data`: The dataset we want to *pivot* longer.
+* `cols`: The columns that need to be pivoted. This can be given as a vector of strings, or we could use any type of function we would select columns with using the `select` function. 
+* `names_to`: The name of the column that will store the long variable names.  
+* `values_to`: The name of the column that will store the values.
+
+Here's what it would look like for the `table4a` dataset: 
+
+```{r table4aPivot, exercise = TRUE}
+table4a |>
+  pivot_longer(
+    cols = -country, # Get everything except first column,
+    names_to = "year",
+    values_to = "TB_count"
+  ) |> 
+  mutate(year = as.integer(year))
+```
+
+`pivot_longer` is often useful for plotting with `ggplot`, because it allows us to use colors and facets based on the created variables. 
+For example, you could color `TB_count` by `year` now that we have made the data "longer". 
+
+Sometimes we can see the opposite problem: a single observation is scattered across multiple rows. To fix this issue, we would use the `pivot_wider` function. 
+This issue is not as common, so we won't go into much detail on this for now. 
+
+*Pivoting* (both longer and wider) can be a tricky idea, and it can take some practice to fully understand how to use these really powerful functions correctly. 
+For more resources, we strongly recommend looking at `vignette("pivot")`. 
 
 ## Lab 8 (Yilei)
 
@@ -52,5 +203,82 @@ tutorial_options(exercise.reveal_solution=FALSE)
 ## Lab 11 (Benjamin)
 
 ## Lab 12 (Jesse)
+
+### Parallelization in `R` 
+
+Sometimes our code doesn't need to run sequentially, i.e., we could do all of our computations at the same time. 
+This is often true when we write code that works with the family of functions like `map` and `apply` (this is also true of some `for`-loops).
+
+When this is the case, we might be able to speed up our code by running *cores* on our computer. 
+A core works essentially like the brain of a computer: it takes a set of instructions, performs those instructions, and returns a result. 
+Almost all computers these days have multiple cores, meaning we could send a set of multiple different instructions to our computer at the same time! 
+This is called *parallelization*. 
+
+There are a few ways to parallelize in `R`, but we are just focusing on parallelization with *Socket Clusters*.
+
+To do this, we should first check how many cores our computer can use with the command: 
+
+```{r getCores}
+numCores <- detectCores()
+numCores
+```
+
+Now, we create a *Socket Cluster*.
+When we make a Socket Cluster, we are starting new `R` processes on our computer, so this means that packages and variables that were created outside of the cluster will not be available to us. 
+
+```{r makeCluster}
+cl <- makeCluster(numCores)
+```
+
+Let's now create a large matrix of random numbers. 
+Each column of the matrix will be 5,000 iid observations from a $N(i, \sqrt{i})$ distribution, for $i \in 1:400$ (variance equal to $i$).
+
+```{r MakeRandomMatrix}
+Rmatrix <- sapply(1:400, function(x) rnorm(1000, mean = x, sd = sqrt(x)))
+remove_missing <- TRUE
+
+mean_narm <- function(x) {
+  mean(x, na.rm = remove_missing)
+}
+```
+
+Now let's take the mean of each column of the matrix: 
+
+```{r parallelError, error=TRUE, message=TRUE, eval=TRUE, warning=TRUE}
+means <- parApply(cl, Rmatrix, 2, mean_narm)
+```
+Notice that this results in an error! We need to *export* the variable "remove_missing" to the cluster! 
+
+```{r parallelCorrect, message=TRUE, eval=TRUE,warning=TRUE}
+clusterExport(cl, "remove_missing")
+means <- parApply(cl, Rmatrix, 2, mean_narm)
+
+stopCluster(cl)
+plot(1:400, 1:400 - means, xlab = "Column Number (mean / var)", ylab = "mean - estimated mean")
+```
+
+### Debugging Tools
+
+This is a large topic! For more resources, consider reading the chapter on debugging in the [Advanced R textbook](https://adv-r.hadley.nz/debugging.html). 
+Here we will just briefly mention some useful debugging tools. 
+
+- `traceback()`: If you're using `R` Studio, then you'll get a message when you get an error with a `Show Traceback` option. This is equivalent to running the function `traceback()`, but formatted nicely. This function will show you which functions where run and in what order, which is helpful for locating bugs inside of nested functions. 
+- `browser()`: If you would like interactive debugger, you can place `browser()` statements in your `R` code, and when you run your code, this will pause everything at each `browser()` step, allowing you to look at the state of the `R` *environment* at each step. Rstudio also has a similar functionality called *Breakpoints* that can be activated by clicking to the left of the line number that you would like to pause on. This is called 
+
+### Performance Evaluation Tools
+
+- Profiling: profiling helps us determine which part of our code/function is the slowest, or what parts of the code are using most of the computing time (i.e., a function might be really fast, but if it's used thousands of times then the profiler will show that the function is a *bottleneck*) and also gives a rough estimate of how long each part the code/function takes. The best way to do this is the `profvis` package in `R`. In `RStudio`, there is a drop-down menu called *Profile* that does this for you.  
+- (Micro)Benchmarking: Benchmarking provides a much more accurate estimate of how long a part of the code takes by running the same piece of code many times and providing summary statistics of the resulting computing time. This also let's us compare the speed of several functions, which can help us decide how to implement a particular algorithm. One easy way of doing this is the `bench` package: `bench::mark(f1(), f2(), f3(), ...)`: 
+
+```{r benchmarkExample}
+x <- runif(100)
+(lb <- bench::mark(
+  sqrt(x),
+  x ^ 0.5
+))
+
+plot(lb)
+```
+like the figure above, microbenchmark times tend to be heavily right-skewed, so it's better to compare computing speeds using median times rather than mean times. 
 
 ## Lab 13 (Yilei)

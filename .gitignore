@@ -47,3 +47,6 @@ lectures/lecture*_files
 
 # Lab Files created after rendering 
 labs/lab*/lab*_files
+
+# Like above, but for review session
+labs/review/review_files/*
