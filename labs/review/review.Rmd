@@ -15,6 +15,8 @@ runtime: shiny_prerendered
 # not have.
 if (!require(ggbeeswarm))
   install.packages("ggbeeswarm", repos = "http://cran.us.r-project.org")
+if (!require(gapminder))
+  install.packages("gapminder", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r setup, eval=TRUE, include=TRUE, message=FALSE, echo=TRUE}
@@ -22,6 +24,7 @@ library(learnr)     # For interactive exercises
 library(tidyverse)
 library(parallel)
 library(bench)
+library(gapminder)
 ```
 
 ```{r tutorialOptions, include=FALSE, message=FALSE, echo=FALSE}
@@ -160,7 +163,7 @@ In a Polar Coordinates plot of the same monthly temperature data, January and De
 
 ## Lab 4 (Yilei)
 
-## Lab 5 (Benjamin)
+
 
 ## Lab 6 (Victor)
 
@@ -344,7 +347,6 @@ For more resources, we strongly recommend looking at `vignette("pivot")`.
 
 ## Lab 8 (Yilei)
 
-## Lab 9 (Benjamin)
 
 ## Lab 10 (Victor)
 
@@ -525,6 +527,7 @@ str_view_all(c("$2.50", "2 dollars"), "^\\$")
 ```
 
 ## Lab 11 (Benjamin)
+### Iterations
 
 ## Lab 12 (Jesse)
 
