@@ -717,6 +717,158 @@ str_view_all(c("$2.50", "2 dollars"), "^\\$")
 ```
 
 ## Lab 11 (Benjamin)
+### Iteration
+- We learned that looping is a useful tool for reducing duplication.
+- We looked at three major forms of iteration
+- **For Loops**, **While Loops** and the **Map family**
+- Let's briefly review of of these
+
+### For Loops
+- For loops are particularly useful when you have an idea of the number of steps until a process terminates
+- The syntax is given by:
+```
+    for (index in vector) {
+       [do something for each index]
+    }
+```
+- While this is a generic syntax, there are three major forms in which for loops may be used:      
+
+- **(1) Looping along the indices of a vector**           
+```{r}
+## Let's first look at how indices of a vector appear
+for(i in 1:5) {
+       print(i)
+}
+```
+
+
+- **(2) Looping along the elements of a vector**   
+```{r}
+x <- c("a", "b", "c", "d")
+
+for(i in x) {
+     ## Print out each element of 'x'
+     print(i)
+} 
+```
+
+
+- **(3) Looping along the length a vector **   
+```{r}
+## Generate a sequence based on length of 'x'
+for(i in seq_along(x)) {   
+         print(x[i])
+}
+```
+
+### While Loops
+- This is particularly helpful when we do not know how many steps until a process terminates
+- The syntax is given by:
+```
+     <OPTIONALLY INITIALIZING THE ITERATOR>
+     while (<condition is true>) {
+        [do something]
+
+        <OPTIONALLY INCREMENTING THE ITERATOR>
+     }
+```
+
+- **Example:**     
+Divide (scale) all numeric columns in `Iris` dataset by 20
+```{r}
+## Before Loop
+head(iris)
+```
+
+```{r}
+col_iter <- 1
+while(is.numeric(iris[, col_iter])){
+  iris[, col_iter] <- iris[, col_iter] /10
+  col_iter <- col_iter + 1
+}
+```
+
+```{r}
+## After Loop
+head(iris)
+```
+
+### The Map Family
+- As we saw in the previous examples, looping can sometimes take up storage and may require initializing a vector.    
+- A simpler and perhaps more desirable alternative is using the `map[_*]()` family of functions from the `purrr` package  
+- Map can be used for iterating over a **single** or **multiple** vectors concurrently.
+
+### **1. map (for a single input)**
+![](images/map1.png){width=90%}
+
+- **Example:**
+We wish to take the length of every element of the parent list: 
+
+```{r}
+moons <-
+  list(
+    earth = 1737.1,
+    mars = c(11.3, 6.2),
+    neptune = 
+      c(60.4, 81.4, 156, 174.8, 194, 34.8, 420, 2705.2, 340, 62, 44, 42, 40, 60)
+  )
+```
+
+Using `map` this is evaluated as:
+
+![](images/map2.png){width=90%}
+
+
+### **2. map2 (for two inputs)**
+![](images/map5.png){width=90%}
+
+**Example**  
+
+- Find each student's best performing score for each subject as a new column
+```{r}
+df <-
+  tibble(
+  Student = c("John", "Dan", "Nancy"),
+  English = c(50, 90, 70),
+  Math    = c(100, 65, 88)
+  )
+
+df %>% 
+  mutate(`Max score` = map2_dbl(English, Math, max))
+```
+
+
+### **3. pmap (for multiple inputs)** 
+![](images/map6.png){width=90%}
+
+**Example** 
+Find the row-wise minimum as a new column in the dataframe below
+```{r}
+tibble(
+  a = c(50, 60, 70),
+  b = c(10, 90, 40),
+  c = c(1, 105, 2000)
+) %>% 
+  pmap_dbl(min)
+
+```
+
+
+
+### Output variants
+- The default `map[_*]()` family of functions return a `list` as the output.  
+- However, we may want atomic vectors (***integers, doubles, characters, logical***) to be the outputs for specific tasks.
+- Below gives variations of the `map` functional together with descriptions:
+
+
+- `map_int()`, `map2_int()`, `pmap_int()` creates an integer vector.
+- `map_dbl()`, `map2_dbl()`, `pmap_dbl()` creates a double vector.
+- `map_chr()`, `map2_chr()`, `pmap_chr()` creates a character vector.
+- `map_lgl()`, `map2_lgl()`, `pmap_lgl()` creates a logical vector.
+- `map_df()` creates a dataframe.
+
+
+
 
 ## Lab 12 (Jesse)
 
