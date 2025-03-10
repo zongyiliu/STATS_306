@@ -44,3 +44,7 @@ Late homework will not be accepted. Please email the professor (mfredric@umich.e
 ## Course Policies
 
 Additional policies available on our course Canvas page.
+
+
+---
+
